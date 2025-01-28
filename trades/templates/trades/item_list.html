@@ -3,73 +3,106 @@
 {% block title %}Список товаров{% endblock %}
 
 {% block content %}
-    <h2>Список товаров</h2>
-    <form method="post">
+<div class="container my-4">
+    <h2 class="mb-4">Список товаров</h2>
+
+    <!-- Поиск по товарам -->
+    <h3 class="mb-3">Поиск по товарам</h3>
+    <form method="get" action="{% url 'item_list' %}" class="mb-4">
+        <div class="row g-3 align-items-center">
+            <div class="col-md-6">
+                <input type="text" name="search" class="form-control" placeholder="Введите название">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary">Искать</button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Таблица товаров -->
+    <form method="post" class="mb-4">
         {% csrf_token %}
-        <table border="1">
-            <thead>
-            <tr>
-                <th>Наименование</th>
-                <th>Цена</th>
-                <th>Действия</th>
-            </tr>
+        <table class="table table-bordered table-hover" style="max-height: 500px; overflow-y: auto; display: block;">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Наименование</th>
+                    <th>Цена</th>
+                    <th>Действия</th>
+                </tr>
             </thead>
             <tbody>
-            {% for item in items %}
+                {% for item in items %}
                 <tr>
+                    <td>{{ forloop.counter }}</td>
                     <td>
-                        <input type="text" name="name_{{ item.id }}" value="{{ item.name }}">
+                        <input type="text" class="form-control" name="name_{{ item.id }}" value="{{ item.name }}">
                     </td>
                     <td>
                         {% if user_settings %}
-                            <input type="number" name="price_{{ item.id }}"
+                            <input type="number" class="form-control" name="price_{{ item.id }}"
                                    value="{{ item.price|floatformat:user_settings.decimal_places_price }}"
                                    step="{{ user_settings.price_step|default:0.01 }}" min="0">
-
                         {% else %}
-                            <input type="number" name="price_{{ item.id }}"
-                                   value="{{ item.price|floatformat:2 }}"
-                                   step="0.01">
+                            <input type="number" class="form-control" name="price_{{ item.id }}"
+                                   value="{{ item.price|floatformat:2 }}" step="0.01">
                         {% endif %}
                     </td>
                     <td>
-                        <button type="submit" name="edit_item" value="{{ item.id }}">Сохранить</button>
-                        <button type="submit" name="delete_item" value="{{ item.id }}">Удалить</button>
+                        <button type="submit" name="edit_item" value="{{ item.id }}" class="btn btn-primary btn-sm">Сохранить</button>
+                        <button type="submit" name="delete_item" value="{{ item.id }}" class="btn btn-danger btn-sm">Удалить</button>
                     </td>
                 </tr>
-            {% endfor %}
+                {% endfor %}
             </tbody>
         </table>
-
     </form>
 
-    <h3>Добавить новый товар</h3>
-    <form method="post">
+    <!-- Добавление нового товара -->
+    <h3 class="mb-3">Добавить новый товар</h3>
+    <form method="post" class="mb-4">
         {% csrf_token %}
-        <input type="text" name="name" placeholder="Название" required>
-        <input type="number" name="price" placeholder="Цена" step="0.01" required>
-        <button type="submit" name="add_item">Добавить</button>
+        <div class="row g-3 align-items-center">
+            <div class="col-md-5">
+                <input type="text" name="name" class="form-control" placeholder="Название" required>
+            </div>
+            <div class="col-md-3">
+                <input type="number" name="price" class="form-control" placeholder="Цена" step="0.01" required>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" name="add_item" class="btn btn-success">Добавить</button>
+            </div>
+        </div>
     </form>
 
-    <h3>Загрузить товары из файла</h3>
-    <form method="post" enctype="multipart/form-data">
+    <!-- Загрузка товаров из файла -->
+    <h3 class="mb-3">Загрузить товары из файла</h3>
+    <form method="post" enctype="multipart/form-data" class="mb-4">
         {% csrf_token %}
-        <input type="file" name="file" accept=".xlsx, .xls">
-        <button type="submit" name="upload_file">Загрузить</button>
+        <div class="row g-3 align-items-center">
+            <div class="col-md-6">
+                <input type="file" name="file" accept=".xlsx, .xls" class="form-control">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" name="upload_file" class="btn btn-info text-white">Загрузить</button>
+            </div>
+        </div>
     </form>
 
-    <h3>Настройка шага изменения цены</h3>
-    <form method="post">
+    <!-- Настройка шага изменения цены -->
+    <h3 class="mb-3">Настройка шага изменения цены</h3>
+    <form method="post" class="mb-4">
         {% csrf_token %}
-        <label for="price_step">Шаг изменения цены:</label>
-        <input type="number" name="price_step" id="price_step"
-               value="{{ user_settings.price_step|default:0.01 }}" step="0.01" min="0">
-        <button type="submit" name="update_step">Сохранить шаг</button>
+        <div class="row g-3 align-items-center">
+            <div class="col-md-3">
+                <label for="price_step" class="form-label">Шаг изменения цены:</label>
+                <input type="number" name="price_step" id="price_step" class="form-control"
+                       value="{{ user_settings.price_step|default:0.01 }}" step="0.01" min="0">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" name="update_step" class="btn btn-secondary">Сохранить шаг</button>
+            </div>
+        </div>
     </form>
+</div>
 {% endblock %}
-
-
-
-
-
-

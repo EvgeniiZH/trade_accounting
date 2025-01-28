@@ -1,34 +1,56 @@
-input[type="number"] {
-    color: #000; /* Чёрный текст */
-    background-color: #fff; /* Белый фон */
-    border: 1px solid #ccc; /* Лёгкая рамка */
-    padding: 5px; /* Внутренние отступы */
-    width: 100px; /* Минимальная ширина */
-    text-align: right; /* Выравнивание текста справа */
-}
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
-}
-
-th, td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
-}
-
-th {
-    background-color: #f2f2f2;
-}
-
-button {
-    padding: 5px 10px;
-    margin: 5px;
+/* Стили для невыбранного чекбокса */
+input[type="checkbox"] {
+    border: 2px solid #343a40; /* Тёмный серый цвет */
+    width: 20px;
+    height: 20px;
+    appearance: none; /* Убираем стандартное оформление */
     cursor: pointer;
 }
 
-button:hover {
-    background-color: #007bff;
+/* Стили для выбранного чекбокса */
+input[type="checkbox"]:checked {
+    border: 2px solid #007bff; /* Синий цвет для выбранного состояния */
+    background-color: #007bff; /* Заливка синего цвета */
     color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Для hover состояния */
+input[type="checkbox"]:hover {
+    border-color: #495057; /* Ещё более тёмный серый */
+}
+
+
+/* Увеличиваем шрифт для наименований товаров */
+.table td:first-child,
+.table th:first-child {
+    font-size: 1.2rem; /* Увеличенный шрифт для наименований */
+    font-weight: 600; /* Сделать текст жирным */
+}
+
+/* Увеличиваем шрифт для стоимости */
+.table td:nth-child(2),
+.table th:nth-child(2) {
+    font-size: 1.1rem; /* Увеличенный шрифт для цены */
+    color: #007bff; /* Синий цвет для акцента */
+}
+
+/* Шрифты для вывода итоговых данных (стоимость, наценка и т.д.) */
+.summary {
+    font-size: 1.4rem; /* Увеличенный шрифт */
+    font-weight: bold;
+    margin-top: 20px;
+}
+
+/* Шрифты для кнопок */
+.btn {
+    font-size: 1rem;
+}
+
+/* Общий стиль для заголовков */
+h2, h3, h4 {
+    font-size: 1.5rem;
+    font-weight: bold;
 }

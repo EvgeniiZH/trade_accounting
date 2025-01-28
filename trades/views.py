@@ -117,7 +117,7 @@ def create_calculation(request):
         markup = request.POST.get("markup", 0)
         item_ids = request.POST.getlist("items")
         if not item_ids:
-            messages.error(request, "Выберите хотя бы один товар!")
+            messages.error(request, "Выберите хотя бы один товар для расчёта!")
             return redirect('create_calculation')
 
         calculation = Calculation.objects.create(title=title, markup=markup)
@@ -125,11 +125,16 @@ def create_calculation(request):
             quantity = int(request.POST.get(f"quantity_{item_id}", 1))
             item = Item.objects.get(id=item_id)
             CalculationItem.objects.create(calculation=calculation, item=item, quantity=quantity)
-
         return redirect('calculation_detail', pk=calculation.pk)
 
-    items = Item.objects.all()
-    return render(request, "trades/create_calculation.html", {"items": items})
+    search_query = request.GET.get('search', '')
+    if search_query:
+        items = Item.objects.filter(name__icontains=search_query)
+    else:
+        items = Item.objects.all()
+
+    return render(request, "trades/create_calculation.html", {"items": items, "search_query": search_query})
+
 
 
 def calculation_detail(request, pk):

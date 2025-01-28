@@ -3,109 +3,143 @@
 {% block title %}Создание расчёта{% endblock %}
 
 {% block content %}
-<div class="container my-4">
-    <h2 class="mb-4" style="font-size: 1.8rem;">Создание расчёта</h2>
+    <div class="container my-4">
+        <h2 class="mb-4" style="font-size: 1.8rem;">Создание расчёта</h2>
 
-    <form method="post" id="calculation-form" class="row g-3">
-        {% csrf_token %}
-        <div class="col-md-6">
-            <label for="title" class="form-label" style="font-size: 1.2rem;">Название расчёта:</label>
-            <input type="text" id="title" name="title" class="form-control" placeholder="Введите название" required>
-        </div>
-        <div class="col-md-6">
-            <label for="markup" class="form-label" style="font-size: 1.2rem;">Наценка (%):</label>
-            <input type="number" id="markup" name="markup" class="form-control" step="0.01"
-                   placeholder="Введите наценку" value="0" required>
-        </div>
+        <form method="post" id="calculation-form" class="row g-3">
+            {% csrf_token %}
+            <div class="col-md-6">
+                <label for="title" class="form-label" style="font-size: 1.2rem;">Название расчёта:</label>
+                <input type="text" id="title" name="title" class="form-control" placeholder="Введите название" required>
+            </div>
+            <div class="col-md-6">
+                <label for="markup" class="form-label" style="font-size: 1.2rem;">Наценка (%):</label>
+                <input type="number" id="markup" name="markup" class="form-control" step="0.01"
+                       placeholder="Введите наценку" value="0" required>
+            </div>
 
-        <h3 class="mt-4" style="font-size: 1.5rem;">Выберите товары:</h3>
-        <table class="table table-bordered table-hover" id="calculation-table" style="max-height: 400px; overflow-y: auto; display: block;">
-            <thead class="table-light">
-            <tr>
-                <th>#</th>
-                <th style="font-size: 1.2rem;">Товар</th>
-                <th style="font-size: 1.2rem;">Цена</th>
-                <th style="font-size: 1.2rem;">Количество</th>
-                <th class="text-center" style="font-size: 1.2rem;">Выбрать</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for item in items %}
+            <!-- Поиск -->
+            <div class="row mb-4">
+                <input type="text" id="search-input" class="form-control" placeholder="Поиск товаров..."
+                       aria-label="Search">
+            </div>
+
+            <h3 class="mt-4" style="font-size: 1.5rem;">Выберите товары:</h3>
+            <table class="table table-bordered table-hover" id="calculation-table"
+                   style="max-height: 400px; overflow-y: auto; display: block;">
+                <thead class="table-light">
                 <tr>
-                    <td>{{ forloop.counter }}</td>
-                    <td style="font-size: 1.1rem;">{{ item.name }}</td>
-                    <td style="font-size: 1.1rem;" class="item-price">{{ item.price }}</td>
-                    <td>
-                        <input type="number" name="quantity_{{ item.id }}" value="1" min="1"
-                               class="form-control quantity-input"
-                               title="Введите количество">
-                    </td>
-                    <td class="text-center">
-                        <div class="form-check">
-                            <input type="checkbox" name="items" value="{{ item.id }}"
-                                   class="form-check-input item-checkbox"
-                                   style="transform: scale(1.5);">
-                        </div>
-                    </td>
+                    <th>#</th>
+                    <th style="font-size: 1.2rem;">Товар</th>
+                    <th style="font-size: 1.2rem;">Цена</th>
+                    <th style="font-size: 1.2rem;">Количество</th>
+                    <th class="text-center" style="font-size: 1.2rem;">Выбрать</th>
                 </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                {% for item in items %}
+                    <tr id="item-{{ item.id }}">
+                        <td>{{ forloop.counter }}</td>
+                        <td style="font-size: 1.1rem;">{{ item.name }}</td>
+                        <td style="font-size: 1.1rem;" class="item-price">{{ item.price }}</td>
+                        <td>
+                            <input type="number" name="quantity_{{ item.id }}" value="1" min="1"
+                                   class="form-control quantity-input"
+                                   title="Введите количество">
+                        </td>
+                        <td class="text-center">
+                            <div class="form-check">
+                                <input type="checkbox" name="items" value="{{ item.id }}"
+                                       class="form-check-input item-checkbox"
+                                       style="transform: scale(1.5);">
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
 
-        <div class="col-12 my-4 p-3 rounded bg-light border">
-            <h4 style="font-size: 1.6rem; font-weight: bold;">Итоговая стоимость</h4>
-            <div class="d-flex justify-content-between align-items-center mt-3">
-                <p style="font-size: 1.3rem; margin: 0;">Без наценки:</p>
-                <span id="total-without-markup"
-                      style="font-size: 1.3rem; font-weight: bold; color: #007bff;">0.00</span>
+            <div class="col-12 my-4 p-3 rounded bg-light border">
+                <h4 style="font-size: 1.6rem; font-weight: bold;">Итоговая стоимость</h4>
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <p style="font-size: 1.3rem; margin: 0;">Без наценки:</p>
+                    <span id="total-without-markup"
+                          style="font-size: 1.3rem; font-weight: bold; color: #007bff;">0.00</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mt-2">
+                    <p style="font-size: 1.3rem; margin: 0;">С наценкой:</p>
+                    <span id="total-with-markup"
+                          style="font-size: 1.3rem; font-weight: bold; color: #28a745;">0.00</span>
+                </div>
             </div>
-            <div class="d-flex justify-content-between align-items-center mt-2">
-                <p style="font-size: 1.3rem; margin: 0;">С наценкой:</p>
-                <span id="total-with-markup"
-                      style="font-size: 1.3rem; font-weight: bold; color: #28a745;">0.00</span>
+
+            <div class="col-12">
+                <button type="submit" class="btn btn-success" style="font-size: 1.2rem;">Сохранить расчёт</button>
             </div>
-        </div>
+        </form>
+    </div>
 
-        <div class="col-12">
-            <button type="submit" class="btn btn-success" style="font-size: 1.2rem;">Сохранить расчёт</button>
-        </div>
-    </form>
-</div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.querySelector('#search-input');
+            const tableBody = document.querySelector('#calculation-table tbody');
 
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const table = document.getElementById('calculation-table');
-        const totalWithoutMarkupElement = document.getElementById('total-without-markup');
-        const totalWithMarkupElement = document.getElementById('total-with-markup');
-        const markupInput = document.getElementById('markup');
+            searchInput.addEventListener('input', () => {
+                const searchTerm = searchInput.value.trim().toLowerCase();
+                const rows = tableBody.querySelectorAll('tr');
+                let found = false;
 
-        const recalculateTotals = () => {
-            let totalWithoutMarkup = 0;
-            const markup = parseFloat(markupInput.value) || 0;
+                rows.forEach(row => {
+                    const itemName = row.querySelector('td:nth-child(2)').textContent.trim().toLowerCase();
+                    if (!found && itemName.startsWith(searchTerm)) {
+                        row.scrollIntoView({behavior: 'smooth', block: 'center'});
+                        row.style.backgroundColor = '#d4edda'; // Подсветка найденного элемента
+                        setTimeout(() => row.style.backgroundColor = '', 6000); // Убираем подсветку через 2 секунды
+                        found = true;
+                    }
+                });
 
-            table.querySelectorAll('tbody tr').forEach(row => {
-                const checkbox = row.querySelector('.item-checkbox');
-                const price = parseFloat(row.querySelector('.item-price').textContent) || 0;
-                const quantityInput = row.querySelector('.quantity-input');
-                const quantity = parseInt(quantityInput.value) || 0;
-
-                if (checkbox.checked) {
-                    totalWithoutMarkup += price * quantity;
+                if (!found) {
+                    console.log('No matches found for:', searchTerm);
                 }
             });
+        });
+    </script>
 
-            const totalWithMarkup = totalWithoutMarkup + (totalWithoutMarkup * (markup / 100));
-            totalWithoutMarkupElement.textContent = totalWithoutMarkup.toFixed(2);
-            totalWithMarkupElement.textContent = totalWithMarkup.toFixed(2);
-        };
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const table = document.getElementById('calculation-table');
+            const totalWithoutMarkupElement = document.getElementById('total-without-markup');
+            const totalWithMarkupElement = document.getElementById('total-with-markup');
+            const markupInput = document.getElementById('markup');
 
-        // Привязываем обработчики событий
-        table.addEventListener('input', recalculateTotals);
-        table.addEventListener('change', recalculateTotals);
-        markupInput.addEventListener('input', recalculateTotals);
+            const recalculateTotals = () => {
+                let totalWithoutMarkup = 0;
+                const markup = parseFloat(markupInput.value) || 0;
 
-        // Пересчёт при загрузке страницы
-        recalculateTotals();
-    });
-</script>
+                table.querySelectorAll('tbody tr').forEach(row => {
+                    const checkbox = row.querySelector('.item-checkbox');
+                    const price = parseFloat(row.querySelector('.item-price').textContent) || 0;
+                    const quantityInput = row.querySelector('.quantity-input');
+                    const quantity = parseInt(quantityInput.value) || 0;
+
+                    if (checkbox.checked) {
+                        totalWithoutMarkup += price * quantity;
+                    }
+                });
+
+                const totalWithMarkup = totalWithoutMarkup + (totalWithoutMarkup * (markup / 100));
+                totalWithoutMarkupElement.textContent = totalWithoutMarkup.toFixed(2);
+                totalWithMarkupElement.textContent = totalWithMarkup.toFixed(12);
+            };
+
+            // Привязываем обработчики событий
+            table.addEventListener('input', recalculateTotals);
+            table.addEventListener('change', recalculateTotals);
+            markupInput.addEventListener('input', recalculateTotals);
+
+            // Пересчёт при загрузке страницы
+            recalculateTotals();
+        });
+    </script>
 {% endblock %}

@@ -54,3 +54,12 @@ h2, h3, h4 {
     font-size: 1.5rem;
     font-weight: bold;
 }
+
+.found-item {
+    animation: highlight 2s ease-in-out;
+}
+
+@keyframes highlight {
+    0% { background-color: #d4edda; }
+    100% { background-color: transparent; }
+}

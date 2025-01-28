@@ -1,0 +1,33 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Trade Accounting{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+<header>
+    <nav>
+
+        <a href="{% url 'item_list' %}">Главная</a>
+        <a href="{% url 'create_calculation' %}">Создать расчёт</a>
+        <a href="{% url 'calculations_list' %}">Список расчётов</a>
+        <a href="{% url 'update_settings' %}">Настройки</a> <!-- Ссылка на настройки -->
+
+    </nav>
+</header>
+<main>
+    {% if messages %}
+        <ul>
+            {% for message in messages %}
+                <li style="color: {% if message.tags == 'success' %}green{% else %}red{% endif %};">
+                    {{ message }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+    {% block content %}{% endblock %}
+</main>
+</body>
+</html>

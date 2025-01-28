@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}Детали расчёта{% endblock %}
+
+{% block content %}
+    <h2>{{ calculation.title }}</h2>
+    <p>Наценка: {{ calculation.markup }}%</p>
+    <p>Стоимость без наценки: <span id="total-without-markup">{{ calculation.total_price_without_markup }}</span></p>
+    <p>Стоимость с наценкой: <span id="total-with-markup">{{ calculation.total_price_with_markup }}</span></p>
+
+    <h3>Товары в расчёте</h3>
+    <table border="1" id="calculation-table">
+        <thead>
+        <tr>
+            <th>Наименование</th>
+            <th>Цена</th>
+            <th>Количество</th>
+            <th>Итого</th>
+            <th>Действия</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for item in calculation.items.all %}
+            <tr data-item-id="{{ item.id }}">
+                <td>{{ item.item.name }}</td>
+                <td class="unit-price">{{ item.item.price }}</td>
+                <td>
+                    <input type="number" name="quantity_{{ item.id }}" value="{{ item.quantity }}" min="1" class="quantity-input">
+                </td>
+                <td class="total-price">{{ item.total_price }}</td>
+                <td>
+                    <form method="post">
+                        {% csrf_token %}
+                        <button type="submit" name="delete_item" value="{{ item.id }}">Удалить</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <h3>Добавить товар</h3>
+    <form method="post">
+        {% csrf_token %}
+        <select name="item_id">
+            {% for item in items %}
+                <option value="{{ item.id }}">{{ item.name }}</option>
+            {% endfor %}
+        </select>
+        <input type="number" name="quantity" value="1" min="1">
+        <button type="submit" name="add_item">Добавить</button>
+    </form>
+
+    <h3>Изменить наценку</h3>
+    <form method="post">
+        {% csrf_token %}
+        <input type="number" name="markup" value="{{ calculation.markup }}" step="0.01">
+        <button type="submit" name="update_markup">Обновить наценку</button>
+    </form>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const table = document.getElementById('calculation-table');
+            const totalWithoutMarkupElement = document.getElementById('total-without-markup');
+            const totalWithMarkupElement = document.getElementById('total-with-markup');
+            const markup = parseFloat({{ calculation.markup|default:0 }});
+
+            const recalculateRowTotal = (row) => {
+                const unitPrice = parseFloat(row.querySelector('.unit-price').textContent);
+                const quantity = parseInt(row.querySelector('.quantity-input').value);
+                const totalPriceCell = row.querySelector('.total-price');
+
+                if (!isNaN(unitPrice) && !isNaN(quantity)) {
+                    const rowTotal = unitPrice * quantity;
+                    totalPriceCell.textContent = rowTotal.toFixed(2);
+                    return rowTotal;
+                }
+                return 0;
+            };
+
+            const recalculateOverallTotals = () => {
+                let totalWithoutMarkup = 0;
+
+                table.querySelectorAll('tr[data-item-id]').forEach(row => {
+                    totalWithoutMarkup += recalculateRowTotal(row);
+                });
+
+                const totalWithMarkup = totalWithoutMarkup + (totalWithoutMarkup * (markup / 100));
+
+                totalWithoutMarkupElement.textContent = totalWithoutMarkup.toFixed(2);
+                totalWithMarkupElement.textContent = totalWithMarkup.toFixed(2);
+            };
+
+            table.addEventListener('input', (event) => {
+                if (event.target.classList.contains('quantity-input')) {
+                    recalculateOverallTotals();
+                }
+            });
+
+            recalculateOverallTotals();
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,34 @@
+input[type="number"] {
+    color: #000; /* Чёрный текст */
+    background-color: #fff; /* Белый фон */
+    border: 1px solid #ccc; /* Лёгкая рамка */
+    padding: 5px; /* Внутренние отступы */
+    width: 100px; /* Минимальная ширина */
+    text-align: right; /* Выравнивание текста справа */
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+
+button {
+    padding: 5px 10px;
+    margin: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #007bff;
+    color: white;
+}

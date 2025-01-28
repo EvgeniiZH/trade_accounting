@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Создание расчёта{% endblock %}
+
+{% block content %}
+<h2>Создание расчёта</h2>
+
+<form method="post">
+    {% csrf_token %}
+    <label>Название:</label>
+    <input type="text" name="title" required>
+    <label>Наценка (%):</label>
+    <input type="number" name="markup" step="0.01" required>
+
+    <h3>Выберите товары:</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Товар</th>
+                <th>Цена</th>
+                <th>Количество</th>
+                <th>Выбрать</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ item.name }}</td>
+                <td>{{ item.price }}</td>
+                <td>
+                    <input type="number" name="quantity_{{ item.id }}" value="1" min="1" title="Введите количество товаров">
+
+                </td>
+                <td>
+                    <input type="checkbox" name="items" value="{{ item.id }}">
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <button type="submit" class="btn btn-primary">Сохранить расчёт</button>
+
+</form>
+{% endblock %}

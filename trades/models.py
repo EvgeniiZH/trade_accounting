@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+
 class Item(models.Model):
     name = models.CharField(max_length=255, unique=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -38,11 +39,10 @@ class CalculationItem(models.Model):
 
 
 class UserSettings(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    decimal_places_price = models.PositiveIntegerField(default=2)
-    decimal_places_percentage = models.PositiveIntegerField(default=2)
-    price_step = models.DecimalField(max_digits=5, decimal_places=2, default=0.01)  # Новый атрибут
+    decimal_places_price = models.PositiveIntegerField(default=2, verbose_name="Знаков после запятой для цены")
+    decimal_places_percentage = models.PositiveIntegerField(default=2, verbose_name="Знаков после запятой для наценки")
+    price_step = models.DecimalField(max_digits=5, decimal_places=2, default=0.01, verbose_name="Шаг изменения цены")
+    markup_step = models.PositiveIntegerField(default=2, verbose_name="Знаков после запятой для наценки")
 
     def __str__(self):
-        return f"Настройки пользователя {self.user.username}"
-
+        return "Глобальные настройки"

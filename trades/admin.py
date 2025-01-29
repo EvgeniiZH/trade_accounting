@@ -6,6 +6,9 @@ admin.site.register(Item)
 admin.site.register(Calculation)
 admin.site.register(CalculationItem)
 
-@admin.register(UserSettings)
 class UserSettingsAdmin(admin.ModelAdmin):
-    list_display = ('user', 'decimal_places_price', 'decimal_places_percentage')
+    list_display = ('decimal_places_price', 'decimal_places_percentage', 'price_step')
+    list_display_links = ('decimal_places_price',)  # Делаем первое поле ссылкой
+    list_editable = ('decimal_places_percentage', 'price_step')  # Остальные поля остаются редактируемыми
+
+admin.site.register(UserSettings, UserSettingsAdmin)

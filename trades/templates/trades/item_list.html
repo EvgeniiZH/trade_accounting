@@ -3,60 +3,62 @@
 {% block title %}Список товаров{% endblock %}
 
 {% block content %}
-<div class="container my-4">
-    <h2 class="mb-4">Список товаров</h2>
+    <div class="container my-4">
+        <h2 class="mb-4">Список товаров</h2>
 
-    <!-- Поиск по товарам -->
-    <h3 class="mb-3">Поиск по товарам</h3>
-    <form method="get" action="{% url 'item_list' %}" class="mb-4">
-        <div class="row g-3 align-items-center">
-            <div class="col-md-6">
-                <input type="text" name="search" class="form-control" placeholder="Введите название">
+        <!-- Поиск -->
+        <h3 class="mb-3">Поиск по товарам</h3>
+        <form method="get" class="mb-4">
+            <div class="row g-3 align-items-center">
+                <div class="col-md-6">
+                    <input type="text" id="search-input" class="form-control"
+                           placeholder="Введите название для поиска...">
+                </div>
             </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary">Искать</button>
-            </div>
-        </div>
-    </form>
+        </form>
 
-    <!-- Таблица товаров -->
-    <form method="post" class="mb-4">
-        {% csrf_token %}
-        <table class="table table-bordered table-hover" style="max-height: 500px; overflow-y: auto; display: block;">
-            <thead class="table-light">
+        <!-- Таблица товаров -->
+        <form method="post">
+            {% csrf_token %}
+            <table class="table table-bordered table-hover" id="item-table">
+                <thead class="table-light">
                 <tr>
                     <th>#</th>
                     <th>Наименование</th>
                     <th>Цена</th>
                     <th>Действия</th>
                 </tr>
-            </thead>
-            <tbody>
+                </thead>
+                <tbody>
                 {% for item in items %}
-                <tr>
-                    <td>{{ forloop.counter }}</td>
-                    <td>
-                        <input type="text" class="form-control" name="name_{{ item.id }}" value="{{ item.name }}">
-                    </td>
-                    <td>
-                        {% if user_settings %}
+                    <tr id="item-{{ item.id }}">
+                        <td>{{ forloop.counter }}</td>
+                        <td class="table-name-cell">
+                            <textarea class="form-control auto-expand"
+                            name="name_{{ item.id }}">{{ item.name }}</textarea>
+                        </td>
+
+
+                        <td>
                             <input type="number" class="form-control" name="price_{{ item.id }}"
                                    value="{{ item.price|floatformat:user_settings.decimal_places_price }}"
                                    step="{{ user_settings.price_step|default:0.01 }}" min="0">
-                        {% else %}
-                            <input type="number" class="form-control" name="price_{{ item.id }}"
-                                   value="{{ item.price|floatformat:2 }}" step="0.01">
-                        {% endif %}
-                    </td>
-                    <td>
-                        <button type="submit" name="edit_item" value="{{ item.id }}" class="btn btn-primary btn-sm">Сохранить</button>
-                        <button type="submit" name="delete_item" value="{{ item.id }}" class="btn btn-danger btn-sm">Удалить</button>
-                    </td>
-                </tr>
+                        </td>
+                        <td>
+                            <button type="submit" name="edit_item" value="{{ item.id }}" class="btn btn-warning btn-sm">
+                                Сохранить
+                            </button>
+                            <button type="submit" name="delete_item" value="{{ item.id }}"
+                                    class="btn btn-danger btn-sm">
+                                Удалить
+                            </button>
+                        </td>
+                    </tr>
                 {% endfor %}
-            </tbody>
-        </table>
-    </form>
+                </tbody>
+            </table>
+        </form>
+    </div>
 
     <!-- Добавление нового товара -->
     <h3 class="mb-3">Добавить новый товар</h3>
@@ -67,7 +69,8 @@
                 <input type="text" name="name" class="form-control" placeholder="Название" required>
             </div>
             <div class="col-md-3">
-                <input type="number" name="price" class="form-control" placeholder="Цена" step="0.01" required>
+                <input type="number" name="price" class="form-control" placeholder="Цена"
+                       step="{{ user_settings.price_step|default:0.01 }}" required>
             </div>
             <div class="col-md-2">
                 <button type="submit" name="add_item" class="btn btn-success">Добавить</button>
@@ -89,20 +92,50 @@
         </div>
     </form>
 
-    <!-- Настройка шага изменения цены -->
-    <h3 class="mb-3">Настройка шага изменения цены</h3>
-    <form method="post" class="mb-4">
-        {% csrf_token %}
-        <div class="row g-3 align-items-center">
-            <div class="col-md-3">
-                <label for="price_step" class="form-label">Шаг изменения цены:</label>
-                <input type="number" name="price_step" id="price_step" class="form-control"
-                       value="{{ user_settings.price_step|default:0.01 }}" step="0.01" min="0">
-            </div>
-            <div class="col-md-2">
-                <button type="submit" name="update_step" class="btn btn-secondary">Сохранить шаг</button>
-            </div>
-        </div>
-    </form>
-</div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.querySelector('#search-input');
+            const tableBody = document.querySelector('#item-table tbody');
+
+            searchInput.addEventListener('input', () => {
+                const searchTerm = searchInput.value.trim().toLowerCase();
+                const rows = tableBody.querySelectorAll('tr');
+                let found = false;
+
+                rows.forEach(row => {
+                    const nameInput = row.querySelector("textarea[name^='name']"); // Используем textarea
+                    const itemName = nameInput ? nameInput.value.trim().toLowerCase() : "";
+
+                    if (!found && itemName.startsWith(searchTerm)) {
+                        row.scrollIntoView({behavior: 'smooth', block: 'center'});
+                        row.style.backgroundColor = '#d4edda'; // Подсветка найденного элемента
+                        setTimeout(() => row.style.backgroundColor = '', 2000); // Убираем подсветку через 2 секунды
+                        found = true;
+                    }
+                });
+
+                if (!found) {
+                    console.log('Товаров не найдено для:', searchTerm);
+                }
+            });
+        });
+
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            document.querySelectorAll(".auto-expand").forEach((textarea) => {
+                function adjustHeight() {
+                    textarea.style.height = "auto"; // Сначала сбрасываем высоту
+                    textarea.style.height = textarea.scrollHeight + "px"; // Устанавливаем новую высоту
+                    textarea.closest("tr").style.height = textarea.scrollHeight + "px"; // Меняем высоту строки
+                }
+
+                adjustHeight(); // Устанавливаем высоту при загрузке
+
+                textarea.addEventListener("input", adjustHeight);
+            });
+        });
+
+
+    </script>
 {% endblock %}

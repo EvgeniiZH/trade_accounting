@@ -1,18 +1,61 @@
 {% extends 'base.html' %}
+{% if form.errors %}
+    <div class="alert alert-danger">
+        <strong>Ошибки формы:</strong>
+        <ul>
+            {% for field, errors in form.errors.items %}
+                <li>{{ field }}: {{ errors|join:", " }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endif %}
+
+{% if messages %}
+    <div class="container my-3">
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Закрыть"></button>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
 
 {% block title %}Настройки{% endblock %}
 
 {% block content %}
-<div class="container my-4">
-    <h2 class="mb-4">Настройки</h2>
-    <form method="post" class="row g-3">
-        {% csrf_token %}
-        <div class="col-12">
-            {{ form.as_p }}
+    <div class="container my-4">
+        <h2 class="mb-4">Настройки</h2>
+
+        <div class="mb-4">
+            <h3>Текущие настройки</h3>
+            <ul class="list-group">
+                <li class="list-group-item">Знаков после запятой для цены: {{ user_settings.decimal_places_price }}</li>
+                <li class="list-group-item">Знаков после запятой для
+                    наценки: {{ user_settings.decimal_places_percentage }}</li>
+                <li class="list-group-item">Шаг изменения цены: {{ user_settings.price_step }}</li>
+            </ul>
         </div>
-        <div class="col-12">
-            <button type="submit" class="btn btn-primary">Сохранить</button>
-        </div>
-    </form>
-</div>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="decimal_places_price" class="form-label">Знаков после запятой для цены:</label>
+                {{ form.decimal_places_price }}
+            </div>
+            <div class="mb-3">
+                <label for="decimal_places_percentage" class="form-label">Знаков после запятой для наценки:</label>
+                {{ form.decimal_places_percentage }}
+            </div>
+            <div class="mb-3">
+                <label for="price_step" class="form-label">Шаг изменения цены:</label>
+                {{ form.price_step }}
+            </div>
+            <div class="mb-3">
+                <label for="markup_step" class="form-label">Шаг изменения наценки:</label>
+                {{ form.markup_step }}
+            </div>
+            <button type="submit" class="btn btn-success">Сохранить</button>
+        </form>
+    </div>
 {% endblock %}

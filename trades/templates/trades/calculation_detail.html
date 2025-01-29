@@ -3,60 +3,83 @@
 {% block title %}Детали расчёта{% endblock %}
 
 {% block content %}
-    <h2>{{ calculation.title }}</h2>
-    <p>Наценка: {{ calculation.markup }}%</p>
-    <p>Стоимость без наценки: <span id="total-without-markup">{{ calculation.total_price_without_markup }}</span></p>
-    <p>Стоимость с наценкой: <span id="total-with-markup">{{ calculation.total_price_with_markup }}</span></p>
+    <div class="container my-4">
+        <h2 class="mb-4 text-primary">📊 {{ calculation.title }}</h2>
 
-    <h3>Товары в расчёте</h3>
-    <table border="1" id="calculation-table">
-        <thead>
-        <tr>
-            <th>Наименование</th>
-            <th>Цена</th>
-            <th>Количество</th>
-            <th>Итого</th>
-            <th>Действия</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for item in calculation.items.all %}
-            <tr data-item-id="{{ item.id }}">
-                <td>{{ item.item.name }}</td>
-                <td class="unit-price">{{ item.item.price }}</td>
-                <td>
-                    <input type="number" name="quantity_{{ item.id }}" value="{{ item.quantity }}" min="1" class="quantity-input">
-                </td>
-                <td class="total-price">{{ item.total_price }}</td>
-                <td>
-                    <form method="post">
-                        {% csrf_token %}
-                        <button type="submit" name="delete_item" value="{{ item.id }}">Удалить</button>
-                    </form>
-                </td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+        <div class="card p-3 bg-light border">
+            <h4>📢 Информация о расчёте</h4>
+            <p><strong>Наценка:</strong> {{ calculation.markup|floatformat:2 }}%</p>
+            <p><strong>Стоимость без наценки:</strong> <span id="total-without-markup">{{ calculation.total_price_without_markup|floatformat:2 }}</span> ₽</p>
+            <p><strong>Стоимость с наценкой:</strong> <span id="total-with-markup">{{ calculation.total_price_with_markup|floatformat:2 }}</span> ₽</p>
+        </div>
 
-    <h3>Добавить товар</h3>
-    <form method="post">
-        {% csrf_token %}
-        <select name="item_id">
-            {% for item in items %}
-                <option value="{{ item.id }}">{{ item.name }}</option>
-            {% endfor %}
-        </select>
-        <input type="number" name="quantity" value="1" min="1">
-        <button type="submit" name="add_item">Добавить</button>
-    </form>
+        <h3 class="mt-4">📦 Товары в расчёте</h3>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover" id="calculation-table">
+                <thead class="table-light">
+                <tr>
+                    <th>Наименование</th>
+                    <th>Цена</th>
+                    <th>Количество</th>
+                    <th>Итого</th>
+                    <th>Действия</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for item in calculation.items.all %}
+                    <tr data-item-id="{{ item.id }}">
+                        <td>{{ item.item.name }}</td>
+                        <td class="unit-price">{{ item.item.price|floatformat:2 }}</td>
+                        <td>
+                            <input type="number" name="quantity_{{ item.id }}" value="{{ item.quantity }}" min="1"
+                                   class="form-control quantity-input">
+                        </td>
+                        <td class="total-price fw-bold">{{ item.total_price|floatformat:2 }}</td>
+                        <td>
+                            <form method="post">
+                                {% csrf_token %}
+                                <button type="submit" name="delete_item" value="{{ item.id }}" class="btn btn-danger btn-sm">
+                                    🗑 Удалить
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
-    <h3>Изменить наценку</h3>
-    <form method="post">
-        {% csrf_token %}
-        <input type="number" name="markup" value="{{ calculation.markup }}" step="0.01">
-        <button type="submit" name="update_markup">Обновить наценку</button>
-    </form>
+        <!-- Добавить товар -->
+        <h3 class="mt-4">➕ Добавить товар</h3>
+        <form method="post" class="row g-3">
+            {% csrf_token %}
+            <div class="col-md-6">
+                <select name="item_id" class="form-control">
+                    {% for item in items %}
+                        <option value="{{ item.id }}">{{ item.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <input type="number" name="quantity" value="1" min="1" class="form-control">
+            </div>
+            <div class="col-md-3">
+                <button type="submit" name="add_item" class="btn btn-success">Добавить</button>
+            </div>
+        </form>
+
+        <!-- Изменить наценку -->
+        <h3 class="mt-4">✏ Изменить наценку</h3>
+        <form method="post" class="row g-3">
+            {% csrf_token %}
+            <div class="col-md-4">
+                <input type="number" name="markup" value="{{ calculation.markup }}" step="0.01" class="form-control">
+            </div>
+            <div class="col-md-4">
+                <button type="submit" name="update_markup" class="btn btn-warning">Обновить</button>
+            </div>
+        </form>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {

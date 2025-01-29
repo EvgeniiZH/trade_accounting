@@ -3,32 +3,45 @@
 {% block title %}Список расчётов{% endblock %}
 
 {% block content %}
-<h2>Список расчётов</h2>
-<table>
-    <thead>
-        <tr>
-            <th>Название</th>
-            <th>Наценка (%)</th>
-            <th>Без наценки</th>
-            <th>С наценкой</th>
-            <th>Действия</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for calc in calculations %}
-        <tr>
-            <td><a href="{% url 'calculation_detail' calc.id %}">{{ calc.title }}</a></td>
-            <td>{{ calc.markup }}</td>
-            <td>{{ calc.total_price_without_markup }}</td>
-            <td>{{ calc.total_price_with_markup }}</td>
-            <td>
-                <form method="post">
-                    {% csrf_token %}
-                    <button type="submit" name="delete_calc" value="{{ calc.id }}">Удалить</button>
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+    <div class="container my-4">
+        <h2 class="mb-4 text-primary">📊 Список расчётов</h2>
+
+        <!-- Таблица расчетов -->
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead class="table-light">
+                <tr>
+                    <th>Название</th>
+                    <th>Наценка (%)</th>
+                    <th>Без наценки</th>
+                    <th>С наценкой</th>
+                    <th>Действия</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for calc in calculations %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'calculation_detail' calc.id %}" class="text-decoration-none">
+                                {{ calc.title }}
+                            </a>
+                        </td>
+                        <td>{{ calc.markup|floatformat:2 }}%</td>
+                        <td class="text-end">{{ calc.total_price_without_markup|floatformat:2 }} ₽</td>
+                        <td class="text-end fw-bold text-success">{{ calc.total_price_with_markup|floatformat:2 }} ₽</td>
+                        <td class="text-center">
+                            <form method="post" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" name="delete_calc" value="{{ calc.id }}"
+                                        class="btn btn-danger btn-sm">
+                                    🗑 Удалить
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 {% endblock %}

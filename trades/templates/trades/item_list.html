@@ -12,86 +12,90 @@
             <div class="row g-3 align-items-center">
                 <div class="col-md-6">
                     <input type="text" id="search-input" class="form-control"
-                           placeholder="Введите название для поиска...">
+                           placeholder="🔍 Введите название товара...">
                 </div>
             </div>
         </form>
 
         <!-- Таблица товаров -->
-        <form method="post">
-            {% csrf_token %}
-            <table class="table table-bordered table-hover" id="item-table">
-                <thead class="table-light">
-                <tr>
-                    <th>#</th>
-                    <th>Наименование</th>
-                    <th>Цена</th>
-                    <th>Действия</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for item in items %}
-                    <tr id="item-{{ item.id }}">
-                        <td>{{ forloop.counter }}</td>
-                        <td class="table-name-cell">
-                            <textarea class="form-control auto-expand"
-                            name="name_{{ item.id }}">{{ item.name }}</textarea>
-                        </td>
-
-
-                        <td>
-                            <input type="number" class="form-control" name="price_{{ item.id }}"
-                                   value="{{ item.price|floatformat:user_settings.decimal_places_price }}"
-                                   step="{{ user_settings.price_step|default:0.01 }}" min="0">
-                        </td>
-                        <td>
-                            <button type="submit" name="edit_item" value="{{ item.id }}" class="btn btn-warning btn-sm">
-                                Сохранить
-                            </button>
-                            <button type="submit" name="delete_item" value="{{ item.id }}"
-                                    class="btn btn-danger btn-sm">
-                                Удалить
-                            </button>
-                        </td>
+        <div class="table-responsive">
+            <form method="post">
+                {% csrf_token %}
+                <table class="table table-bordered table-hover" id="item-table">
+                    <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Наименование</th>
+                        <th>Цена</th>
+                        <th>Действия</th>
                     </tr>
-                {% endfor %}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                    {% for item in items %}
+                        <tr id="item-{{ item.id }}">
+                            <td>{{ forloop.counter }}</td>
+                            <td class="table-name-cell">
+                        <textarea class="form-control auto-expand"
+                                  name="name_{{ item.id }}">{{ item.name }}</textarea>
+                            </td>
+                            <td>
+                                <input type="number" class="form-control" name="price_{{ item.id }}"
+                                       value="{{ item.price|floatformat:user_settings.decimal_places_price }}"
+                                       step="{{ user_settings.price_step|default:0.01 }}" min="0">
+                            </td>
+                            <td>
+                                <button type="submit" name="edit_item" value="{{ item.id }}"
+                                        class="btn btn-warning btn-sm">
+                                    Сохранить
+                                </button>
+                                <button type="submit" name="delete_item" value="{{ item.id }}"
+                                        class="btn btn-danger btn-sm">
+                                    Удалить
+                                </button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </form>
+        </div>
+
+
+        <!-- Добавление нового товара -->
+        <h3 class="mb-3">Добавить новый товар</h3>
+        <form method="post" class="mb-4">
+            {% csrf_token %}
+            <div class="row g-3 align-items-center">
+                <div class="col-md-5">
+                    <input type="text" name="name" class="form-control" placeholder="Название" required>
+                </div>
+                <div class="col-md-3">
+                    <input type="number" name="price" class="form-control" placeholder="Цена"
+                           step="{{ user_settings.price_step|default:0.01 }}" required>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" name="add_item" class="btn btn-success">Добавить</button>
+                </div>
+            </div>
         </form>
+
+        <!-- Загрузка товаров из файла -->
+        <h3 class="mb-3">Загрузить товары из файла</h3>
+        <form method="post" enctype="multipart/form-data" class="mb-4">
+            {% csrf_token %}
+            <div class="row g-3 align-items-center">
+                <div class="col-md-6">
+                    <input type="file" name="file" accept=".xlsx, .xls" class="form-control">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" name="upload_file" class="btn btn-info text-white">Загрузить</button>
+                </div>
+            </div>
+        </form>
+
     </div>
 
-    <!-- Добавление нового товара -->
-    <h3 class="mb-3">Добавить новый товар</h3>
-    <form method="post" class="mb-4">
-        {% csrf_token %}
-        <div class="row g-3 align-items-center">
-            <div class="col-md-5">
-                <input type="text" name="name" class="form-control" placeholder="Название" required>
-            </div>
-            <div class="col-md-3">
-                <input type="number" name="price" class="form-control" placeholder="Цена"
-                       step="{{ user_settings.price_step|default:0.01 }}" required>
-            </div>
-            <div class="col-md-2">
-                <button type="submit" name="add_item" class="btn btn-success">Добавить</button>
-            </div>
-        </div>
-    </form>
-
-    <!-- Загрузка товаров из файла -->
-    <h3 class="mb-3">Загрузить товары из файла</h3>
-    <form method="post" enctype="multipart/form-data" class="mb-4">
-        {% csrf_token %}
-        <div class="row g-3 align-items-center">
-            <div class="col-md-6">
-                <input type="file" name="file" accept=".xlsx, .xls" class="form-control">
-            </div>
-            <div class="col-md-2">
-                <button type="submit" name="upload_file" class="btn btn-info text-white">Загрузить</button>
-            </div>
-        </div>
-    </form>
-
+    <!-- Поиск с прокруткой и подсветкой -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const searchInput = document.querySelector('#search-input');
@@ -103,24 +107,30 @@
                 let found = false;
 
                 rows.forEach(row => {
-                    const nameInput = row.querySelector("textarea[name^='name']"); // Используем textarea
+                    const nameInput = row.querySelector("textarea[name^='name']");
                     const itemName = nameInput ? nameInput.value.trim().toLowerCase() : "";
 
-                    if (!found && itemName.startsWith(searchTerm)) {
-                        row.scrollIntoView({behavior: 'smooth', block: 'center'});
-                        row.style.backgroundColor = '#d4edda'; // Подсветка найденного элемента
-                        setTimeout(() => row.style.backgroundColor = '', 2000); // Убираем подсветку через 2 секунды
-                        found = true;
+                    if (itemName.includes(searchTerm)) {
+                        row.style.display = "";
+                        if (!found) {
+                            row.scrollIntoView({behavior: 'smooth', block: 'center'});
+                            row.style.backgroundColor = '#d4edda'; // Подсветка
+                            setTimeout(() => row.style.backgroundColor = '', 2000);
+                            found = true;
+                        }
+                    } else {
+                        row.style.display = "none";
                     }
                 });
 
-                if (!found) {
-                    console.log('Товаров не найдено для:', searchTerm);
+                if (!found && searchTerm !== "") {
+                    console.log('Товар не найден:', searchTerm);
                 }
             });
         });
-
     </script>
+
+    <!-- Автоматическая настройка высоты textarea -->
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             document.querySelectorAll(".auto-expand").forEach((textarea) => {
@@ -135,7 +145,5 @@
                 textarea.addEventListener("input", adjustHeight);
             });
         });
-
-
     </script>
 {% endblock %}

@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from .views import price_history_view
 
 urlpatterns = [
     path('', views.item_list, name='item_list'),
@@ -7,4 +8,5 @@ urlpatterns = [
     path('calculations/create/', views.create_calculation, name='create_calculation'),
     path('calculations/<int:pk>/', views.calculation_detail, name='calculation_detail'),
     path('settings/', views.update_settings, name='update_settings'),
+    path('price-history/', price_history_view, name='price_history'),
 ]

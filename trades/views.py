@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from .forms import UserSettingsForm
-from .models import Item, Calculation, CalculationItem, UserSettings
+from .models import Item, Calculation, CalculationItem, UserSettings, PriceHistory
 import pandas as pd
 import decimal
 
@@ -223,4 +223,28 @@ def update_settings(request):
     })
 
 
+def handle_edit_item(request):
+    item_id = request.POST.get("edit_item")
+    name = request.POST.get(f"name_{item_id}")
+    new_price = request.POST.get(f"price_{item_id}")
 
+    try:
+        item = Item.objects.get(id=item_id)
+        old_price = item.price  # Сохраняем старую цену
+
+        if old_price != new_price:
+            # Создаём запись в истории цен
+            PriceHistory.objects.create(item=item, old_price=old_price, new_price=new_price)
+
+        item.name = name
+        item.price = new_price
+        item.save()
+        messages.success(request, "Товар успешно обновлён!")
+
+    except Item.DoesNotExist:
+        messages.error(request, "Товар не найден!")
+
+
+def price_history_view(request):
+    price_history = PriceHistory.objects.all().order_by('-changed_at')  # Сортируем по дате (новые сверху)
+    return render(request, "trades/price_history.html", {"price_history": price_history})

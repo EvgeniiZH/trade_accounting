@@ -1,13 +1,18 @@
+from django.contrib.auth.decorators import login_required
+from django.db import IntegrityError
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from .forms import UserSettingsForm
-from .models import Item, Calculation, CalculationItem, UserSettings, PriceHistory
+from .forms import UserCreateForm, UserEditForm
+from .models import Item, Calculation, CalculationItem, PriceHistory, CustomUser
 import pandas as pd
 import decimal
 
+# Фиксированные настройки (шаг цены и наценки)
+PRICE_STEP = 1
+MARKUP_STEP = 1
+DECIMAL_PLACES = 1
 
-# Главная страница: список товаров, редактирование, удаление и загрузка
-# Вспомогательные функции
+
 def handle_add_item(request):
     """Обработка добавления товара."""
     name = request.POST.get("name")
@@ -33,12 +38,20 @@ def handle_edit_item(request):
     item_id = request.POST.get("edit_item")
     name = request.POST.get(f"name_{item_id}")
     price = request.POST.get(f"price_{item_id}")
+
     try:
         item = Item.objects.get(id=item_id)
+        old_price = item.price  # Сохраняем старую цену
+
+        if old_price != price:
+            # Создаём запись в истории цен
+            PriceHistory.objects.create(item=item, old_price=old_price, new_price=price)
+
         item.name = name
         item.price = price
         item.save()
         messages.success(request, "Товар успешно обновлён!")
+
     except Item.DoesNotExist:
         messages.error(request, "Товар не найден!")
 
@@ -74,6 +87,7 @@ def handle_upload_file(request):
 
 # Главная страница: список товаров, редактирование, удаление и загрузка
 def item_list(request):
+    """Главная страница: список товаров, редактирование, удаление и загрузка"""
     if request.method == "POST":
         if "add_item" in request.POST:
             handle_add_item(request)
@@ -84,19 +98,17 @@ def item_list(request):
         elif "upload_file" in request.POST:
             handle_upload_file(request)
 
-    # Получение всех товаров
     items = Item.objects.all()
-    settings, _ = UserSettings.objects.get_or_create(id=1)
 
     return render(request, "trades/item_list.html", {
         "items": items,
-        "user_settings": settings,
+        "price_step": PRICE_STEP
     })
 
 
 def calculations_list(request):
+    """Страница списка расчётов"""
     if request.method == "POST":
-        # Обработка удаления расчёта
         if "delete_calc" in request.POST:
             calc_id = request.POST.get("delete_calc")
             try:
@@ -111,31 +123,58 @@ def calculations_list(request):
 
 
 def create_calculation(request):
+    """Создание нового расчёта"""
     if request.method == "POST":
         title = request.POST.get("title")
-        markup = request.POST.get("markup", 0)
+        markup = request.POST.get("markup", 0)  # Получаем наценку, по умолчанию 0
         item_ids = request.POST.getlist("items")
+
         if not item_ids:
             messages.error(request, "Выберите хотя бы один товар для расчёта!")
             return redirect('create_calculation')
 
-        calculation = Calculation.objects.create(title=title, markup=markup)
+        try:
+            # Преобразуем наценку в Decimal
+            markup = decimal.Decimal(markup)
+        except decimal.InvalidOperation:
+            messages.error(request, "Наценка должна быть числовым значением!")
+            return redirect('create_calculation')
+
+        # Создание объекта расчета
+        try:
+            calculation = Calculation.objects.create(title=title, markup=markup)
+        except IntegrityError:
+            messages.error(request, "Ошибка при создании расчета!")
+            return redirect('create_calculation')
+
+        # Добавляем товары в расчет
         for item_id in item_ids:
-            quantity = int(request.POST.get(f"quantity_{item_id}", 1))
-            item = Item.objects.get(id=item_id)
-            CalculationItem.objects.create(calculation=calculation, item=item, quantity=quantity)
+            quantity = int(request.POST.get(f"quantity_{item_id}", 1))  # Устанавливаем количество товара
+            try:
+                item = Item.objects.get(id=item_id)
+                CalculationItem.objects.create(calculation=calculation, item=item, quantity=quantity)
+            except Item.DoesNotExist:
+                messages.error(request, f"Товар с id {item_id} не найден!")
+                continue
+
+        messages.success(request, "Расчёт успешно создан!")
         return redirect('calculation_detail', pk=calculation.pk)
 
+    # Поиск по товарам
     search_query = request.GET.get('search', '')
-    if search_query:
-        items = Item.objects.filter(name__icontains=search_query)
-    else:
-        items = Item.objects.all()
+    items = Item.objects.filter(name__icontains=search_query) if search_query else Item.objects.all()
 
     return render(request, "trades/create_calculation.html", {"items": items, "search_query": search_query})
 
 
+def calculate_total_price(calculation):
+    """Функция для вычисления общей стоимости расчёта с учётом наценки."""
+    total = sum(item.quantity * item.item.price for item in calculation.items.all())  # Суммируем цену всех товаров с их количеством
+    total_with_markup = total + (total * calculation.markup / 100)  # Применяем наценку
+    return total, total_with_markup
+
 def calculation_detail(request, pk):
+    """Просмотр и редактирование сохранённого расчёта"""
     calculation = get_object_or_404(Calculation, pk=pk)
 
     if request.method == "POST":
@@ -145,82 +184,60 @@ def calculation_detail(request, pk):
             try:
                 calculation_item = calculation.items.get(id=item_id)
                 calculation_item.delete()
-                messages.success(request, "Товар успешно удалён из расчёта!")
+                messages.success(request, "Товар удалён из расчёта!")
             except CalculationItem.DoesNotExist:
                 messages.error(request, "Товар не найден в расчёте!")
-                # Изменение количества товара
-                if "update_quantity" in request.POST:
-                    item_id = request.POST.get("update_quantity")
-                    quantity = request.POST.get(f"quantity_{item_id}")
-                    try:
-                        calculation_item = calculation.items.get(id=item_id)
-                        calculation_item.quantity = int(quantity)
-                        calculation_item.save()
-                        messages.success(request, "Количество успешно обновлено!")
-                    except CalculationItem.DoesNotExist:
-                        messages.error(request, "Товар не найден в расчёте!")
-                    except ValueError:
-                        messages.error(request, "Введите корректное количество!")
 
-        # Изменение количества товара
-        if "update_quantity" in request.POST:
+        # Обновление количества товара
+        elif "update_quantity" in request.POST:
             item_id = request.POST.get("update_quantity")
             quantity = request.POST.get(f"quantity_{item_id}")
             try:
                 calculation_item = calculation.items.get(id=item_id)
                 calculation_item.quantity = int(quantity)
                 calculation_item.save()
-                messages.success(request, "Количество успешно обновлено!")
-            except CalculationItem.DoesNotExist:
-                messages.error(request, "Товар не найден в расчёте!")
-            except ValueError:
-                messages.error(request, "Введите корректное количество!")
+                messages.success(request, "Количество обновлено!")
+            except (CalculationItem.DoesNotExist, ValueError):
+                messages.error(request, "Ошибка обновления количества!")
+
         # Добавление товара в расчёт
         elif "add_item" in request.POST:
             item_id = request.POST.get("item_id")
             quantity = int(request.POST.get("quantity", 1))
             item = Item.objects.get(id=item_id)
             CalculationItem.objects.create(calculation=calculation, item=item, quantity=quantity)
-            messages.success(request, "Товар успешно добавлен в расчёт!")
+            messages.success(request, "Товар добавлен в расчёт!")
 
-        # Изменение наценки
+        # Обновление наценки
         elif "update_markup" in request.POST:
             markup = request.POST.get("markup", 0)
             try:
-                # Преобразование в Decimal
                 calculation.markup = decimal.Decimal(markup)
                 calculation.save()
-                messages.success(request, "Наценка успешно обновлена!")
+                messages.success(request, "Наценка обновлена!")
             except (ValueError, decimal.InvalidOperation):
                 messages.error(request, "Введите корректное значение наценки!")
 
+        # Сохранение расчёта
+        elif "save_calculation" in request.POST:
+            calculation.save()  # Сохраняем изменения
+            messages.success(request, "Расчёт успешно сохранён!")  # Сообщение об успешном сохранении
+
+        # Пересчитываем общую стоимость с учётом наценки
+        total, total_with_markup = calculate_total_price(calculation)
+        calculation.total_price = total
+        calculation.total_price_with_markup = total_with_markup
+        calculation.save()
+
+    # Получение товаров, которые еще не добавлены в расчёт
     items = Item.objects.exclude(id__in=calculation.items.values_list('item_id', flat=True))
+
     return render(request, "trades/calculation_detail.html", {
         "calculation": calculation,
         "items": items,
+        "markup_step": MARKUP_STEP
     })
 
-
-def update_settings(request):
-    settings, created = UserSettings.objects.get_or_create(id=1)
-
-    if request.method == "POST":
-        form = UserSettingsForm(request.POST, instance=settings)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Настройки успешно сохранены!")
-            return redirect('update_settings')
-        else:
-            # Лог отладки: выводим ошибки формы
-            print("Ошибки формы:", form.errors)
-            messages.error(request, "Пожалуйста, исправьте ошибки в форме.")
-    else:
-        form = UserSettingsForm(instance=settings)
-
-    return render(request, 'trades/settings.html', {
-        'form': form,
-        'user_settings': settings,
-    })
 
 
 def handle_edit_item(request):
@@ -248,3 +265,50 @@ def handle_edit_item(request):
 def price_history_view(request):
     price_history = PriceHistory.objects.all().order_by('-changed_at')  # Сортируем по дате (новые сверху)
     return render(request, "trades/price_history.html", {"price_history": price_history})
+
+
+@login_required
+def manage_users(request):
+    """Страница управления пользователями"""
+    users = CustomUser.objects.all()
+    return render(request, 'trades/manage_users.html', {'users': users})
+
+
+@login_required
+def create_user(request):
+    """Создание нового пользователя"""
+    if request.method == "POST":
+        form = UserCreateForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Пользователь успешно создан!")
+            return redirect('manage_users')
+    else:
+        form = UserCreateForm()
+    return render(request, 'trades/create_user.html', {'form': form})
+
+
+@login_required
+def edit_user(request, user_id):
+    """Редактирование пользователя"""
+    user = get_object_or_404(CustomUser, id=user_id)
+    if request.method == "POST":
+        form = UserEditForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Пользователь успешно обновлён!")
+            return redirect('manage_users')
+    else:
+        form = UserEditForm(instance=user)
+    return render(request, 'trades/edit_user.html', {'form': form, 'user': user})
+
+
+@login_required
+def delete_user(request, user_id):
+    """Удаление пользователя"""
+    user = get_object_or_404(CustomUser, id=user_id)
+    if request.method == "POST":
+        user.delete()
+        messages.success(request, "Пользователь успешно удалён!")
+        return redirect('manage_users')
+    return render(request, 'trades/delete_user.html', {'user': user})

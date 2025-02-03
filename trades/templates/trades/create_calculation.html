@@ -20,7 +20,6 @@
                        value="{{ user_settings.markup_step }}" required>
             </div>
 
-
             <!-- Поле поиска -->
             <div class="col-12 mt-3">
                 <input type="text" id="search-input" class="form-control" placeholder="🔍 Поиск товаров...">
@@ -95,7 +94,7 @@
                         row.style.display = "";
                         if (!found) {
                             row.scrollIntoView({behavior: 'smooth', block: 'center'});
-                            row.style.backgroundColor = '#d4edda'; // Подсветка найденного товара
+                            row.style.backgroundColor = '#d4edda';
                             setTimeout(() => row.style.backgroundColor = '', 2000);
                             found = true;
                         }

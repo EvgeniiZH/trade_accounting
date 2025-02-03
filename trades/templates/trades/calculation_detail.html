@@ -9,8 +9,10 @@
         <div class="card p-3 bg-light border">
             <h4>📢 Информация о расчёте</h4>
             <p><strong>Наценка:</strong> {{ calculation.markup|floatformat:2 }}%</p>
-            <p><strong>Стоимость без наценки:</strong> <span id="total-without-markup">{{ calculation.total_price_without_markup|floatformat:2 }}</span> ₽</p>
-            <p><strong>Стоимость с наценкой:</strong> <span id="total-with-markup">{{ calculation.total_price_with_markup|floatformat:2 }}</span> ₽</p>
+            <p><strong>Стоимость без наценки:</strong> <span
+                    id="total-without-markup">{{ calculation.total_price_without_markup|floatformat:2 }}</span> ₽</p>
+            <p><strong>Стоимость с наценкой:</strong> <span
+                    id="total-with-markup">{{ calculation.total_price_with_markup|floatformat:2 }}</span> ₽</p>
         </div>
 
         <h3 class="mt-4">📦 Товары в расчёте</h3>
@@ -38,7 +40,8 @@
                         <td>
                             <form method="post">
                                 {% csrf_token %}
-                                <button type="submit" name="delete_item" value="{{ item.id }}" class="btn btn-danger btn-sm">
+                                <button type="submit" name="delete_item" value="{{ item.id }}"
+                                        class="btn btn-danger btn-sm">
                                     🗑 Удалить
                                 </button>
                             </form>
@@ -61,7 +64,9 @@
                 </select>
             </div>
             <div class="col-md-3">
-                <input type="number" name="quantity" value="1" min="1" class="form-control">
+                <input type="number" name="markup" value="{{ calculation.markup|floatformat:1 }}" class="form-control"
+                       step="1">
+
             </div>
             <div class="col-md-3">
                 <button type="submit" name="add_item" class="btn btn-success">Добавить</button>
@@ -73,12 +78,19 @@
         <form method="post" class="row g-3">
             {% csrf_token %}
             <div class="col-md-4">
-                <input type="number" name="markup" value="{{ calculation.markup }}" step="0.01" class="form-control">
+                <input type="number" name="markup" value="{{ calculation.markup|floatformat:1 }}" class="form-control">
             </div>
             <div class="col-md-4">
                 <button type="submit" name="update_markup" class="btn btn-warning">Обновить</button>
             </div>
         </form>
+        <div class="mt-4">
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" name="save_calculation" class="btn btn-primary">Сохранить расчет</button>
+            </form>
+        </div>
+
     </div>
 
     <script>

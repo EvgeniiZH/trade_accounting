@@ -26,9 +26,11 @@
                                 {{ calc.title }}
                             </a>
                         </td>
-                        <td>{{ calc.markup|floatformat:2 }}%</td>
-                        <td class="text-end">{{ calc.total_price_without_markup|floatformat:2 }} ₽</td>
-                        <td class="text-end fw-bold text-success">{{ calc.total_price_with_markup|floatformat:2 }} ₽</td>
+                        <td>{{ calc.markup|floatformat:1 }}%</td>
+                        <td class="text-end">{{ calc.total_price_without_markup|floatformat:1 }} ₽</td>
+                        <td class="text-end fw-bold text-success">{{ calc.total_price_with_markup|floatformat:1 }} ₽
+                        </td>
+
                         <td class="text-center">
                             <form method="post" class="d-inline">
                                 {% csrf_token %}

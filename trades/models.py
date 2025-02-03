@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, AbstractUser, Permission, Group
 
 
 class Item(models.Model):
@@ -38,16 +38,7 @@ class CalculationItem(models.Model):
         return f"{self.item.name} x {self.quantity}"
 
 
-class UserSettings(models.Model):
-    decimal_places_price = models.PositiveIntegerField(default=2, verbose_name="Знаков после запятой для цены")
-    decimal_places_percentage = models.PositiveIntegerField(default=2, verbose_name="Знаков после запятой для наценки")
-    price_step = models.DecimalField(max_digits=5, decimal_places=2, default=0.01, verbose_name="Шаг изменения цены")
-    markup_step = models.PositiveIntegerField(default=2, verbose_name="Знаков после запятой для наценки")
 
-    def __str__(self):
-        return "Глобальные настройки"
-
-from django.db import models
 
 class PriceHistory(models.Model):
     item = models.ForeignKey('Item', on_delete=models.CASCADE, related_name="price_history")
@@ -57,3 +48,14 @@ class PriceHistory(models.Model):
 
     def __str__(self):
         return f"{self.item.name} | {self.old_price} → {self.new_price} ({self.changed_at})"
+
+
+class CustomUser(AbstractUser):
+    """Кастомная модель пользователя с исправленными связями"""
+    is_admin = models.BooleanField(default=False, verbose_name="Администратор")
+
+    groups = models.ManyToManyField(Group, related_name="customuser_set", blank=True)
+    user_permissions = models.ManyToManyField(Permission, related_name="customuser_permissions_set", blank=True)
+
+    def __str__(self):
+        return self.username

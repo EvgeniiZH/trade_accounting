@@ -40,8 +40,7 @@
                             </td>
                             <td>
                                 <input type="number" class="form-control" name="price_{{ item.id }}"
-                                       value="{{ item.price|floatformat:user_settings.decimal_places_price }}"
-                                       step="{{ user_settings.price_step|default:0.01 }}" min="0">
+                                       value="{{ item.price|floatformat:1 }}" step="1" min="0">
                             </td>
                             <td>
                                 <button type="submit" name="edit_item" value="{{ item.id }}"
@@ -70,8 +69,7 @@
                     <input type="text" name="name" class="form-control" placeholder="Название" required>
                 </div>
                 <div class="col-md-3">
-                    <input type="number" name="price" class="form-control" placeholder="Цена"
-                           step="{{ user_settings.price_step|default:0.01 }}" required>
+                    <input type="number" name="price" class="form-control" placeholder="Цена" step="1" required>
                 </div>
                 <div class="col-md-2">
                     <button type="submit" name="add_item" class="btn btn-success">Добавить</button>

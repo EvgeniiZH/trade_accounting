@@ -1,25 +1,30 @@
 from django import template
 from decimal import Decimal, ROUND_HALF_UP
-from trades.models import UserSettings
 
 register = template.Library()
 
 @register.filter
 def format_price(value):
     try:
-        settings = UserSettings.objects.first()
-        decimal_places = settings.decimal_places_price if settings else 2
+        # Убедимся, что значение не пустое и является числом
+        if value is None or value == '':
+            return value
+        # Устанавливаем фиксированное количество знаков после запятой
+        decimal_places = 1  # 1 знак после запятой
         formatted_value = Decimal(value).quantize(Decimal(f'1.{"0" * decimal_places}'), rounding=ROUND_HALF_UP)
         return f"{formatted_value}"
-    except Exception:
+    except (ValueError, TypeError):
+        # Если значение некорректное, возвращаем исходное
         return value
 
 @register.filter
 def format_percentage(value):
     try:
-        settings = UserSettings.objects.first()
-        decimal_places = settings.decimal_places_percentage if settings else 2
+        if value is None or value == '':
+            return value
+        # Устанавливаем фиксированное количество знаков после запятой для наценки
+        decimal_places = 1  # 1 знак после запятой
         formatted_value = Decimal(value).quantize(Decimal(f'1.{"0" * decimal_places}'), rounding=ROUND_HALF_UP)
         return f"{formatted_value}%"
-    except Exception:
+    except (ValueError, TypeError):
         return value

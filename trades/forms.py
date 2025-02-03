@@ -1,5 +1,6 @@
 from django import forms
-from .models import Item, Calculation, CalculationItem, UserSettings
+from django.contrib.auth.forms import UserCreationForm, UserChangeForm
+from .models import Item, Calculation, CalculationItem, CustomUser
 
 
 class ItemForm(forms.ModelForm):
@@ -40,19 +41,17 @@ class UploadPricesForm(forms.Form):
     )
 
 
-class UserSettingsForm(forms.ModelForm):
+
+class UserCreateForm(UserCreationForm):
+    """Форма для создания нового пользователя."""
     class Meta:
-        model = UserSettings
-        fields = ['decimal_places_price', 'decimal_places_percentage', 'price_step', 'markup_step']
-        labels = {
-            'decimal_places_price': 'Знаков после запятой для цены',
-            'decimal_places_percentage': 'Знаков после запятой для наценки',
-            'price_step': 'Шаг изменения цены',
-            'markup_step': 'Шаг изменения наценки',
-        }
-        widgets = {
-            'decimal_places_price': forms.NumberInput(attrs={'class': 'form-control'}),
-            'decimal_places_percentage': forms.NumberInput(attrs={'class': 'form-control'}),
-            'price_step': forms.NumberInput(attrs={'class': 'form-control', 'step': 0.01}),
-            'markup_step': forms.NumberInput(attrs={'class': 'form-control'}),
-        }
+        model = CustomUser
+        fields = ['username', 'email', 'password1', 'password2', 'is_admin']
+
+class UserEditForm(UserChangeForm):
+    """Форма для редактирования существующего пользователя."""
+    password = None  # Отключаем отображение пароля в форме редактирования
+
+    class Meta:
+        model = CustomUser
+        fields = ['username', 'email', 'is_active', 'is_admin']

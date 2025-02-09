@@ -16,4 +16,5 @@ urlpatterns = [
     path('login/', auth_views.LoginView.as_view(template_name='trades/login.html'), name='login'),
     # Например, можно добавить logout
     path('logout/', auth_views.LogoutView.as_view(template_name='trades/logout.html'), name='logout'),
+    path('download-template/', views.download_import_template, name='download_import_template'),
 ]

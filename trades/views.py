@@ -1,11 +1,14 @@
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
+from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from .forms import UserCreateForm, UserEditForm
 from .models import Item, Calculation, CalculationItem, PriceHistory, CustomUser
 import pandas as pd
 import decimal
+import io
+import zipfile
 
 # Фиксированные настройки (шаг цены и наценки)
 PRICE_STEP = 0.01
@@ -19,6 +22,13 @@ def handle_add_item(request):
     price = request.POST.get("price")
     if name and price:
         try:
+            # Приводим цену к Decimal
+            price = decimal.Decimal(price)
+        except (decimal.InvalidOperation, TypeError):
+            messages.error(request, "Введите корректное значение цены!")
+            return
+
+        try:
             item, created = Item.objects.update_or_create(
                 name=name.strip(),
                 defaults={'price': price}
@@ -27,33 +37,10 @@ def handle_add_item(request):
                 messages.success(request, "Товар успешно добавлен!")
             else:
                 messages.success(request, "Товар уже существовал, цена обновлена!")
-        except Exception as e:
+        except IntegrityError as e:
             messages.error(request, f"Ошибка добавления товара: {e}")
     else:
         messages.error(request, "Введите название и цену!")
-
-
-def handle_edit_item(request):
-    """Обработка редактирования товара."""
-    item_id = request.POST.get("edit_item")
-    name = request.POST.get(f"name_{item_id}")
-    price = request.POST.get(f"price_{item_id}")
-
-    try:
-        item = Item.objects.get(id=item_id)
-        old_price = item.price  # Сохраняем старую цену
-
-        if old_price != price:
-            # Создаём запись в истории цен
-            PriceHistory.objects.create(item=item, old_price=old_price, new_price=price)
-
-        item.name = name
-        item.price = price
-        item.save()
-        messages.success(request, "Товар успешно обновлён!")
-
-    except Item.DoesNotExist:
-        messages.error(request, "Товар не найден!")
 
 
 def handle_delete_item(request):
@@ -107,7 +94,7 @@ def item_list(request):
 
 
 def calculations_list(request):
-    """Страница списка расчётов"""
+    """Страница списка расчётов с возможностью экспорта в Excel (каждый расчёт – отдельный файл в ZIP‑архиве)"""
     if request.method == "POST":
         if "delete_calc" in request.POST:
             calc_id = request.POST.get("delete_calc")
@@ -117,6 +104,61 @@ def calculations_list(request):
                 messages.success(request, "Расчёт успешно удалён!")
             except Exception as e:
                 messages.error(request, f"Ошибка при удалении расчёта: {e}")
+        elif "export_excel" in request.POST:
+            # Получаем список выбранных расчётов
+            calc_ids = request.POST.getlist("calc_ids")
+            if calc_ids:
+                calculations = Calculation.objects.filter(id__in=calc_ids)
+                # Создаем буфер для ZIP‑архива
+                zip_buffer = io.BytesIO()
+                with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+                    for calc in calculations:
+                        # Вычисляем итоговые суммы для расчёта
+                        total, total_with_markup = calculate_total_price(calc)
+
+                        # Формируем данные для DataFrame
+                        calc_data = {
+                            "ID": [calc.id],
+                            "Название": [calc.title],
+                            "Наценка (%)": [calc.markup],
+                            "Стоимость": [total],
+                            "Стоимость с наценкой": [total_with_markup]
+                        }
+                        df_calc = pd.DataFrame(calc_data)
+
+                        # Создаем Excel‑файл для этого расчёта
+                        excel_buffer = io.BytesIO()
+                        with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
+                            df_calc.to_excel(writer, index=False, sheet_name="Информация о расчёте")
+
+                            # Если расчет содержит товары, добавляем дополнительный лист
+                            calc_items = calc.items.all().select_related("item")
+                            if calc_items.exists():
+                                items_data = []
+                                for ci in calc_items:
+                                    items_data.append({
+                                        "ID товара": ci.item.id,
+                                        "Наименование товара": ci.item.name,
+                                        "Цена": ci.item.price,
+                                        "Количество": ci.quantity,
+                                        "Итого": ci.quantity * ci.item.price
+                                    })
+                                df_items = pd.DataFrame(items_data)
+                                df_items.to_excel(writer, index=False, sheet_name="Товары")
+                        # Задаем имя файла для каждого расчёта
+                        excel_filename = f"calculation_{calc.id}.xlsx"
+                        # Добавляем Excel‑файл в ZIP‑архив
+                        zip_file.writestr(excel_filename, excel_buffer.getvalue())
+                # Возвращаем ZIP‑архив как ответ
+                zip_buffer.seek(0)
+                response = HttpResponse(
+                    zip_buffer.getvalue(),
+                    content_type="application/zip"
+                )
+                response["Content-Disposition"] = 'attachment; filename="calculations.zip"'
+                return response
+            else:
+                messages.error(request, "Выберите хотя бы один расчёт для экспорта!")
 
     calculations = Calculation.objects.all()
     return render(request, "trades/calculations_list.html", {"calculations": calculations})
@@ -258,23 +300,29 @@ def calculation_detail(request, pk):
 
 
 def handle_edit_item(request):
+    """Обработка редактирования товара."""
     item_id = request.POST.get("edit_item")
     name = request.POST.get(f"name_{item_id}")
-    new_price = request.POST.get(f"price_{item_id}")
+    price = request.POST.get(f"price_{item_id}")
+
+    try:
+        price = decimal.Decimal(price)
+    except (decimal.InvalidOperation, TypeError):
+        messages.error(request, "Введите корректное значение цены!")
+        return
 
     try:
         item = Item.objects.get(id=item_id)
         old_price = item.price  # Сохраняем старую цену
 
-        if old_price != new_price:
+        if old_price != price:
             # Создаём запись в истории цен
-            PriceHistory.objects.create(item=item, old_price=old_price, new_price=new_price)
+            PriceHistory.objects.create(item=item, old_price=old_price, new_price=price)
 
         item.name = name
-        item.price = new_price
+        item.price = price
         item.save()
         messages.success(request, "Товар успешно обновлён!")
-
     except Item.DoesNotExist:
         messages.error(request, "Товар не найден!")
 
@@ -329,3 +377,30 @@ def delete_user(request, user_id):
         messages.success(request, "Пользователь успешно удалён!")
         return redirect('manage_users')
     return render(request, 'trades/delete_user.html', {'user': user})
+
+
+def download_import_template(request):
+    """
+    Создает Excel-шаблон для импорта товаров и возвращает его как файл для скачивания.
+    Шаблон содержит заголовки: 'Наименование комплектующей' и 'Цена'.
+    """
+    # Формируем DataFrame с необходимыми столбцами (без строк данных)
+    data = {
+        "Наименование комплектующей": [],
+        "Цена": []
+    }
+    df = pd.DataFrame(data)
+
+    # Создаем буфер для записи Excel-файла
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+        df.to_excel(writer, index=False, sheet_name="Импорт")
+    output.seek(0)
+
+    # Формируем HTTP-ответ с нужным content-type и заголовком для скачивания
+    response = HttpResponse(
+        output.getvalue(),
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = 'attachment; filename="import_template.xlsx"'
+    return response

@@ -8,7 +8,7 @@ import pandas as pd
 import decimal
 
 # Фиксированные настройки (шаг цены и наценки)
-PRICE_STEP = 1
+PRICE_STEP = 0.01
 MARKUP_STEP = 1
 DECIMAL_PLACES = 1
 
@@ -169,9 +169,11 @@ def create_calculation(request):
 
 def calculate_total_price(calculation):
     """Функция для вычисления общей стоимости расчёта с учётом наценки."""
-    total = sum(item.quantity * item.item.price for item in calculation.items.all())  # Суммируем цену всех товаров с их количеством
+    total = sum(item.quantity * item.item.price for item in
+                calculation.items.all())  # Суммируем цену всех товаров с их количеством
     total_with_markup = total + (total * calculation.markup / 100)  # Применяем наценку
     return total, total_with_markup
+
 
 def calculation_detail(request, pk):
     """Просмотр и редактирование сохранённого расчёта"""
@@ -218,10 +220,26 @@ def calculation_detail(request, pk):
             except (ValueError, decimal.InvalidOperation):
                 messages.error(request, "Введите корректное значение наценки!")
 
-        # Сохранение расчёта
+        # Сохранение расчёта (привязано к кнопке "Сохранить расчет")
         elif "save_calculation" in request.POST:
-            calculation.save()  # Сохраняем изменения
-            messages.success(request, "Расчёт успешно сохранён!")  # Сообщение об успешном сохранении
+            # Обновляем количество для всех позиций расчёта
+            for calc_item in calculation.items.all():
+                new_quantity = request.POST.get(f"quantity_{calc_item.id}")
+                if new_quantity:
+                    try:
+                        calc_item.quantity = int(new_quantity)
+                        calc_item.save()
+                    except ValueError:
+                        messages.error(request, f"Некорректное количество для товара {calc_item.item.name}.")
+            # Обновляем наценку, если она передана в форме
+            if "markup" in request.POST:
+                markup = request.POST.get("markup")
+                try:
+                    calculation.markup = decimal.Decimal(markup)
+                except (ValueError, decimal.InvalidOperation):
+                    messages.error(request, "Введите корректное значение наценки!")
+            calculation.save()  # Сохраняем объект расчёта
+            messages.success(request, "Расчёт успешно сохранён!")
 
         # Пересчитываем общую стоимость с учётом наценки
         total, total_with_markup = calculate_total_price(calculation)
@@ -237,7 +255,6 @@ def calculation_detail(request, pk):
         "items": items,
         "markup_step": MARKUP_STEP
     })
-
 
 
 def handle_edit_item(request):

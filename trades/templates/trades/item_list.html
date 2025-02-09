@@ -4,6 +4,8 @@
 
 {% block content %}
     <div class="container my-4">
+
+
         <h2 class="mb-4">Список товаров</h2>
 
         <!-- Поиск -->
@@ -35,12 +37,12 @@
                         <tr id="item-{{ item.id }}">
                             <td>{{ forloop.counter }}</td>
                             <td class="table-name-cell">
-                        <textarea class="form-control auto-expand"
-                                  name="name_{{ item.id }}">{{ item.name }}</textarea>
+                            <textarea class="form-control auto-expand"
+                                      name="name_{{ item.id }}">{{ item.name }}</textarea>
                             </td>
                             <td>
                                 <input type="number" class="form-control" name="price_{{ item.id }}"
-                                       value="{{ item.price|floatformat:1 }}" step="1" min="0">
+                                       value="{{ item.price|floatformat:2 }}" step="0.01" min="1">
                             </td>
                             <td>
                                 <button type="submit" name="edit_item" value="{{ item.id }}"
@@ -59,7 +61,6 @@
             </form>
         </div>
 
-
         <!-- Добавление нового товара -->
         <h3 class="mb-3">Добавить новый товар</h3>
         <form method="post" class="mb-4">
@@ -69,7 +70,8 @@
                     <input type="text" name="name" class="form-control" placeholder="Название" required>
                 </div>
                 <div class="col-md-3">
-                    <input type="number" name="price" class="form-control" placeholder="Цена" step="1" required>
+                    <input type="number" name="price" class="form-control" placeholder="Цена" step="0.01" min="1"
+                           required>
                 </div>
                 <div class="col-md-2">
                     <button type="submit" name="add_item" class="btn btn-success">Добавить</button>
@@ -90,7 +92,6 @@
                 </div>
             </div>
         </form>
-
     </div>
 
     <!-- Поиск с прокруткой и подсветкой -->

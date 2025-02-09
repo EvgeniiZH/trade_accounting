@@ -1,17 +1,39 @@
-# Системные файлы
-*.DS_Store
+# Игнорируем виртуальное окружение
+venv/
+env/
 *.pyc
+*.pyo
 __pycache__/
 
-# Виртуальное окружение
+# Игнорируем файлы IDE и редакторов
 .vscode/
-.venv/
-env/
-venv/
+.idea/
+*.swp
+*.swo
+.DS_Store
 
-# Секретные данные
-*.sqlite3
+# Игнорируем файлы зависимостей (локальные настройки)
+.env
 *.env
+config/settings_local.py
 
-# Статические файлы
-/static/
+# Игнорируем базу данных SQLite (если используете)
+db.sqlite3
+db.sqlite3-journal
+
+# Игнорируем файлы миграций (необязательно, но может быть полезно)
+*/migrations/*.pyc
+*/migrations/*.py
+
+# Логи и дампы
+logs/
+*.log
+*.bak
+*.dump
+
+# Файлы кеша и временные файлы
+*.out
+*.pid
+*.sock
+tmp/
+*.~undo-tree~

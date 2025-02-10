@@ -22,6 +22,18 @@ ALLOWED_HOSTS = [
     'localhost',
 ]
 
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',  # ВАЖНО! Должно быть
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+
+    # Ваши приложения
+    'trades',  # Замените на ваше приложение
+]
+
 # Добавляем Render-окружение, если оно есть
 RENDER_EXTERNAL_HOSTNAME = os.getenv('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:

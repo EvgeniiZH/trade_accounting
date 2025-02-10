@@ -16,6 +16,18 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'замените-на-безопа�
 # ⚠️ Продакшн-режим
 DEBUG = False
 
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+
+    # Ваши приложения
+    'trades',  # Убедитесь, что ваше приложение добавлено
+]
+
 # 🏗 Настройка `ALLOWED_HOSTS`
 ALLOWED_HOSTS = [
     'trade-accounting.onrender.com',  # Домен Render

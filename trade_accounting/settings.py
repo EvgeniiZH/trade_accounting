@@ -141,3 +141,5 @@ LOGGING = {
         },
     },
 }
+
+ROOT_URLCONF = 'trade_accounting.urls'

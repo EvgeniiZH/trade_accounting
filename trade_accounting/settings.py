@@ -75,6 +75,10 @@ EMAIL_HOST_PASSWORD = os.getenv('EMAIL_PASSWORD', 'your-email-password')
 DEFAULT_FROM_EMAIL = 'your-email@example.com'
 
 # 🛠 Логирование ошибок
+# Проверяем, существует ли директория логов
+LOG_DIR = os.getenv('LOG_DIR', BASE_DIR / 'logs')
+os.makedirs(LOG_DIR, exist_ok=True)  # Создаём папку, если её нет
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -82,7 +86,7 @@ LOGGING = {
         'file': {
             'level': 'WARNING',
             'class': 'logging.FileHandler',
-            'filename': BASE_DIR / 'logs/django.log',
+            'filename': os.path.join(LOG_DIR, 'django.log'),
         },
     },
     'loggers': {

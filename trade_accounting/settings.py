@@ -13,7 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'замените-на-безопасный-ключ')
 
 # ⚠️ Продакшн-режим
-DEBUG = os.getenv('DEBUG', 'False') == 'True'
+DEBUG = True
 
 # 🏗 Настройка `ALLOWED_HOSTS`
 ALLOWED_HOSTS = [

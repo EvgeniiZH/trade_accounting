@@ -16,11 +16,12 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'замените-на-безопа�
 DEBUG = True
 
 # 🏗 Настройка `ALLOWED_HOSTS`
-ALLOWED_HOSTS = [
-    'trade-accounting.onrender.com',  # Домен Render
-    '127.0.0.1',
-    'localhost',
-]
+# ALLOWED_HOSTS = [
+#     'trade-accounting.onrender.com',  # Домен Render
+#     '127.0.0.1',
+#     'localhost',
+# ]
+ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'django.contrib.admin',

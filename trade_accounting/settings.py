@@ -4,6 +4,7 @@ from pathlib import Path
 
 # Загружаем переменные окружения
 from dotenv import load_dotenv
+
 load_dotenv()
 
 # Определяем базовую директорию проекта
@@ -97,3 +98,5 @@ LOGGING = {
         },
     },
 }
+
+ROOT_URLCONF = 'trade_accounting.urls'

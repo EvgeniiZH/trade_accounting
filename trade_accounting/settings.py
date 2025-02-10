@@ -1,10 +1,9 @@
 import os
 import dj_database_url
 from pathlib import Path
-
-# Загружаем переменные окружения
 from dotenv import load_dotenv
 
+# Загружаем переменные окружения
 load_dotenv()
 
 # Определяем базовую директорию проекта
@@ -14,19 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'замените-на-безопасный-ключ')
 
 # ⚠️ Продакшн-режим
-DEBUG = False
-
-INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-
-    # Ваши приложения
-    'trades',  # Убедитесь, что ваше приложение добавлено
-]
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 # 🏗 Настройка `ALLOWED_HOSTS`
 ALLOWED_HOSTS = [
@@ -41,12 +28,17 @@ if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 # 🎯 Подключение к базе данных PostgreSQL
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.getenv('DATABASE_URL'),
-        conn_max_age=600,  # Улучшение производительности
-    )
-}
+DATABASE_URL = os.getenv('DATABASE_URL')
+
+if DATABASE_URL:
+    DATABASES = {'default': dj_database_url.config(default=DATABASE_URL)}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # 🔐 Валидация паролей
 AUTH_PASSWORD_VALIDATORS = [
@@ -70,6 +62,34 @@ STATIC_ROOT = BASE_DIR / 'static'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# 📌 TEMPLATES (исправлено!)
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [BASE_DIR / "templates"],  # Убедитесь, что папка templates существует
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+
+# 📌 MIDDLEWARE (исправлено!)
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',  # ОБЯЗАТЕЛЬНО перед AuthenticationMiddleware
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
 # 🔒 Настройки безопасности (SSL и защита от атак)
 SECURE_SSL_REDIRECT = True  # Автоматический редирект с HTTP на HTTPS
 CSRF_COOKIE_SECURE = True  # CSRF-куки только через HTTPS
@@ -87,10 +107,9 @@ EMAIL_HOST_USER = os.getenv('EMAIL_USER', 'your-email@example.com')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_PASSWORD', 'your-email-password')
 DEFAULT_FROM_EMAIL = 'your-email@example.com'
 
-# 🛠 Логирование ошибок
-# Проверяем, существует ли директория логов
-LOG_DIR = os.getenv('LOG_DIR', BASE_DIR / 'logs')
-os.makedirs(LOG_DIR, exist_ok=True)  # Создаём папку, если её нет
+# 🛠 Логирование ошибок (исправлено!)
+LOG_DIR = BASE_DIR / 'logs'
+os.makedirs(LOG_DIR, exist_ok=True)  # Создаём папку логов, если её нет
 
 LOGGING = {
     'version': 1,
@@ -99,7 +118,7 @@ LOGGING = {
         'file': {
             'level': 'WARNING',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(LOG_DIR, 'django.log'),
+            'filename': LOG_DIR / 'django.log',
         },
     },
     'loggers': {
@@ -110,5 +129,3 @@ LOGGING = {
         },
     },
 }
-
-ROOT_URLCONF = 'trade_accounting.urls'

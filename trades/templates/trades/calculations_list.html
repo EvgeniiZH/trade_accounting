@@ -26,7 +26,9 @@
                     <td>
                         <input type="checkbox" name="calc_ids" value="{{ calc.id }}">
                     </td>
-                    <td>{{ calc.id }}</td>
+                    <td><a href="{% url 'calculation_detail' calc.id %}" class="text-decoration-none">
+                                {{ calc.title }}
+                            </a></td>
                     <td>{{ calc.title }}</td>
                     <td>{{ calc.markup }}</td>
                     <td>{{ calc.total_price }}</td>

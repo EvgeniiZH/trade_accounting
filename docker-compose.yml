@@ -1,0 +1,24 @@
+version: "3.9"
+
+services:
+  web:
+    build: .
+    command: gunicorn trade_accounting.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+  db:
+    image: postgres:14
+    restart: always
+    environment:
+      POSTGRES_DB: django_project_db
+      POSTGRES_USER: django
+      POSTGRES_PASSWORD: me4ut9oodi3W
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+
+volumes:
+  postgres_data:

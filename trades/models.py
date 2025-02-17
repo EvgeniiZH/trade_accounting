@@ -11,11 +11,10 @@ class Item(models.Model):
 
 
 class Calculation(models.Model):
-    # Добавляем поле user – привязка расчёта к пользователю
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        null=True,  # Если расчёт может быть без пользователя
+        null=True,      # Если расчёт может быть без пользователя
         blank=True
     )
     title = models.CharField(max_length=255)

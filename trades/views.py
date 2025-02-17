@@ -185,7 +185,8 @@ def create_calculation(request):
 
         # Создание объекта расчета
         try:
-            calculation = Calculation.objects.create(title=title, markup=markup)
+            calculation = Calculation.objects.create(title=title, markup=markup, user=request.user)
+
         except IntegrityError:
             messages.error(request, "Ошибка при создании расчета!")
             return redirect('create_calculation')

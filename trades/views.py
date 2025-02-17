@@ -73,6 +73,7 @@ def handle_upload_file(request):
 
 
 # Главная страница: список товаров, редактирование, удаление и загрузка
+@login_required(login_url='/login/')
 def item_list(request):
     """Главная страница: список товаров, редактирование, удаление и загрузка"""
     if request.method == "POST":

@@ -14,6 +14,7 @@
                     <th>Старая цена</th>
                     <th>Новая цена</th>
                     <th>Дата изменения</th>
+                    <th>Изменил</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -23,10 +24,17 @@
                         <td class="text-end">{{ history.old_price|floatformat:2 }} ₽</td>
                         <td class="text-end fw-bold text-success">{{ history.new_price|floatformat:2 }} ₽</td>
                         <td class="text-center">{{ history.changed_at|date:"d.m.Y H:i" }}</td>
+                        <td class="text-center">
+                            {% if history.changed_by %}
+                                {{ history.changed_by.username }}
+                            {% else %}
+                                Неизвестно
+                            {% endif %}
+                        </td>
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="4" class="text-center text-muted">История изменений отсутствует</td>
+                        <td colspan="5" class="text-center text-muted">История изменений отсутствует</td>
                     </tr>
                 {% endfor %}
                 </tbody>

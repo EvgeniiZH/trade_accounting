@@ -316,8 +316,13 @@ def handle_edit_item(request):
         old_price = item.price  # Сохраняем старую цену
 
         if old_price != price:
-            # Создаём запись в истории цен
-            PriceHistory.objects.create(item=item, old_price=old_price, new_price=price)
+            # Создаём запись в истории цен с указанием пользователя, изменившего цену.
+            PriceHistory.objects.create(
+                item=item,
+                old_price=old_price,
+                new_price=price,
+                changed_by=request.user  # Здесь передаем текущего пользователя
+            )
 
         item.name = name
         item.price = price

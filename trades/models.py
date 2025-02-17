@@ -11,15 +11,16 @@ class Item(models.Model):
 
 
 class Calculation(models.Model):
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        null=True,      # Если расчёт может быть без пользователя
-        blank=True
-    )
+    # Если хотите, чтобы расчет принадлежал пользователю:
+    # user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
+
     title = models.CharField(max_length=255)
     markup = models.DecimalField(max_digits=5, decimal_places=2, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    # Новые поля для хранения итоговых сумм
+    total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total_price_with_markup = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     def total_price_without_markup(self):
         return sum(item.total_price() for item in self.items.all())

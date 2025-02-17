@@ -93,7 +93,7 @@ def item_list(request):
         "price_step": PRICE_STEP
     })
 
-@login_required(login_url='/login/')
+
 def calculations_list(request):
     """Страница списка расчётов с возможностью экспорта в Excel (каждый расчёт – отдельный файл в ZIP‑архиве)"""
     if request.method == "POST":
@@ -164,7 +164,7 @@ def calculations_list(request):
     calculations = Calculation.objects.all()
     return render(request, "trades/calculations_list.html", {"calculations": calculations})
 
-@login_required(login_url='/login/')
+
 def create_calculation(request):
     """Создание нового расчёта"""
     if request.method == "POST":
@@ -209,7 +209,7 @@ def create_calculation(request):
 
     return render(request, "trades/create_calculation.html", {"items": items, "search_query": search_query})
 
-@login_required(login_url='/login/')
+
 def calculate_total_price(calculation):
     """Функция для вычисления общей стоимости расчёта с учётом наценки."""
     total = sum(item.quantity * item.item.price for item in
@@ -217,7 +217,7 @@ def calculate_total_price(calculation):
     total_with_markup = total + (total * calculation.markup / 100)  # Применяем наценку
     return total, total_with_markup
 
-@login_required(login_url='/login/')
+
 def calculation_detail(request, pk):
     """Просмотр и редактирование сохранённого расчёта"""
     calculation = get_object_or_404(Calculation, pk=pk)
@@ -299,7 +299,7 @@ def calculation_detail(request, pk):
         "markup_step": MARKUP_STEP
     })
 
-@login_required(login_url='/login/')
+
 def handle_edit_item(request):
     """Обработка редактирования товара."""
     item_id = request.POST.get("edit_item")
@@ -332,7 +332,7 @@ def handle_edit_item(request):
     except Item.DoesNotExist:
         messages.error(request, "Товар не найден!")
 
-@login_required(login_url='/login/')
+
 def price_history_view(request):
     price_history = PriceHistory.objects.all().order_by('-changed_at')  # Сортируем по дате (новые сверху)
     return render(request, "trades/price_history.html", {"price_history": price_history})

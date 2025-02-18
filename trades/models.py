@@ -11,26 +11,34 @@ class Item(models.Model):
 
 
 class Calculation(models.Model):
-    # Если хотите, чтобы расчет принадлежал пользователю:
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
+    # Привязка расчёта к пользователю
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,  # Если расчёт может создаваться без пользователя, иначе можно поставить False
+        blank=True
+    )
 
     title = models.CharField(max_length=255)
     markup = models.DecimalField(max_digits=5, decimal_places=2, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    # Новые поля для хранения итоговых сумм
+    # Поля для хранения итоговых сумм
     total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total_price_with_markup = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
-    def total_price_without_markup(self):
+    def total_price_without_markup_calc(self):
+        """Вычисляет сумму без наценки по всем CalculationItem, связанным с этим расчетом."""
         return sum(item.total_price() for item in self.items.all())
 
-    def total_price_with_markup(self):
-        total = self.total_price_without_markup()
+    def calculate_total_price_with_markup(self):
+        """Вычисляет сумму с учетом наценки."""
+        total = self.total_price_without_markup_calc()
         return total + (total * self.markup / 100)
 
     def __str__(self):
         return self.title
+
 
 
 class CalculationItem(models.Model):

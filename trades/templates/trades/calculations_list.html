@@ -27,15 +27,15 @@
                     <tr id="calc-{{ calc.id }}">
                         <td><input type="checkbox" name="calc_ids" value="{{ calc.id }}"></td>
                         <td>{{ calc.id }}</td>
-{#                        <td>{{ calc.user.username|default:"Не указан" }}</td>#}
+                        {#                        <td>{{ calc.user.username|default:"Не указан" }}</td>#}
                         <td>
                             <a href="{% url 'calculation_detail' calc.id %}" class="text-decoration-none">
                                 {{ calc.title }}
                             </a>
                         </td>
                         <td>{{ calc.markup }}</td>
-                        <td>{{ calc.total_price }}</td>
-                        <td>{{ calc.total_price_with_markup }}</td>
+                        <td>{{ calc.total_price_without_markup_calc }}</td>
+                        <td>{{ calc.calculate_total_price_with_markup }}</td>
                         <td>
                             <button type="submit" name="delete_calc" value="{{ calc.id }}"
                                     class="btn btn-danger btn-sm">

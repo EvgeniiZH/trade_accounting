@@ -95,7 +95,7 @@ def item_list(request):
         "price_step": PRICE_STEP
     })
 
-
+@login_required(login_url='/login/')
 def calculations_list(request):
     """Страница списка расчётов с возможностью экспорта в Excel (каждый расчёт – отдельный файл в ZIP‑архиве)"""
     if request.method == "POST":
@@ -122,6 +122,7 @@ def calculations_list(request):
                         # Формируем данные для DataFrame
                         calc_data = {
                             "ID": [calc.id],
+                            "Создал": [calc.user.username if calc.user else "Не указан"],
                             "Название": [calc.title],
                             "Наценка (%)": [calc.markup],
                             "Стоимость": [total],
@@ -163,7 +164,7 @@ def calculations_list(request):
             else:
                 messages.error(request, "Выберите хотя бы один расчёт для экспорта!")
 
-    calculations = Calculation.objects.all()
+    calculations = Calculation.objects.filter(user=request.user)
     return render(request, "trades/calculations_list.html", {"calculations": calculations})
 
 @login_required(login_url='/login/')

@@ -10,6 +10,7 @@ class Item(models.Model):
         return self.name
 
 
+
 class Calculation(models.Model):
     # Привязка расчёта к пользователю
     user = models.ForeignKey(

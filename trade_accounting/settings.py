@@ -103,6 +103,7 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
+
 # Добавляем директорию для сбора статических файлов
 STATIC_ROOT = str(BASE_DIR / "staticfiles")
 

@@ -4,6 +4,8 @@
 
 {% block content %}
     <div class="container my-4">
+
+
         <h2 class="mb-4">Список товаров</h2>
 
         <!-- Поиск -->
@@ -35,8 +37,8 @@
                         <tr id="item-{{ item.id }}">
                             <td>{{ forloop.counter }}</td>
                             <td class="table-name-cell">
-                                <textarea class="form-control auto-expand"
-                                          name="name_{{ item.id }}">{{ item.name }}</textarea>
+                            <textarea class="form-control auto-expand"
+                                      name="name_{{ item.id }}">{{ item.name }}</textarea>
                             </td>
                             <td>
                                 <input type="number" class="form-control" name="price_{{ item.id }}"
@@ -139,12 +141,13 @@
         document.addEventListener("DOMContentLoaded", function () {
             document.querySelectorAll(".auto-expand").forEach((textarea) => {
                 function adjustHeight() {
-                    textarea.style.height = "auto";
-                    textarea.style.height = textarea.scrollHeight + "px";
-                    textarea.closest("tr").style.height = textarea.scrollHeight + "px";
+                    textarea.style.height = "auto"; // Сначала сбрасываем высоту
+                    textarea.style.height = textarea.scrollHeight + "px"; // Устанавливаем новую высоту
+                    textarea.closest("tr").style.height = textarea.scrollHeight + "px"; // Меняем высоту строки
                 }
 
-                adjustHeight();
+                adjustHeight(); // Устанавливаем высоту при загрузке
+
                 textarea.addEventListener("input", adjustHeight);
             });
         });
@@ -158,7 +161,7 @@
             if (newItemId) {
                 const newRow = document.getElementById('item-' + newItemId);
                 if (newRow) {
-                    newRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    newRow.scrollIntoView({behavior: 'smooth', block: 'center'});
                     newRow.style.backgroundColor = '#d4edda';
                     setTimeout(() => newRow.style.backgroundColor = '', 2000);
                 }

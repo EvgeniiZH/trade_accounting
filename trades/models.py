@@ -12,7 +12,7 @@ class Item(models.Model):
 
 class Calculation(models.Model):
     # Если хотите, чтобы расчет принадлежал пользователю:
-    # user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
 
     title = models.CharField(max_length=255)
     markup = models.DecimalField(max_digits=5, decimal_places=2, default=0)

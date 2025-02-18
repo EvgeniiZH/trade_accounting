@@ -27,7 +27,7 @@
                     <tr id="calc-{{ calc.id }}">
                         <td><input type="checkbox" name="calc_ids" value="{{ calc.id }}"></td>
                         <td>{{ calc.id }}</td>
-                        <td>{{ calc.user.username|default:"Не указан" }}</td>
+{#                        <td>{{ calc.user.username|default:"Не указан" }}</td>#}
                         <td>
                             <a href="{% url 'calculation_detail' calc.id %}" class="text-decoration-none">
                                 {{ calc.title }}

@@ -3,13 +3,13 @@
 {% block title %}Список расчётов{% endblock %}
 
 {% block content %}
-<div class="container my-4">
-    <h2 class="mb-4">Список расчётов</h2>
+    <div class="container my-4">
+        <h2 class="mb-4">Список расчётов</h2>
 
-    <form method="post">
-        {% csrf_token %}
-        <table class="table table-bordered table-hover">
-            <thead class="table-light">
+        <form method="post">
+            {% csrf_token %}
+            <table class="table table-bordered table-hover">
+                <thead class="table-light">
                 <tr>
                     <th><input type="checkbox" id="select_all"></th>
                     <th>ID</th>
@@ -19,49 +19,47 @@
                     <th>Стоимость</th>
                     <th>Стоимость с наценкой</th>
                     <th>Действия</th>
+                    <th>Пользователь</th>
                 </tr>
-            </thead>
-            <tbody>
+                </thead>
+                <tbody>
                 {% for calc in calculations %}
-                <tr>
-                    <td>
-                        <input type="checkbox" name="calc_ids" value="{{ calc.id }}">
-                    </td>
-                    <td>{{ calc.id }}</td>
-                    <td>
-                        {{ calc.user.username|default:"Не указан" }}
-                    </td>
-                    <td>
-                        <a href="{% url 'calculation_detail' calc.id %}" class="text-decoration-none">
-                            {{ calc.title }}
-                        </a>
-                    </td>
-                    <td>{{ calc.markup }}</td>
-                    <td>{{ calc.total_price }}</td>
-                    <td>{{ calc.total_price_with_markup }}</td>
-                    <td>
-                        <button type="submit" name="delete_calc" value="{{ calc.id }}" class="btn btn-danger btn-sm">
-                            Удалить
-                        </button>
-                    </td>
-                </tr>
+                    <tr id="calc-{{ calc.id }}">
+                        <td><input type="checkbox" name="calc_ids" value="{{ calc.id }}"></td>
+                        <td>{{ calc.id }}</td>
+                        <td>{{ calc.user.username|default:"Не указан" }}</td>
+                        <td>
+                            <a href="{% url 'calculation_detail' calc.id %}" class="text-decoration-none">
+                                {{ calc.title }}
+                            </a>
+                        </td>
+                        <td>{{ calc.markup }}</td>
+                        <td>{{ calc.total_price }}</td>
+                        <td>{{ calc.total_price_with_markup }}</td>
+                        <td>
+                            <button type="submit" name="delete_calc" value="{{ calc.id }}"
+                                    class="btn btn-danger btn-sm">
+                                Удалить
+                            </button>
+                        </td>
+                    </tr>
                 {% endfor %}
-            </tbody>
-        </table>
-        <!-- Кнопка экспорта выбранных расчётов в Excel -->
-        <button type="submit" name="export_excel" value="1" class="btn btn-success">
-            Экспорт в Excel
-        </button>
-    </form>
-</div>
+                </tbody>
+            </table>
+            <!-- Кнопка экспорта выбранных расчётов в Excel -->
+            <button type="submit" name="export_excel" value="1" class="btn btn-success">
+                Экспорт в Excel
+            </button>
+        </form>
+    </div>
 
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const selectAll = document.getElementById("select_all");
-        const checkboxes = document.querySelectorAll("input[name='calc_ids']");
-        selectAll.addEventListener("change", function () {
-            checkboxes.forEach(cb => cb.checked = selectAll.checked);
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const selectAll = document.getElementById("select_all");
+            const checkboxes = document.querySelectorAll("input[name='calc_ids']");
+            selectAll.addEventListener("change", function () {
+                checkboxes.forEach(cb => cb.checked = selectAll.checked);
+            });
         });
-    });
-</script>
+    </script>
 {% endblock %}

@@ -158,8 +158,10 @@
         document.addEventListener('DOMContentLoaded', function () {
             const params = new URLSearchParams(window.location.search);
             const newItemId = params.get('new_item');
+            console.log("Параметр new_item:", newItemId);
             if (newItemId) {
                 const newRow = document.getElementById('item-' + newItemId);
+                console.log("Найдена строка:", newRow);
                 if (newRow) {
                     newRow.scrollIntoView({behavior: 'smooth', block: 'center'});
                     newRow.style.backgroundColor = '#d4edda';

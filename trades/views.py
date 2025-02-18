@@ -35,6 +35,8 @@ def handle_add_item(request):
             )
             if created:
                 messages.success(request, "Товар успешно добавлен!")
+                # Передаем идентификатор созданного товара для автопрокрутки
+                return redirect(f'/items/?new_item={item.id}')
             else:
                 messages.success(request, "Товар уже существовал, цена обновлена!")
         except IntegrityError as e:

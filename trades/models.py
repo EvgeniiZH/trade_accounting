@@ -16,7 +16,7 @@ class Calculation(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        null=True,  # Если расчёт может создаваться без пользователя, иначе можно поставить False
+        null=False,  # Если расчёт может создаваться без пользователя, иначе можно поставить False
         blank=True
     )
 

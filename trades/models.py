@@ -16,8 +16,8 @@ class Calculation(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        null=False,  # Если расчёт может создаваться без пользователя, иначе можно поставить False
-        blank=True
+        null=False,
+        blank=False
     )
 
     title = models.CharField(max_length=255)

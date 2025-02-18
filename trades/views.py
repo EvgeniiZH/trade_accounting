@@ -164,7 +164,7 @@ def calculations_list(request):
     calculations = Calculation.objects.all()
     return render(request, "trades/calculations_list.html", {"calculations": calculations})
 
-
+@login_required(login_url='/login/')
 def create_calculation(request):
     """Создание нового расчёта"""
     if request.method == "POST":

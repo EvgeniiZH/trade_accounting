@@ -13,6 +13,7 @@
                 <tr>
                     <th><input type="checkbox" id="select_all"></th>
                     <th>ID</th>
+                    <th>Создал</th>
                     <th>Название</th>
                     <th>Наценка (%)</th>
                     <th>Стоимость</th>
@@ -27,9 +28,14 @@
                         <input type="checkbox" name="calc_ids" value="{{ calc.id }}">
                     </td>
                     <td>{{ calc.id }}</td>
-                    <td><a href="{% url 'calculation_detail' calc.id %}" class="text-decoration-none">
-                                {{ calc.title }}
-                            </a></td>
+                    <td>
+                        {{ calc.user.username|default:"Не указан" }}
+                    </td>
+                    <td>
+                        <a href="{% url 'calculation_detail' calc.id %}" class="text-decoration-none">
+                            {{ calc.title }}
+                        </a>
+                    </td>
                     <td>{{ calc.markup }}</td>
                     <td>{{ calc.total_price }}</td>
                     <td>{{ calc.total_price_with_markup }}</td>

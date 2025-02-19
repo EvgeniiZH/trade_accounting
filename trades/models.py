@@ -52,7 +52,11 @@ class CalculationItem(models.Model):
 
     def __str__(self):
         return f"{self.item.name} x {self.quantity}"
-
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)  # вызов оригинального сохранения
+        self.calculation.total_price = self.calculation.total_price_without_markup_calc()
+        self.calculation.total_price_with_markup = self.calculation.calculate_total_price_with_markup()
+        self.calculation.save()
 
 class PriceHistory(models.Model):
     item = models.ForeignKey('Item', on_delete=models.CASCADE, related_name="price_history")

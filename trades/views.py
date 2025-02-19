@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
 from django.http import HttpResponse
@@ -9,6 +10,7 @@ import pandas as pd
 import decimal
 import io
 import zipfile
+from django.urls import reverse
 
 # Фиксированные настройки (шаг цены и наценки)
 PRICE_STEP = 0.01
@@ -36,7 +38,7 @@ def handle_add_item(request):
             if created:
                 messages.success(request, "Товар успешно добавлен!")
                 # Передаем идентификатор созданного товара для автопрокрутки
-                return redirect(f'/items/?new_item={item.id}')
+                return redirect(reverse('item_list') + f'?new_item={item.id}')
             else:
                 messages.success(request, "Товар уже существовал, цена обновлена!")
         except IntegrityError as e:
@@ -80,7 +82,9 @@ def item_list(request):
     """Главная страница: список товаров, редактирование, удаление и загрузка"""
     if request.method == "POST":
         if "add_item" in request.POST:
-            handle_add_item(request)
+            response = handle_add_item(request)
+            if response:
+                return response
         elif "edit_item" in request.POST:
             handle_edit_item(request)
         elif "delete_item" in request.POST:
@@ -88,12 +92,12 @@ def item_list(request):
         elif "upload_file" in request.POST:
             handle_upload_file(request)
 
-    items = Item.objects.all()
-
+    items = Item.objects.order_by('name')
     return render(request, "trades/item_list.html", {
         "items": items,
         "price_step": PRICE_STEP
     })
+
 
 @login_required(login_url='/login/')
 def calculations_list(request):
@@ -167,6 +171,7 @@ def calculations_list(request):
     calculations = Calculation.objects.filter(user=request.user)
     return render(request, "trades/calculations_list.html", {"calculations": calculations})
 
+
 @login_required(login_url='/login/')
 def create_calculation(request):
     """Создание нового расчёта"""
@@ -175,42 +180,47 @@ def create_calculation(request):
         markup = request.POST.get("markup", 0)  # Получаем наценку, по умолчанию 0
         item_ids = request.POST.getlist("items")
 
+        try:
+            markup = decimal.Decimal(markup)
+        except decimal.InvalidOperation:
+            messages.error(request, "Неверное значение markup. Markup должен быть числовым значением!")
+            return redirect('create_calculation')
+
         if not item_ids:
             messages.error(request, "Выберите хотя бы один товар для расчёта!")
             return redirect('create_calculation')
 
+        # Создаем объект расчёта один раз
         try:
-            # Преобразуем наценку в Decimal
-            markup = decimal.Decimal(markup)
-        except decimal.InvalidOperation:
-            messages.error(request, "Наценка должна быть числовым значением!")
+            User = get_user_model()
+            user = User.objects.get(id=request.user.id)
+            calculation = Calculation.objects.create(title=title, markup=markup, user=user)
+        except User.DoesNotExist:
+            messages.error(request, "Аккаунт пользователя не найден. Пожалуйста, войдите снова.")
+            return redirect('login')
+        except IntegrityError as e:
+            messages.error(request, f"Ошибка при создании расчёта: {e}")
             return redirect('create_calculation')
 
-        # Создание объекта расчета
-        try:
-            calculation = Calculation.objects.create(title=title, markup=markup, user=request.user)
-
-        except IntegrityError:
-            messages.error(request, "Ошибка при создании расчета!")
-            return redirect('create_calculation')
-
-        # Добавляем товары в расчет
+        # Добавляем товары в расчёт
+        calculation_items = []
         for item_id in item_ids:
-            quantity = int(request.POST.get(f"quantity_{item_id}", 1))  # Устанавливаем количество товара
+            quantity = int(request.POST.get(f"quantity_{item_id}", 1))
             try:
                 item = Item.objects.get(id=item_id)
-                CalculationItem.objects.create(calculation=calculation, item=item, quantity=quantity)
+                calculation_item = CalculationItem(calculation=calculation, item=item, quantity=quantity)
+                calculation_items.append(calculation_item)
             except Item.DoesNotExist:
                 messages.error(request, f"Товар с id {item_id} не найден!")
                 continue
 
+        CalculationItem.objects.bulk_create(calculation_items)
         messages.success(request, "Расчёт успешно создан!")
         return redirect('calculation_detail', pk=calculation.pk)
 
     # Поиск по товарам
     search_query = request.GET.get('search', '')
     items = Item.objects.filter(name__icontains=search_query) if search_query else Item.objects.all()
-
     return render(request, "trades/create_calculation.html", {"items": items, "search_query": search_query})
 
 

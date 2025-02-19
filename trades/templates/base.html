@@ -71,9 +71,11 @@
                             расчётов</a></li>
                         <li class="nav-item"><a class="nav-link fs-5" href="{% url 'price_history' %}">История цен</a>
                         </li>
-                        <li class="nav-item"><a class="nav-link fs-5" href="{% url 'manage_users' %}">👥 Пользователи</a>
-                        </li>
-
+                        {% if user.is_authenticated and user.is_admin or user.is_superuser %}
+                            <li class="nav-item">
+                                <a class="nav-link fs-5" href="{% url 'manage_users' %}">👥 Пользователи</a>
+                            </li>
+                        {% endif %}
                     </ul>
                 </div>
                 <!-- Блок с ссылками для входа/выхода -->

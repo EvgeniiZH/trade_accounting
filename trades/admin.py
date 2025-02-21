@@ -1,10 +1,14 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import Item, Calculation, CalculationItem, CustomUser
+from .models import Item, Calculation, CalculationItem, CustomUser, PriceHistory, CalculationSnapshot, \
+    CalculationSnapshotItem
 
 # Регистрация стандартных моделей
 admin.site.register(Item)
 admin.site.register(Calculation)
+admin.site.register(PriceHistory)
+admin.site.register(CalculationSnapshot)
+admin.site.register(CalculationSnapshotItem)
 
 
 # Кастомный админ для CalculationItem с использованием raw_id_fields и list_display

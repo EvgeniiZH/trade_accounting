@@ -20,12 +20,14 @@
                        value="{{ user_settings.markup_step }}" required>
             </div>
 
-            <!-- Поле поиска -->
-            <div class="col-12 mt-3">
-                <input type="text" id="search-input" class="form-control" placeholder="🔍 Поиск товаров...">
-            </div>
 
             <h3 class="mt-4">Выберите товары:</h3>
+            <!-- Поле поиска -->
+            <div class="input-group">
+                <input type="text" id="search-input" name="search" class="form-control"
+                       placeholder="🔍 Введите название товара...">
+                <button type="button" id="clear-search" class="btn btn-outline-secondary">Очистить</button>
+            </div>
             <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                 <table class="table table-bordered table-hover" id="calculation-table">
                     <thead class="table-light">
@@ -109,37 +111,6 @@
             });
         });
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const table = document.getElementById('calculation-table');
-            const totalWithoutMarkupElement = document.getElementById('total-without-markup');
-            const totalWithMarkupElement = document.getElementById('total-with-markup');
-            const markupInput = document.getElementById('markup');
 
-            const recalculateTotals = () => {
-                let totalWithoutMarkup = 0;
-                const markup = parseFloat(markupInput.value) || 0;
-
-                table.querySelectorAll('tbody tr').forEach(row => {
-                    const checkbox = row.querySelector('.item-checkbox');
-                    const price = parseFloat(row.querySelector('.item-price').textContent) || 0;
-                    const quantityInput = row.querySelector('.quantity-input');
-                    const quantity = parseInt(quantityInput.value) || 0;
-
-                    if (checkbox.checked) {
-                        totalWithoutMarkup += price * quantity;
-                    }
-                });
-
-                const totalWithMarkup = totalWithoutMarkup + (totalWithoutMarkup * (markup / 100));
-                totalWithoutMarkupElement.textContent = totalWithoutMarkup.toFixed(2);
-                totalWithMarkupElement.textContent = totalWithMarkup.toFixed(2);
-            };
-
-            table.addEventListener('input', recalculateTotals);
-            table.addEventListener('change', recalculateTotals);
-            markupInput.addEventListener('input', recalculateTotals);
-
-            recalculateTotals();
-        });
     </script>
 {% endblock %}

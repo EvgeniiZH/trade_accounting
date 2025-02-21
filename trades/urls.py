@@ -8,6 +8,10 @@ urlpatterns = [
     path('calculations/', views.calculations_list, name='calculations_list'),
     path('calculations/create/', views.create_calculation, name='create_calculation'),
     path('calculations/<int:pk>/', views.calculation_detail, name='calculation_detail'),
+    path('calculation-snapshot/save/<int:pk>/', views.save_calculation_snapshot, name='save_calculation_snapshot'),
+    path('calculation-snapshots/', views.calculation_snapshot_list, name='calculation_snapshot_list'),
+    path('calculation-snapshot/<int:snapshot_id>/', views.calculation_snapshot_detail,
+         name='calculation_snapshot_detail'),
     path('price-history/', price_history_view, name='price_history'),
     path('users/', manage_users, name='manage_users'),
     path('users/create/', create_user, name='create_user'),
@@ -16,4 +20,8 @@ urlpatterns = [
     path('login/', auth_views.LoginView.as_view(template_name='trades/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(template_name='trades/logout.html'), name='logout'),
     path('download-template/', views.download_import_template, name='download_import_template'),
+    # Новые AJAX URL'ы:
+    path('ajax/edit_item/', views.edit_item_ajax, name='edit_item_ajax'),
+    path('ajax/delete_item/', views.delete_item_ajax, name='delete_item_ajax'),
+
 ]

@@ -11,7 +11,7 @@ input[type="checkbox"] {
 /* Стили для выбранного чекбокса */
 input[type="checkbox"]:checked {
     border: 2px solid #007bff; /* Синий для выбранного состояния */
-    background-color: #007bff; /* Заливка синего цвета */
+    background-color: #27f606; /* Заливка синего цвета */
     color: white;
     display: flex;
     align-items: center;
@@ -212,4 +212,24 @@ h2 {
     font-size: 24px;
     font-weight: bold;
     margin-bottom: 15px;
+}
+
+/* Стили для поля поиска, чтобы оно было поменьше */
+#search-input {
+    max-width: 500px; /* Ограничение максимальной ширины */
+    padding: 5px 5px; /* Немного уменьшенный отступ */
+    font-size: 16px; /* Меньший размер шрифта */
+    height: 40px; /* Фиксированная высота */
+}
+
+/* Пример стилей для вертикального меню */
+.sidebar {
+    height: 100vh;
+    background-color: #f8f9fa;
+    border-right: 1px solid #dee2e6;
+    padding: 1rem;
+}
+
+.content-area {
+    padding: 1rem;
 }

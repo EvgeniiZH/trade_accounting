@@ -86,6 +86,7 @@
                            min="0"
                            step="1">
                 </div>
+
             </div>
 
             <!-- Кнопка "Сохранить расчет" теперь расположена в самом конце формы -->
@@ -93,46 +94,54 @@
                 <button type="submit" name="save_calculation" class="btn btn-primary w-100">
                     Сохранить расчет
                 </button>
+
+            </div>
+            <div class="mt-5">
+                <form method="post" action="{% url 'save_calculation_snapshot' calculation.id %}"
+                      style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">Сохранить снимок расчёта</button>
+                </form>
             </div>
         </form>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const table = document.getElementById('calculation-table');
-            const totalWithoutMarkupElement = document.getElementById('total-without-markup');
-            const totalWithMarkupElement = document.getElementById('total-with-markup');
-            const markup = parseFloat("{{ calculation.markup|default:'0'|floatformat:2 }}");
-
-            const recalculateRowTotal = (row) => {
-                const unitPrice = parseFloat(row.querySelector('.unit-price').textContent.replace(',', '.'));
-                const quantity = parseInt(row.querySelector('.quantity-input').value);
-                const totalPriceCell = row.querySelector('.total-price');
-                if (!isNaN(unitPrice) && !isNaN(quantity)) {
-                    const rowTotal = unitPrice * quantity;
-                    totalPriceCell.textContent = rowTotal.toFixed(2);
-                    return rowTotal;
-                }
-                return 0;
-            };
-
-            const recalculateOverallTotals = () => {
-                let totalWithoutMarkup = 0;
-                table.querySelectorAll('tr[data-item-id]').forEach(row => {
-                    totalWithoutMarkup += recalculateRowTotal(row);
-                });
-                const totalWithMarkup = totalWithoutMarkup + (totalWithoutMarkup * (markup / 100));
-                totalWithoutMarkupElement.textContent = totalWithoutMarkup.toFixed(2);
-                totalWithMarkupElement.textContent = totalWithMarkup.toFixed(2);
-            };
-
-            table.addEventListener('input', (event) => {
-                if (event.target.classList.contains('quantity-input')) {
-                    recalculateOverallTotals();
-                }
-            });
-
-            recalculateOverallTotals();
-        });
-    </script>
+    {#    <script>#}
+    {#        document.addEventListener('DOMContentLoaded', () => {#}
+    {#            const table = document.getElementById('calculation-table');#}
+    {#            const totalWithoutMarkupElement = document.getElementById('total-without-markup');#}
+    {#            const totalWithMarkupElement = document.getElementById('total-with-markup');#}
+    {#            const markup = parseFloat("{{ calculation.markup|default:'0'|floatformat:2 }}");#}
+    {##}
+    {#            const recalculateRowTotal = (row) => {#}
+    {#                const unitPrice = parseFloat(row.querySelector('.unit-price').textContent.replace(',', '.'));#}
+    {#                const quantity = parseInt(row.querySelector('.quantity-input').value);#}
+    {#                const totalPriceCell = row.querySelector('.total-price');#}
+    {#                if (!isNaN(unitPrice) && !isNaN(quantity)) {#}
+    {#                    const rowTotal = unitPrice * quantity;#}
+    {#                    totalPriceCell.textContent = rowTotal.toFixed(2);#}
+    {#                    return rowTotal;#}
+    {#                }#}
+    {#                return 0;#}
+    {#            };#}
+    {##}
+    {#            const recalculateOverallTotals = () => {#}
+    {#                let totalWithoutMarkup = 0;#}
+    {#                table.querySelectorAll('tr[data-item-id]').forEach(row => {#}
+    {#                    totalWithoutMarkup += recalculateRowTotal(row);#}
+    {#                });#}
+    {#                const totalWithMarkup = totalWithoutMarkup + (totalWithoutMarkup * (markup / 100));#}
+    {#                totalWithoutMarkupElement.textContent = totalWithoutMarkup.toFixed(2);#}
+    {#                totalWithMarkupElement.textContent = totalWithMarkup.toFixed(2);#}
+    {#            };#}
+    {##}
+    {#            table.addEventListener('input', (event) => {#}
+    {#                if (event.target.classList.contains('quantity-input')) {#}
+    {#                    recalculateOverallTotals();#}
+    {#                }#}
+    {#            });#}
+    {##}
+    {#            recalculateOverallTotals();#}
+    {#        });#}
+    {#    </script>#}
 {% endblock %}

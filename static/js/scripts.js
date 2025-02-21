@@ -1,121 +1,193 @@
-// document.addEventListener("DOMContentLoaded", function () {
-//     // Фильтр поиска товаров
-//     const searchInput = document.getElementById("search");
-//     if (searchInput) {
-//         searchInput.addEventListener("input", function () {
-//             let filter = searchInput.value.toLowerCase();
-//             let rows = document.querySelectorAll("table tbody tr");
-//
-//             rows.forEach(row => {
-//                 let text = row.innerText.toLowerCase();
-//                 row.style.display = text.includes(filter) ? "" : "none";
-//             });
-//         });
-//     }
-//
-//     // Автоисчезновение сообщений
-//     setTimeout(() => {
-//         let alerts = document.querySelectorAll(".alert");
-//         alerts.forEach(alert => {
-//             alert.style.display = "none";
-//         });
-//     }, 3000);
-//
-//     // Подсветка найденного элемента в поиске
-//     document.querySelectorAll("#search-input").forEach((input) => {
-//         input.addEventListener("input", function () {
-//             let searchTerm = input.value.trim().toLowerCase();
-//             let rows = document.querySelectorAll("table tbody tr");
-//
-//             rows.forEach(row => {
-//                 let itemName = row.innerText.toLowerCase();
-//                 if (itemName.startsWith(searchTerm)) {
-//                     row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-//                     row.classList.add("highlight");
-//                     setTimeout(() => row.classList.remove("highlight"), 2000);
-//                 }
-//             });
-//         });
-//     });
-//
-//     // Улучшение отображения чекбоксов
-//     document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-//         checkbox.addEventListener("change", function () {
-//             this.closest("tr").classList.toggle("table-warning", this.checked);
-//         });
-//     });
-//
-//     // Авторасширение текстовых полей
-//     document.querySelectorAll(".auto-expand").forEach((textarea) => {
-//         textarea.style.height = textarea.scrollHeight + "px";
-//         textarea.addEventListener("input", function () {
-//             this.style.height = "auto";
-//             this.style.height = this.scrollHeight + "px";
-//         });
-//     });
-// });
-//
-//
-// document.addEventListener("DOMContentLoaded", function () {
-//     // Удаление товаров без перезагрузки
-//     document.querySelectorAll("[name^='delete_']").forEach(function (checkbox) {
-//         checkbox.addEventListener("change", function () {
-//             if (this.checked) {
-//                 let row = this.closest("tr");
-//                 row.classList.add("table-danger");
-//             } else {
-//                 this.closest("tr").classList.remove("table-danger");
-//             }
-//         });
-//     });
-//
-//     // Автообновление стоимости при изменении количества
-//     document.querySelectorAll("[name^='quantity_']").forEach(function (input) {
-//         input.addEventListener("input", function () {
-//             let row = this.closest("tr");
-//             let price = parseFloat(row.querySelector(".price").textContent);
-//             let quantity = parseInt(this.value);
-//             let totalCell = row.querySelector(".total-price");
-//
-//             totalCell.textContent = (price * quantity).toFixed(2);
-//         });
-//     });
-//
-//     // Всплывающие сообщения
-//     const messages = document.querySelectorAll(".alert");
-//     messages.forEach(function (msg) {
-//         setTimeout(() => {
-//             msg.classList.add("fade");
-//             setTimeout(() => msg.remove(), 500);
-//         }, 5000);
-//     });
-// });
-//
-// function recalculateTotals() {
-//     let total = 0;
-//     let markup = parseFloat(document.getElementById('markup').value || 0);
-//
-//     // Перебираем все строки товаров
-//     document.querySelectorAll('#itemsTable tr').forEach(function(row) {
-//         let price = parseFloat(row.cells[2].innerText);
-//         let quantity = parseFloat(row.querySelector('input[type="number"]').value);
-//
-//         // Рассчитываем стоимость для каждой строки
-//         let itemTotal = price * quantity;
-//         row.querySelector('.item-total').innerText = itemTotal.toFixed(2);
-//
-//         total += itemTotal;
-//     });
-//
-//     // Рассчитываем итоговую стоимость с наценкой
-//     let totalPriceWithMarkup = total + (total * markup / 100);
-//
-//     // Отображаем итоговую стоимость
-//     document.getElementById('totalPrice').value = totalPriceWithMarkup.toFixed(2);
-// }
-//
-// function removeItemRow(button) {
-//     // Удаляем строку товара
-//     button.closest('tr').remove();
-//     recalculateTotals();  // Пересчитываем итоговую стоимость после удаления
-// }
+document.addEventListener('DOMContentLoaded', () => {
+    // Определяем, какая таблица используется: товары (item-table) или расчёты (calculation-table)
+    const itemTable = document.getElementById('item-table');
+    const calculationTable = document.getElementById('calculation-table');
+    let tableBody = null;
+    let isItemTable = false;
+    if (itemTable) {
+        tableBody = itemTable.querySelector('tbody');
+        isItemTable = true;
+    } else if (calculationTable) {
+        tableBody = calculationTable.querySelector('tbody');
+    }
+
+    // ===== AJAX для обновления товара (только для таблицы товаров) =====
+    if (isItemTable) {
+        document.querySelectorAll('button[name="edit_item"]').forEach(button => {
+            button.addEventListener('click', function (event) {
+                event.preventDefault(); // Отменяем стандартное поведение формы
+
+                const itemId = this.value;
+                const row = document.getElementById(`item-${itemId}`);
+                const nameField = row.querySelector(`textarea[name="name_${itemId}"]`);
+                const priceField = row.querySelector(`input[name="price_${itemId}"]`);
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+                const params = new URLSearchParams();
+                params.append('edit_item', itemId);
+                params.append(`name_${itemId}`, nameField.value);
+                params.append(`price_${itemId}`, priceField.value);
+
+                fetch('/ajax/edit_item/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: params
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Подсвечиваем изменённую строку без изменения скролла
+                            row.style.backgroundColor = '#d4edda';
+                            setTimeout(() => {
+                                row.style.backgroundColor = '';
+                            }, 2000);
+                            showMessage("success", data.message || "Товар успешно обновлён");
+                        } else {
+                            showMessage("danger", data.error || "Ошибка при обновлении товара");
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Ошибка:', error);
+                        showMessage("danger", "Ошибка при выполнении запроса");
+                    });
+            });
+        });
+
+        // ===== AJAX для удаления товара =====
+        document.querySelectorAll('button[name="delete_item"]').forEach(button => {
+            button.addEventListener('click', function (event) {
+                event.preventDefault();
+                if (!confirm("Вы действительно хотите удалить этот товар?")) return;
+                const itemId = this.value;
+                const row = document.getElementById(`item-${itemId}`);
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+                const params = new URLSearchParams();
+                params.append('delete_item', itemId);
+
+                fetch('/ajax/delete_item/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: params
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            row.remove();
+                            showMessage("success", data.message || "Товар успешно удалён");
+                        } else {
+                            showMessage("danger", data.error || "Ошибка при удалении товара");
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Ошибка:', error);
+                        showMessage("danger", "Ошибка при выполнении запроса");
+                    });
+            });
+        });
+    }
+
+
+    // ===== Автоматическая настройка высоты для всех textarea с классом "auto-expand" =====
+    document.querySelectorAll(".auto-expand").forEach(textarea => {
+        const adjustHeight = () => {
+            textarea.style.height = "auto";
+            textarea.style.height = textarea.scrollHeight + "px";
+        };
+        adjustHeight();
+        textarea.addEventListener("input", adjustHeight);
+    });
+
+    // ===== "Select All" для расчётов (если используется) =====
+    const selectAll = document.getElementById("select_all");
+    if (selectAll) {
+        const checkboxes = document.querySelectorAll("input[name='calc_ids']");
+        selectAll.addEventListener("change", () => {
+            checkboxes.forEach(cb => cb.checked = selectAll.checked);
+        });
+    }
+
+    // ===== Перерасчёт итоговых сумм для таблицы расчётов (если присутствует) =====
+    if (calculationTable) {
+        const totalWithoutMarkupElement = document.getElementById('total-without-markup');
+        const totalWithMarkupElement = document.getElementById('total-with-markup');
+        const markupInput = document.getElementById('markup');
+
+        const recalculateTotals = () => {
+            let totalWithoutMarkup = 0;
+            calculationTable.querySelectorAll('tbody tr').forEach(row => {
+                const checkbox = row.querySelector('.item-checkbox');
+                const priceCell = row.querySelector('.item-price');
+                const quantityInput = row.querySelector('.quantity-input');
+                const price = parseFloat(priceCell ? priceCell.textContent : "0") || 0;
+                const quantity = parseInt(quantityInput ? quantityInput.value : "0") || 0;
+                if (checkbox && checkbox.checked) {
+                    totalWithoutMarkup += price * quantity;
+                }
+            });
+            const markupValue = parseFloat(markupInput.value) || 0;
+            const totalWithMarkup = totalWithoutMarkup + (totalWithoutMarkup * (markupValue / 100));
+            totalWithoutMarkupElement.textContent = totalWithoutMarkup.toFixed(2);
+            totalWithMarkupElement.textContent = totalWithMarkup.toFixed(2);
+        };
+
+        calculationTable.addEventListener('input', recalculateTotals);
+        calculationTable.addEventListener('change', recalculateTotals);
+        markupInput.addEventListener('input', recalculateTotals);
+        recalculateTotals();
+    }
+
+    // ===== Подсветка нового товара (если в URL присутствует параметр new_item) =====
+    const params = new URLSearchParams(window.location.search);
+    const newItemId = params.get('new_item');
+    if (newItemId) {
+        const newRow = document.getElementById('item-' + newItemId);
+        if (newRow) {
+            newRow.scrollIntoView({behavior: 'smooth', block: 'center'});
+            newRow.style.backgroundColor = '#d4edda';
+            setTimeout(() => {
+                newRow.style.backgroundColor = '';
+            }, 2000);
+        }
+    }
+
+    // ===== Подсветка изменённого товара (если в URL присутствует параметр changed_item) =====
+    const changedItemId = params.get('changed_item');
+    if (changedItemId) {
+        const changedRow = document.getElementById('item-' + changedItemId);
+        if (changedRow) {
+            changedRow.style.backgroundColor = '#d4edda';
+            setTimeout(() => {
+                changedRow.style.backgroundColor = '';
+            }, 2000);
+        }
+    }
+
+    // ===== Функция отображения сообщений =====
+    function showMessage(type, text) {
+        const messageContainer = document.getElementById("message-container");
+        if (!messageContainer) return;
+        const alertDiv = document.createElement("div");
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show shadow-lg m-2`;
+        alertDiv.innerHTML = `
+            <strong>${text}</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        messageContainer.appendChild(alertDiv);
+        setTimeout(() => {
+            alertDiv.classList.remove("show");
+        }, 5000);
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 5500);
+    }
+});
+

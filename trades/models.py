@@ -1,6 +1,10 @@
+from decimal import Decimal
+
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.contrib.auth.models import User, AbstractUser, Permission, Group
 from django.conf import settings  # Импорт для ссылки на модель пользователя
+
 
 class Item(models.Model):
     name = models.CharField(max_length=255, unique=True)
@@ -8,7 +12,6 @@ class Item(models.Model):
 
     def __str__(self):
         return self.name
-
 
 
 class Calculation(models.Model):
@@ -41,7 +44,6 @@ class Calculation(models.Model):
         return self.title
 
 
-
 class CalculationItem(models.Model):
     calculation = models.ForeignKey(Calculation, related_name='items', on_delete=models.CASCADE)
     item = models.ForeignKey(Item, on_delete=models.CASCADE)
@@ -52,11 +54,13 @@ class CalculationItem(models.Model):
 
     def __str__(self):
         return f"{self.item.name} x {self.quantity}"
+
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)  # вызов оригинального сохранения
         self.calculation.total_price = self.calculation.total_price_without_markup_calc()
         self.calculation.total_price_with_markup = self.calculation.calculate_total_price_with_markup()
         self.calculation.save()
+
 
 class PriceHistory(models.Model):
     item = models.ForeignKey('Item', on_delete=models.CASCADE, related_name="price_history")
@@ -85,3 +89,32 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.username
+
+
+class CalculationSnapshot(models.Model):
+    calculation = models.ForeignKey('Calculation', on_delete=models.CASCADE, related_name="snapshots")
+    frozen_total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    frozen_total_price_with_markup = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Создал"
+    )
+
+    def __str__(self):
+        return f"Snapshot of {self.calculation} at {self.created_at}"
+
+
+class CalculationSnapshotItem(models.Model):
+    snapshot = models.ForeignKey(CalculationSnapshot, on_delete=models.CASCADE, related_name="items")
+    item_name = models.CharField(max_length=255)
+    item_price = models.DecimalField(max_digits=10, decimal_places=2)
+    quantity = models.PositiveIntegerField(default=1)
+    total_price = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.item_name} x {self.quantity} (Итого: {self.total_price})"
+

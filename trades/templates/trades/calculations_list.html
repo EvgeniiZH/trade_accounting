@@ -10,39 +10,41 @@
             {% csrf_token %}
             <table class="table table-bordered table-hover">
                 <thead class="table-light">
-                <tr>
-                    <th><input type="checkbox" id="select_all"></th>
-                    <th>ID</th>
-                    <th>Создал</th>
-                    <th>Название</th>
-                    <th>Наценка (%)</th>
-                    <th>Стоимость</th>
-                    <th>Стоимость с наценкой</th>
-                    <th>Действия</th>
-                </tr>
+                    <tr>
+                        <th><input type="checkbox" id="select_all"></th>
+                        <th>ID</th>
+                        <th>Автор</th>
+                        <th>Дата создания</th>
+                        <th>Название</th>
+                        <th>Наценка (%)</th>
+                        <th>Стоимость</th>
+                        <th>Стоимость с наценкой</th>
+                        <th>Действия</th>
+                    </tr>
                 </thead>
                 <tbody>
-                {% for calc in calculations %}
-                    <tr id="calc-{{ calc.id }}">
-                        <td><input type="checkbox" name="calc_ids" value="{{ calc.id }}"></td>
-                        <td>{{ calc.id }}</td>
-                        <td>{{ calc.user.username|default:"Не указан" }}</td>
-                        <td>
-                            <a href="{% url 'calculation_detail' calc.id %}" class="text-decoration-none">
-                                {{ calc.title }}
-                            </a>
-                        </td>
-                        <td>{{ calc.markup }}</td>
-                        <td>{{ calc.total_price_without_markup_calc }}</td>
-                        <td>{{ calc.calculate_total_price_with_markup }}</td>
-                        <td>
-                            <button type="submit" name="delete_calc" value="{{ calc.id }}"
-                                    class="btn btn-danger btn-sm">
-                                Удалить
-                            </button>
-                        </td>
-                    </tr>
-                {% endfor %}
+                    {% for calc in calculations %}
+                        <tr id="calc-{{ calc.id }}">
+                            <td><input type="checkbox" name="calc_ids" value="{{ calc.id }}"></td>
+                            <td>{{ calc.id }}</td>
+                            <td>{{ calc.user.username|default:"Не указан" }}</td>
+                            <td>{{ calc.created_at|date:"d.m.Y H:i" }}</td>
+                            <td>
+                                <a href="{% url 'calculation_detail' calc.id %}" class="text-decoration-none">
+                                    {{ calc.title }}
+                                </a>
+                            </td>
+                            <td>{{ calc.markup }}</td>
+                            <td>{{ calc.total_price_without_markup_calc }}</td>
+                            <td>{{ calc.calculate_total_price_with_markup }}</td>
+                            <td>
+                                <button type="submit" name="delete_calc" value="{{ calc.id }}"
+                                        class="btn btn-danger btn-sm">
+                                    Удалить
+                                </button>
+                            </td>
+                        </tr>
+                    {% endfor %}
                 </tbody>
             </table>
             <!-- Кнопка экспорта выбранных расчётов в Excel -->
@@ -51,14 +53,4 @@
             </button>
         </form>
     </div>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const selectAll = document.getElementById("select_all");
-            const checkboxes = document.querySelectorAll("input[name='calc_ids']");
-            selectAll.addEventListener("change", function () {
-                checkboxes.forEach(cb => cb.checked = selectAll.checked);
-            });
-        });
-    </script>
 {% endblock %}

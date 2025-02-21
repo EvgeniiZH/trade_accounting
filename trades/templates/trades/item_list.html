@@ -3,163 +3,148 @@
 {% block title %}Список товаров{% endblock %}
 
 {% block content %}
-<div class="container my-4">
-    <h2 class="mb-4">Список товаров</h2>
+    <div class="container my-4">
+        <h2 class="mb-4">Список товаров</h2>
 
-    <!-- Поиск -->
-    <h3 class="mb-3">Поиск по товарам</h3>
-    <form method="get" class="mb-4">
-        <div class="row g-3 align-items-center">
-            <div class="col-md-6">
-                <input type="text" id="search-input" class="form-control" placeholder="🔍 Введите название товара...">
+        <!-- Поиск -->
+        <h3 class="mb-3">Поиск по товарам</h3>
+        <form method="get" class="mb-4">
+            <div class="row g-3 align-items-center">
+                <div class="input-group">
+                    <input type="text" id="search-input" name="search" class="form-control"
+                           placeholder="🔍 Введите название товара...">
+                    <button type="button" id="clear-search" class="btn btn-outline-secondary">Очистить</button>
+                </div>
             </div>
-        </div>
-    </form>
+        </form>
 
-    <!-- Таблица товаров -->
-    <div class="table-responsive">
-        <form method="post">
-            {% csrf_token %}
-            <table class="table table-bordered table-hover" id="item-table">
-                <thead class="table-light">
+        <!-- Таблица товаров -->
+        <div class="table-responsive">
+            <form method="post">
+                {% csrf_token %}
+                <table class="table table-bordered table-hover" id="item-table">
+                    <thead class="table-light">
                     <tr>
                         <th>#</th>
                         <th>Наименование</th>
                         <th>Цена</th>
                         <th>Действия</th>
                     </tr>
-                </thead>
-                <tbody>
+                    </thead>
+                    <tbody>
                     {% for item in items %}
-                    <tr id="item-{{ item.id }}">
-                        <td>{{ forloop.counter }}</td>
-                        <td class="table-name-cell">
-                            <textarea class="form-control auto-expand" name="name_{{ item.id }}">{{ item.name }}</textarea>
-                        </td>
-                        <td>
-                            <input type="number" class="form-control" name="price_{{ item.id }}"
-                                   value="{{ item.price|floatformat:2 }}" step="0.01" min="1">
-                        </td>
-                        <td>
-                            <button type="submit" name="edit_item" value="{{ item.id }}" class="btn btn-warning btn-sm">
-                                Сохранить
-                            </button>
-                            <button type="submit" name="delete_item" value="{{ item.id }}" class="btn btn-danger btn-sm">
-                                Удалить
-                            </button>
-                        </td>
-                    </tr>
+                        <tr id="item-{{ item.id }}">
+                            <td>{{ forloop.counter }}</td>
+                            <td class="table-name-cell">
+                                <textarea class="form-control auto-expand"
+                                          name="name_{{ item.id }}">{{ item.name }}</textarea>
+                            </td>
+                            <td>
+                                <input type="number" class="form-control" name="price_{{ item.id }}"
+                                       value="{{ item.price|floatformat:2 }}" step="0.01" min="1">
+                            </td>
+                            <td>
+                                <button type="button" name="edit_item" value="{{ item.id }}"
+                                        class="btn btn-warning btn-sm">
+                                    Сохранить
+                                </button>
+                                <button type="button" name="delete_item" value="{{ item.id }}"
+                                        class="btn btn-danger btn-sm">
+                                    Удалить
+                                </button>
+                            </td>
+                        </tr>
                     {% endfor %}
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            </form>
+        </div>
+
+        <!-- Добавление нового товара -->
+        <h3 class="mb-3">Добавить новый товар</h3>
+        <form method="post" class="mb-4">
+            {% csrf_token %}
+            <div class="row g-3 align-items-center">
+                <div class="col-md-5">
+                    <input type="text" name="name" class="form-control" placeholder="Название" required>
+                </div>
+                <div class="col-md-3">
+                    <input type="number" name="price" class="form-control" placeholder="Цена" step="0.01" min="1"
+                           required>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" name="add_item" class="btn btn-success">Добавить</button>
+                </div>
+            </div>
         </form>
+
+        <!-- Загрузка товаров из файла -->
+        <h3 class="mb-3">Загрузить товары из файла</h3>
+        <form method="post" enctype="multipart/form-data" class="mb-4">
+            {% csrf_token %}
+            <div class="row g-3 align-items-center">
+                <div class="col-md-6">
+                    <input type="file" name="file" accept=".xlsx, .xls" class="form-control">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" name="upload_file" class="btn btn-info text-white">Загрузить</button>
+                </div>
+            </div>
+        </form>
+
+        <div>
+            <!-- Кнопка для скачивания шаблона импорта товаров -->
+            <a href="{% url 'download_import_template' %}" class="btn btn-info">
+                Скачать шаблон импорта товаров
+            </a>
+        </div>
     </div>
 
-    <!-- Добавление нового товара -->
-    <h3 class="mb-3">Добавить новый товар</h3>
-    <form method="post" class="mb-4">
-        {% csrf_token %}
-        <div class="row g-3 align-items-center">
-            <div class="col-md-5">
-                <input type="text" name="name" class="form-control" placeholder="Название" required>
-            </div>
-            <div class="col-md-3">
-                <input type="number" name="price" class="form-control" placeholder="Цена" step="0.01" min="1" required>
-            </div>
-            <div class="col-md-2">
-                <button type="submit" name="add_item" class="btn btn-success">Добавить</button>
-            </div>
-        </div>
-    </form>
+    <!-- Поиск с прокруткой и подсветкой -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.querySelector('#search-input');
+            const clearButton = document.querySelector('#clear-search');
+            const tableBody = document.querySelector('#item-table tbody');
 
-    <!-- Загрузка товаров из файла -->
-    <h3 class="mb-3">Загрузить товары из файла</h3>
-    <form method="post" enctype="multipart/form-data" class="mb-4">
-        {% csrf_token %}
-        <div class="row g-3 align-items-center">
-            <div class="col-md-6">
-                <input type="file" name="file" accept=".xlsx, .xls" class="form-control">
-            </div>
-            <div class="col-md-2">
-                <button type="submit" name="upload_file" class="btn btn-info text-white">Загрузить</button>
-            </div>
-        </div>
-    </form>
+            // Обработчик для поиска с подсветкой и скроллом
+            searchInput.addEventListener('input', () => {
+                const searchTerm = searchInput.value.trim().toLowerCase();
+                const rows = tableBody.querySelectorAll('tr');
+                let found = false;
 
-    <div>
-        <!-- Кнопка для скачивания шаблона импорта товаров -->
-        <a href="{% url 'download_import_template' %}" class="btn btn-info">
-            Скачать шаблон импорта товаров
-        </a>
-    </div>
-</div>
+                rows.forEach(row => {
+                    const nameInput = row.querySelector("textarea[name^='name']");
+                    const itemName = nameInput ? nameInput.value.trim().toLowerCase() : "";
 
-<!-- Поиск с прокруткой и подсветкой -->
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const searchInput = document.querySelector('#search-input');
-        const tableBody = document.querySelector('#item-table tbody');
-
-        searchInput.addEventListener('input', () => {
-            const searchTerm = searchInput.value.trim().toLowerCase();
-            const rows = tableBody.querySelectorAll('tr');
-            let found = false;
-
-            rows.forEach(row => {
-                const nameInput = row.querySelector("textarea[name^='name']");
-                const itemName = nameInput ? nameInput.value.trim().toLowerCase() : "";
-
-                if (itemName.includes(searchTerm)) {
-                    row.style.display = "";
-                    if (!found) {
-                        row.scrollIntoView({behavior: 'smooth', block: 'center'});
-                        row.style.backgroundColor = '#d4edda'; // Подсветка
-                        setTimeout(() => row.style.backgroundColor = '', 2000);
-                        found = true;
+                    if (searchTerm === "" || itemName.startsWith(searchTerm)) {
+                        row.style.display = "";
+                        // Подсвечиваем первую строку, соответствующую запросу
+                        if (!found && searchTerm !== "") {
+                            row.scrollIntoView({behavior: 'smooth', block: 'center'});
+                            row.style.backgroundColor = '#d4edda';
+                            setTimeout(() => row.style.backgroundColor = '', 2000);
+                            found = true;
+                        }
+                    } else {
+                        row.style.display = "none";
                     }
-                } else {
-                    row.style.display = "none";
+                });
+
+                if (!found && searchTerm !== "") {
+                    console.log('Товар не найден:', searchTerm);
                 }
             });
 
-            if (!found && searchTerm !== "") {
-                console.log('Товар не найден:', searchTerm);
+            // Обработчик для кнопки "Очистить"
+            if (clearButton) {
+                clearButton.addEventListener('click', () => {
+                    searchInput.value = "";
+                    // Генерируем событие input для обновления списка
+                    searchInput.dispatchEvent(new Event('input'));
+                });
             }
         });
-    });
-</script>
+    </script>
 
-<!-- Автоматическая настройка высоты textarea -->
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        document.querySelectorAll(".auto-expand").forEach((textarea) => {
-            function adjustHeight() {
-                textarea.style.height = "auto"; // Сначала сбрасываем высоту
-                textarea.style.height = textarea.scrollHeight + "px"; // Устанавливаем новую высоту
-                textarea.closest("tr").style.height = textarea.scrollHeight + "px"; // Меняем высоту строки
-            }
-
-            adjustHeight(); // Устанавливаем высоту при загрузке
-            textarea.addEventListener("input", adjustHeight);
-        });
-    });
-</script>
-
-<!-- Автопрокрутка к новому товару -->
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const params = new URLSearchParams(window.location.search);
-        const newItemId = params.get('new_item');
-        console.log("Параметр new_item:", newItemId);
-        if (newItemId) {
-            const newRow = document.getElementById('item-' + newItemId);
-            console.log("Найдена строка:", newRow);
-            if (newRow) {
-                newRow.scrollIntoView({behavior: 'smooth', block: 'center'});
-                newRow.style.backgroundColor = '#d4edda';
-                setTimeout(() => newRow.style.backgroundColor = '', 2000);
-            }
-        }
-    });
-</script>
 {% endblock %}

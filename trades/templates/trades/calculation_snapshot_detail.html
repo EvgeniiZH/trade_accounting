@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Детали снимка расчёта{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <h2>Детали снимка расчёта</h2>
+    <p><strong>Расчёт:</strong> {{ snapshot.calculation.title }}</p>
+    <p><strong>Создан:</strong> {{ snapshot.created_at|date:"d.m.Y H:i" }}</p>
+    <p><strong>Стоимость без наценки:</strong> {{ snapshot.frozen_total_price|floatformat:2 }} ₽</p>
+    <p><strong>Стоимость с наценкой:</strong> {{ snapshot.frozen_total_price_with_markup|floatformat:2 }} ₽</p>
+    <h3>Товары в расчёте:</h3>
+    <table class="table table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>ID товара</th>
+                <th>Наименование</th>
+                <th>Цена</th>
+                <th>Количество</th>
+                <th>Итого</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in snapshot.items.all %}
+            <tr>
+                <td>{{ item.snapshot.id }}</td>
+                <td>{{ item.item_name }}</td>
+                <td>{{ item.item_price|floatformat:2 }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ item.total_price|floatformat:2 }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center">Товары не найдены</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a href="{% url 'calculation_snapshot_list' %}" class="btn btn-secondary mt-3">Вернуться к списку снимков</a>
+</div>
+{% endblock %}

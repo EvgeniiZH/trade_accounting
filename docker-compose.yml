@@ -10,6 +10,9 @@ services:
       - .env
     depends_on:
       - db
+    environment:
+      - DJANGO_SETTINGS_MODULE=trade_accounting.settings.production
+
 
   db:
     image: postgres:14

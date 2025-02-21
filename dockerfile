@@ -22,3 +22,6 @@ EXPOSE 8000
 
 # Запускаем приложение через Gunicorn
 CMD ["gunicorn", "trade_accounting.wsgi:application", "--bind", "0.0.0.0:8000"]
+
+
+ENV DJANGO_SETTINGS_MODULE=trade_accounting.settings

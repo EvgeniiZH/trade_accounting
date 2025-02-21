@@ -11,7 +11,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles',
+    'django.contrib.staticfiles',  # Убедитесь, что это приложение включено
     'rest_framework',
     'trades',
 ]
@@ -80,9 +80,9 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / "static"]
-STATIC_ROOT = BASE_DIR / "staticfiles"
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_DIRS = [BASE_DIR / "static"]  # Папка со статическими файлами
+STATIC_ROOT = BASE_DIR / "staticfiles"    # Папка для сбора статических файлов
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'  # Используем Whitenoise
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

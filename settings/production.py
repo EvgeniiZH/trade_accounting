@@ -7,7 +7,7 @@ DEBUG = False
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '89.111.153.46,89-111-153-46.cloudvps.regruhosting.ru').split(',')
 # Настройка базы данных для продакшена (например, PostgreSQL)
-
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-3-q)1+uqx7(8i(+6zg4+r^9ed4h%&5bmc%g%nm@w2-=$89ibr-')
 
 #При деплое используется PostgreSQL, параметры которого указываются в файле .env
 DATABASES = {

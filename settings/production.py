@@ -22,3 +22,5 @@ DATABASES = {
 }
 
 # Можно добавить дополнительные настройки для продакшена, например, настройки для Whitenoise, security, logging и т.д.
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'

@@ -14,7 +14,8 @@ RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 # Копируем весь исходный код проекта в контейнер
 COPY . .
 
-# Собираем статику (если используется)
+# Создаем папку для статики и собираем статику
+RUN mkdir -p /app/trade_accounting/staticfiles
 RUN python manage.py collectstatic --noinput
 
 # Открываем порт 8000 для приложения
@@ -22,6 +23,3 @@ EXPOSE 8000
 
 # Запускаем приложение через Gunicorn
 CMD ["gunicorn", "trade_accounting.wsgi:application", "--bind", "0.0.0.0:8000"]
-
-
-ENV DJANGO_SETTINGS_MODULE=trade_accounting.settings

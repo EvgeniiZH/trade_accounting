@@ -10,6 +10,7 @@ services:
       - .env.production
     depends_on:
       - db
+      - redis  # Добавляем зависимость от Redis
     environment:
       - DJANGO_SETTINGS_MODULE=trade_accounting.settings.production
 
@@ -32,10 +33,6 @@ services:
     volumes:
       - redis_data:/data
 
-  volumes:
-    redis_data:
-
-
 volumes:
   postgres_data:
-
+  redis_data:

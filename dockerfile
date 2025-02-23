@@ -1,5 +1,5 @@
 # Используем официальный образ Python (на данный момент версия 3.11)
-FROM python:3.11-slim
+FROM python:3.11
 
 # Устанавливаем системные зависимости (при необходимости)
 RUN apt-get update && apt-get install -y gcc libpq-dev && rm -rf /var/lib/apt/lists/*

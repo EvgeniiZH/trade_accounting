@@ -113,6 +113,14 @@
                     console.log('Товаров не найдено для:', searchTerm);
                 }
             });
+            // Обработчик для кнопки "Очистить"
+            if (clearButton) {
+                clearButton.addEventListener('click', () => {
+                    searchInput.value = "";
+                    // Генерируем событие input для обновления списка
+                    searchInput.dispatchEvent(new Event('input'));
+                });
+            }
         });
 
 

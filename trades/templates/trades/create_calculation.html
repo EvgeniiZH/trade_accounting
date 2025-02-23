@@ -23,11 +23,15 @@
 
             <h3 class="mt-4">Выберите товары:</h3>
             <!-- Поле поиска -->
-            <div class="input-group">
-                <input type="text" id="search-input" name="search" class="form-control"
-                       placeholder="🔍 Введите название товара...">
-                <button type="button" id="clear-search" class="btn btn-outline-secondary">Очистить</button>
-            </div>
+            <form method="get" class="mb-4">
+                <div class="row g-3 align-items-center">
+                    <div class="input-group">
+                        <input type="text" id="search-input" name="search" class="form-control"
+                               placeholder="🔍 Введите название товара...">
+                        <button type="button" id="clear-search" class="btn btn-outline-secondary">Очистить</button>
+                    </div>
+                </div>
+            </form>
             <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                 <table class="table table-bordered table-hover" id="calculation-table">
                     <thead class="table-light">

@@ -83,46 +83,44 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const searchInput = document.querySelector('#search-input');
-            const tableBody = document.querySelector('#calculation-table tbody');
+    document.addEventListener('DOMContentLoaded', () => {
+        const searchInput = document.querySelector('#search-input');
+        const clearButton = document.querySelector('#clear-search');  // Добавляем объявление clearButton
+        const tableBody = document.querySelector('#calculation-table tbody');
 
-            searchInput.addEventListener('input', () => {
-                const searchTerm = searchInput.value.trim().toLowerCase();
-                const rows = tableBody.querySelectorAll('tr');
-                let found = false;
+        searchInput.addEventListener('input', () => {
+            const searchTerm = searchInput.value.trim().toLowerCase();
+            const rows = tableBody.querySelectorAll('tr');
+            let found = false;
 
-                rows.forEach(row => {
-                    const nameCell = row.querySelector('.item-name');
-                    const itemName = nameCell.textContent.trim().toLowerCase();
+            rows.forEach(row => {
+                const nameCell = row.querySelector('.item-name');
+                const itemName = nameCell.textContent.trim().toLowerCase();
 
-                    if (itemName.includes(searchTerm)) {
-                        row.style.display = "";
-                        if (!found) {
-                            row.scrollIntoView({behavior: 'smooth', block: 'center'});
-                            row.style.backgroundColor = '#d4edda';
-                            setTimeout(() => row.style.backgroundColor = '', 2000);
-                            found = true;
-                        }
-                    } else {
-                        row.style.display = "none";
+                if (itemName.includes(searchTerm)) {
+                    row.style.display = "";
+                    if (!found) {
+                        row.scrollIntoView({behavior: 'smooth', block: 'center'});
+                        row.style.backgroundColor = '#d4edda';
+                        setTimeout(() => row.style.backgroundColor = '', 2000);
+                        found = true;
                     }
-                });
-
-                if (!found && searchTerm !== "") {
-                    console.log('Товаров не найдено для:', searchTerm);
+                } else {
+                    row.style.display = "none";
                 }
             });
-            // Обработчик для кнопки "Очистить"
-            if (clearButton) {
-                clearButton.addEventListener('click', () => {
-                    searchInput.value = "";
-                    // Генерируем событие input для обновления списка
-                    searchInput.dispatchEvent(new Event('input'));
-                });
+
+            if (!found && searchTerm !== "") {
+                console.log('Товаров не найдено для:', searchTerm);
             }
         });
 
+        // Обработчик для кнопки "Очистить"
+        clearButton.addEventListener('click', () => {
+            searchInput.value = "";
+            searchInput.dispatchEvent(new Event('input'));  // Обновляем список
+        });
+    });
+</script>
 
-    </script>
 {% endblock %}

@@ -32,8 +32,11 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 sentry_sdk.init(
-    dsn="YOUR_SENTRY_DSN",
+    dsn="https://1c5b83ea9bf786f67bddd04ef85e58d0@o4508867893526528.ingest.de.sentry.io/4508867895230544",
     integrations=[DjangoIntegration()],
-    traces_sample_rate=1.0,  # Отслеживание перфоманса (1.0 = 100% запросов)
-    send_default_pii=True,  # Передача данных о пользователях
+    send_default_pii=True,  # Сбор информации о пользователях (по желанию)
+    traces_sample_rate=1.0,  # 100% запросов будет отслеживаться (можно снизить)
+    _experiments={
+        "continuous_profiling_auto_start": True,  # Включаем автоматическое профилирование
+    },
 )

@@ -1,3 +1,5 @@
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
 from .base import *
 import os
 
@@ -24,8 +26,14 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-
 CSRF_TRUSTED_ORIGINS = [
     "https://kiteh.ru",
     "https://www.kiteh.ru",
 ]
+
+sentry_sdk.init(
+    dsn="YOUR_SENTRY_DSN",
+    integrations=[DjangoIntegration()],
+    traces_sample_rate=1.0,  # Отслеживание перфоманса (1.0 = 100% запросов)
+    send_default_pii=True,  # Передача данных о пользователях
+)

@@ -21,7 +21,9 @@ DATABASES = {
 }
 
 STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATIC_ROOT = BASE_DIR / 'trade_accounting' / 'staticfiles'
+STATICFILES_DIRS = [BASE_DIR / 'trade_accounting' / 'static']
+
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'

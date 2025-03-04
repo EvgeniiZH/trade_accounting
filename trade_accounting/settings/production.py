@@ -20,9 +20,9 @@ DATABASES = {
     }
 }
 
-STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'trade_accounting' / 'staticfiles'
-STATICFILES_DIRS = [BASE_DIR / 'trade_accounting' / 'trade_accounting/static']
+# STATIC_URL = '/static/'
+# STATIC_ROOT = BASE_DIR / 'trade_accounting' / 'staticfiles'
+# STATICFILES_DIRS = [BASE_DIR / 'trade_accounting' / 'trade_accounting/static']
 
 
 MEDIA_URL = '/media/'

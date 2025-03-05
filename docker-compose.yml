@@ -10,26 +10,23 @@ services:
       - .env.production
     depends_on:
       - db
-      - redis  # Добавляем зависимость от Redis
+      - redis
     environment:
       - DJANGO_SETTINGS_MODULE=trade_accounting.settings.production
 
   db:
     image: postgres:14
-    restart: always
-    environment:
-      POSTGRES_DB: django_project_db
-      POSTGRES_USER: django
-      POSTGRES_PASSWORD: me4ut9oodi3W
     volumes:
       - postgres_data:/var/lib/postgresql/data/
+    env_file:
+      - .env.production
 
   redis:
     image: redis:7
     restart: always
     ports:
       - "6379:6379"
-    command: [ "redis-server", "--appendonly", "yes" ]
+    command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - redis_data:/data
 

@@ -21,28 +21,35 @@ jobs:
       - name: Deploy to VPS
         run: |
           ssh -o StrictHostKeyChecking=no root@${{ secrets.SERVER_IP }} << 'EOF'
-            set -e  # Остановить скрипт при ошибке
-
+            set -e
             echo "==> Переход в проект"
             cd /root/trade_accounting
 
             echo "==> Сброс локальных изменений"
             git reset --hard HEAD
 
-            echo "==> Получение последних обновлений"
+            echo "==> Получение свежего кода"
             git pull origin main
 
-            echo "==> Пересборка контейнеров без кеша"
+            echo "==> Пересборка Docker"
             docker compose build --no-cache
-
-            echo "==> Запуск контейнеров"
             docker compose up -d
 
             echo "==> Выполнение миграций"
             docker compose exec web python manage.py migrate --noinput
 
-            echo "==> Сборка статики"
+            echo "==> Сбор статики"
             docker compose exec web python manage.py collectstatic --noinput
 
-            echo "==> Деплой завершён успешно 🎉"
+            echo "==> Обновление nginx-конфига"
+            cp nginx/django.conf /etc/nginx/sites-available/django
+            ln -sf /etc/nginx/sites-available/django /etc/nginx/sites-enabled/django
+
+            echo "==> Проверка конфигурации nginx"
+            nginx -t
+
+            echo "==> Перезапуск nginx"
+            systemctl reload nginx
+
+            echo "✅ Деплой завершён успешно!"
           EOF

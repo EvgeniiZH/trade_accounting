@@ -12,6 +12,10 @@ import decimal
 import io
 import zipfile
 from django.urls import reverse
+from .utils import update_or_create_item_clean
+from django.db.models.functions import Collate
+from .utils import calculate_total_price
+
 
 # Фиксированные настройки (шаг цены и наценки)
 PRICE_STEP = 0.01
@@ -20,30 +24,23 @@ DECIMAL_PLACES = 1
 
 
 def handle_add_item(request):
-    """Обработка добавления товара."""
+    """Обработка добавления товара с проверкой дубликатов и форматированием имени."""
     name = request.POST.get("name")
     price = request.POST.get("price")
+
     if name and price:
         try:
-            # Приводим цену к Decimal
             price = decimal.Decimal(price)
         except (decimal.InvalidOperation, TypeError):
             messages.error(request, "Введите корректное значение цены!")
             return
 
-        try:
-            item, created = Item.objects.update_or_create(
-                name=name.strip(),
-                defaults={'price': price}
-            )
-            if created:
-                messages.success(request, "Товар успешно добавлен!")
-                # Передаем идентификатор созданного товара для автопрокрутки
-                return redirect(reverse('item_list') + f'?new_item={item.id}')
-            else:
-                messages.success(request, "Товар уже существовал, цена обновлена!")
-        except IntegrityError as e:
-            messages.error(request, f"Ошибка добавления товара: {e}")
+        item, updated = update_or_create_item_clean(name, price)
+        if updated:
+            messages.success(request, f"Товар «{item.name}» успешно добавлен или обновлён!")
+            return redirect(reverse('item_list') + f'?new_item={item.id}')
+        else:
+            messages.info(request, f"Товар «{item.name}» уже существует и совпадает по цене.")
     else:
         messages.error(request, "Введите название и цену!")
 
@@ -138,8 +135,10 @@ def delete_item_ajax(request):
 
 
 def handle_upload_file(request):
-    """Обработка загрузки товаров из файла."""
+    """Обработка загрузки товаров из файла с проверкой дубликатов и форматированием имен."""
     file = request.FILES.get("file")
+    updated, created, skipped = 0, 0, 0
+
     try:
         df = pd.read_excel(file)
         if 'Наименование комплектующей' not in df.columns or 'Цена' not in df.columns:
@@ -149,8 +148,19 @@ def handle_upload_file(request):
                 name = row.get('Наименование комплектующей')
                 price = row.get('Цена')
                 if name and price:
-                    Item.objects.update_or_create(name=name.strip(), defaults={'price': price})
-            messages.success(request, "Товары загружены!")
+                    try:
+                        price = decimal.Decimal(str(price))
+                        item, changed = update_or_create_item_clean(name, price)
+                        if changed:
+                            updated += 1 if Item.objects.filter(pk=item.pk).exists() else 0
+                            created += 0 if Item.objects.filter(pk=item.pk).exists() else 1
+                        else:
+                            skipped += 1
+                    except decimal.InvalidOperation:
+                        continue
+
+            messages.success(request,
+                             f"Импорт завершён: обновлено — {updated}, добавлено — {created}, пропущено — {skipped}")
     except Exception as e:
         messages.error(request, f"Ошибка загрузки файла: {e}")
 
@@ -171,88 +181,109 @@ def item_list(request):
         elif "upload_file" in request.POST:
             handle_upload_file(request)
 
-    items = Item.objects.order_by('name')
+    # Поиск и сортировка
+    search = request.GET.get("search", "")
+    sort_by = request.GET.get("sort", "name")
+    direction = request.GET.get("direction", "asc")
+    order = sort_by if direction == "asc" else f"-{sort_by}"
+
+    items = Item.objects.filter(name__icontains=search).order_by(order)
+
+    # Статистика
+    total_items = items.count()
+    total_price = sum(item.price for item in items)
+    avg_price = total_price / total_items if total_items else 0
+
     return render(request, "trades/item_list.html", {
         "items": items,
-        "price_step": PRICE_STEP
+        "price_step": PRICE_STEP,
+        "search": search,
+        "sort_by": sort_by,
+        "direction": direction,
+        "total_items": total_items,
+        "total_price": total_price,
+        "avg_price": avg_price,
     })
+
+
+from pyuca import Collator
+
+collator = Collator()
 
 
 @login_required(login_url='/login/')
 def calculations_list(request):
-    """
-    Страница списка расчётов с возможностью экспорта в Excel (каждый расчёт – отдельный файл в ZIP‑архиве).
-    Все расчёты видны, но удалять (и редактировать) могут только владелец, администратор или суперадмин.
-    """
+    updated_calc_id = request.GET.get("updated_calc")
+    sort_by = request.GET.get("sort", "title")
+    direction = request.GET.get("direction", "asc")
+    reverse = direction == "desc"
+
     if request.method == "POST":
         if "delete_calc" in request.POST:
             calc_id = request.POST.get("delete_calc")
             calculation = get_object_or_404(Calculation, id=calc_id)
-            # Проверяем, имеет ли текущий пользователь право удалять данный расчёт
             if calculation.user == request.user or request.user.is_admin or request.user.is_superuser:
                 calculation.delete()
                 messages.success(request, "Расчёт успешно удалён!")
             else:
                 messages.error(request, "У вас нет прав для удаления этого расчёта.")
+            return redirect('calculations_list')
+
         elif "export_excel" in request.POST:
-            # Получаем список выбранных расчётов
             calc_ids = request.POST.getlist("calc_ids")
             if calc_ids:
                 calculations_for_export = Calculation.objects.filter(id__in=calc_ids)
-                # Создаем буфер для ZIP‑архива
                 zip_buffer = io.BytesIO()
                 with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
                     for calc in calculations_for_export:
-                        # Вычисляем итоговые суммы для расчёта
                         total, total_with_markup = calculate_total_price(calc)
-                        # Формируем данные для DataFrame
-                        calc_data = {
+                        df_calc = pd.DataFrame({
                             "ID": [calc.id],
                             "Создал": [calc.user.username if calc.user else "Не указан"],
                             "Название": [calc.title],
                             "Наценка (%)": [calc.markup],
                             "Стоимость": [total],
                             "Стоимость с наценкой": [total_with_markup]
-                        }
-                        df_calc = pd.DataFrame(calc_data)
-                        # Создаем Excel‑файл для этого расчёта
+                        })
                         excel_buffer = io.BytesIO()
                         with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
                             df_calc.to_excel(writer, index=False, sheet_name="Информация о расчёте")
-                            # Если расчёт содержит товары, добавляем дополнительный лист
-                            calc_items = calc.items.all().select_related("item")
-                            if calc_items.exists():
-                                items_data = []
-                                for ci in calc_items:
-                                    items_data.append({
-                                        "ID товара": ci.item.id,
-                                        "Наименование товара": ci.item.name,
-                                        "Цена": ci.item.price,
-                                        "Количество": ci.quantity,
-                                        "Итого": ci.quantity * ci.item.price
-                                    })
-                                df_items = pd.DataFrame(items_data)
-                                df_items.to_excel(writer, index=False, sheet_name="Товары")
-                        excel_filename = f"calculation_{calc.id}.xlsx"
-                        zip_file.writestr(excel_filename, excel_buffer.getvalue())
+                        zip_file.writestr(f"calculation_{calc.id}.xlsx", excel_buffer.getvalue())
                 zip_buffer.seek(0)
-                response = HttpResponse(
+                return HttpResponse(
                     zip_buffer.getvalue(),
-                    content_type="application/zip"
+                    content_type="application/zip",
+                    headers={"Content-Disposition": 'attachment; filename="calculations.zip"'}
                 )
-                response["Content-Disposition"] = 'attachment; filename="calculations.zip"'
-                return response
             else:
                 messages.error(request, "Выберите хотя бы один расчёт для экспорта!")
+                return redirect('calculations_list')
 
-    # Для отображения списка выводим все расчёты
-    calculations = Calculation.objects.all()
-    return render(request, "trades/calculations_list.html", {"calculations": calculations})
+        return redirect('calculations_list')
+
+    # 🔠 Локализованная сортировка по title через Python
+    if sort_by == "title":
+        qs = Calculation.objects.all()
+        calculations = sorted(
+            qs,
+            key=lambda c: collator.sort_key(c.title),
+            reverse=reverse
+        )
+    else:
+        order = sort_by if not reverse else f"-{sort_by}"
+        calculations = Calculation.objects.all().order_by(order)
+
+    return render(request, "trades/calculations_list.html", {
+        "calculations": calculations,
+        "sort_by": sort_by,
+        "direction": direction,
+        "updated_calc_id": updated_calc_id,
+    })
 
 
 @login_required(login_url='/login/')
 def create_calculation(request):
-    """Создание нового расчёта"""
+    """Создание нового расчёта (с возможностью предзаполнения через GET)"""
     if request.method == "POST":
         title = request.POST.get("title")
         markup = request.POST.get("markup", 0)  # По умолчанию 0
@@ -268,10 +299,8 @@ def create_calculation(request):
             messages.error(request, "Выберите хотя бы один товар для расчёта!")
             return redirect('create_calculation')
 
-        # Создаем объект расчёта один раз, используя request.user
         calculation = Calculation.objects.create(title=title, markup=markup, user=request.user)
 
-        # Подготавливаем CalculationItem для bulk_create
         calculation_items = []
         for item_id in item_ids:
             try:
@@ -290,20 +319,18 @@ def create_calculation(request):
         if calculation_items:
             CalculationItem.objects.bulk_create(calculation_items)
 
-        # Пересчитываем итоговые суммы
         total, total_with_markup = calculate_total_price(calculation)
         calculation.total_price = total
         calculation.total_price_with_markup = total_with_markup
         calculation.save()
 
-        # Создаем снимок расчёта
         snapshot = CalculationSnapshot.objects.create(
             calculation=calculation,
             frozen_total_price=total,
             frozen_total_price_with_markup=total_with_markup,
             created_by=request.user
         )
-        # Для каждого CalculationItem сохраняем его данные в CalculationSnapshotItem
+
         snapshot_items = []
         for calc_item in calculation.items.all():
             snapshot_items.append(
@@ -318,13 +345,33 @@ def create_calculation(request):
         if snapshot_items:
             CalculationSnapshotItem.objects.bulk_create(snapshot_items)
 
-        messages.success(request, "Расчёт успешно создан и зафиксирован!")
-        return redirect('calculations_list')
+        messages.success(request, "Расчёт успешно создан!")
+        return redirect(reverse('calculations_list') + f'?new_calc={calculation.id}')
 
-    # Для GET-запроса – отображаем форму создания расчёта
+    # Обработка GET-запроса с возможностью копирования
+    title = request.GET.get("title", "")
+    markup = request.GET.get("markup", "0")
+    selected_items_ids = request.GET.getlist("items")
+    initial_quantities = {}
+    for key in request.GET:
+        if key.startswith("quantity_"):
+            item_id = key.replace("quantity_", "")
+            initial_quantities[item_id] = request.GET.get(key)
+
     search_query = request.GET.get('search', '')
     items = Item.objects.filter(name__icontains=search_query) if search_query else Item.objects.all()
-    return render(request, "trades/create_calculation.html", {"items": items, "search_query": search_query})
+
+    return render(request, "trades/create_calculation.html", {
+        "items": items,
+        "search_query": search_query,
+        "title": title,
+        "markup": markup,
+        "selected_items_ids": selected_items_ids,
+        "initial_quantities": initial_quantities,
+        "user_settings": {
+            "markup_step": 1  # или получи из профиля пользователя
+        },
+    })
 
 
 @login_required(login_url='/login/')
@@ -377,85 +424,78 @@ def calculate_total_price(calculation):
     return total, total_with_markup
 
 
+@login_required(login_url='/login/')
+@login_required(login_url='/login/')
 def calculation_detail(request, pk):
-    """Просмотр и редактирование сохранённого расчёта"""
     calculation = get_object_or_404(Calculation, pk=pk)
 
     if request.method == "POST":
-        # Удаление товара из расчёта
         if "delete_item" in request.POST:
             item_id = request.POST.get("delete_item")
             try:
-                calculation_item = calculation.items.get(id=item_id)
-                calculation_item.delete()
+                calculation.items.get(id=item_id).delete()
                 messages.success(request, "Товар удалён из расчёта!")
             except CalculationItem.DoesNotExist:
                 messages.error(request, "Товар не найден в расчёте!")
+            return redirect(request.path)  # Вернуться на ту же страницу после удаления
 
-        # Обновление количества товара
-        elif "update_quantity" in request.POST:
-            item_id = request.POST.get("update_quantity")
-            quantity = request.POST.get(f"quantity_{item_id}")
-            try:
-                calculation_item = calculation.items.get(id=item_id)
-                calculation_item.quantity = int(quantity)
-                calculation_item.save()
-                messages.success(request, "Количество обновлено!")
-            except (CalculationItem.DoesNotExist, ValueError):
-                messages.error(request, "Ошибка обновления количества!")
-
-        # Добавление товара в расчёт
-        elif "add_item" in request.POST:
-            item_id = request.POST.get("item_id")
-            quantity = int(request.POST.get("quantity", 1))
-            item = Item.objects.get(id=item_id)
-            CalculationItem.objects.create(calculation=calculation, item=item, quantity=quantity)
-            messages.success(request, "Товар добавлен в расчёт!")
-
-        # Обновление наценки
-        elif "update_markup" in request.POST:
-            markup = request.POST.get("markup", 0)
-            try:
-                calculation.markup = decimal.Decimal(markup)
-                calculation.save()
-                messages.success(request, "Наценка обновлена!")
-            except (ValueError, decimal.InvalidOperation):
-                messages.error(request, "Введите корректное значение наценки!")
-
-        # Сохранение расчёта (привязано к кнопке "Сохранить расчет")
         elif "save_calculation" in request.POST:
-            # Обновляем количество для всех позиций расчёта
+            # Обновление количества уже добавленных товаров
             for calc_item in calculation.items.all():
-                new_quantity = request.POST.get(f"quantity_{calc_item.id}")
-                if new_quantity:
+                quantity = request.POST.get(f"quantity_{calc_item.id}")
+                if quantity:
                     try:
-                        calc_item.quantity = int(new_quantity)
+                        calc_item.quantity = int(quantity)
                         calc_item.save()
                     except ValueError:
-                        messages.error(request, f"Некорректное количество для товара {calc_item.item.name}.")
-            # Обновляем наценку, если она передана в форме
-            if "markup" in request.POST:
-                markup = request.POST.get("markup")
-                try:
-                    calculation.markup = decimal.Decimal(markup)
-                except (ValueError, decimal.InvalidOperation):
-                    messages.error(request, "Введите корректное значение наценки!")
-            calculation.save()  # Сохраняем объект расчёта
-            messages.success(request, "Расчёт успешно сохранён!")
+                        messages.error(request, f"Ошибка количества у {calc_item.item.name}")
 
-        # Пересчитываем общую стоимость с учётом наценки
-        total, total_with_markup = calculate_total_price(calculation)
-        calculation.total_price = total
-        calculation.total_price_with_markup = total_with_markup
-        calculation.save()
+            # Обновление наценки
+            markup = request.POST.get("markup", "0")
+            try:
+                calculation.markup = decimal.Decimal(markup)
+            except decimal.InvalidOperation:
+                messages.error(request, "Введите корректную наценку!")
 
-    # Получение товаров, которые еще не добавлены в расчёт
-    items = Item.objects.exclude(id__in=calculation.items.values_list('item_id', flat=True))
+            # Добавление новых товаров
+            item_ids = request.POST.getlist("items")
+            for item_id in item_ids:
+                if not calculation.items.filter(item_id=item_id).exists():
+                    quantity = request.POST.get(f"quantity_{item_id}", 1)
+                    try:
+                        item = Item.objects.get(id=item_id)
+                        CalculationItem.objects.create(
+                            calculation=calculation,
+                            item=item,
+                            quantity=int(quantity)
+                        )
+                    except (Item.DoesNotExist, ValueError):
+                        messages.error(request, f"Ошибка при добавлении товара ID={item_id}")
+
+            # Обновление сумм
+            total, total_with_markup = calculate_total_price(calculation)
+            calculation.total_price = total
+            calculation.total_price_with_markup = total_with_markup
+            calculation.save()
+
+            messages.success(request, "Расчёт успешно обновлён!")
+            return redirect(reverse("calculations_list") + f"?updated_calc={calculation.id}")
+
+    # GET-запрос
+    selected_items_ids = []
+    initial_quantities = {}
+    for ci in calculation.items.all():
+        selected_items_ids.append(str(ci.item.id))
+        initial_quantities[str(ci.item.id)] = ci.quantity
+
+    items = Item.objects.all()
 
     return render(request, "trades/calculation_detail.html", {
         "calculation": calculation,
         "items": items,
-        "markup_step": MARKUP_STEP
+        "markup_step": 1,
+        "initial_quantities": initial_quantities,
+        "selected_items_ids": selected_items_ids,
     })
 
 
@@ -536,3 +576,47 @@ def download_import_template(request):
     )
     response["Content-Disposition"] = 'attachment; filename="import_template.xlsx"'
     return response
+
+
+@login_required(login_url='/login/')
+def copy_calculation(request, calculation_id):
+    original_calc = get_object_or_404(Calculation, id=calculation_id)
+
+    # Формируем параметры для передачи в GET-запрос
+    params = {
+        'title': f"{original_calc.title} (копия)",
+        'markup': original_calc.markup,
+    }
+
+    for ci in original_calc.items.all():
+        params[f'quantity_{ci.item.id}'] = ci.quantity
+        params.setdefault('items', []).append(str(ci.item.id))
+
+    # Создаём URL с параметрами
+    base_url = reverse('create_calculation')
+    query_string = '&'.join([f"{key}={value}" for key, value in params.items() if key != 'items'])
+    items_string = '&'.join([f"items={item_id}" for item_id in params['items']])
+    redirect_url = f"{base_url}?{query_string}&{items_string}"
+
+    return redirect(redirect_url)
+
+
+@login_required(login_url='/login/')
+def edit_item_page(request, item_id):
+    item = get_object_or_404(Item, id=item_id)
+
+    if request.method == "POST":
+        name = request.POST.get("name")
+        price = request.POST.get("price")
+
+        try:
+            price = decimal.Decimal(price)
+            item.name = name
+            item.price = price
+            item.save()
+            messages.success(request, "Товар успешно обновлён!")
+            return redirect('item_list')
+        except decimal.InvalidOperation:
+            messages.error(request, "Некорректная цена!")
+
+    return render(request, "trades/edit_item.html", {"item": item})

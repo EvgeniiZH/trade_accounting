@@ -1,0 +1,25 @@
+/* Стили только для таблицы снимков расчётов */
+#snapshot-table {
+  table-layout: fixed;
+}
+
+#snapshot-table th,
+#snapshot-table td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+/* Ограничение ширины названия */
+#snapshot-table th:nth-child(2),
+#snapshot-table td:nth-child(2) {
+  max-width: 250px;
+}
+
+/* Выравнивание и ширина для кнопок */
+#snapshot-table th:nth-child(8),
+#snapshot-table td:nth-child(8) {
+  text-align: center;
+  width: 110px;
+}

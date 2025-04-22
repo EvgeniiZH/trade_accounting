@@ -1,0 +1,58 @@
+.layout {
+    display: flex;
+    height: 100vh; /* фиксируем на весь экран */
+    overflow: hidden; /* убираем прокрутку страницы */
+}
+
+.sidebar {
+    width: 240px;
+    background-color: #f8f9fa;
+    border-right: 1px solid #ddd;
+    padding: 1rem;
+    flex-shrink: 0;
+    overflow-y: auto; /* если меню будет длинным */
+}
+
+.sidebar-title {
+    font-weight: bold;
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar li {
+    margin-bottom: 10px;
+}
+
+.sidebar a {
+    display: block;
+    text-decoration: none;
+    color: #007bff;
+    font-weight: 500;
+    padding: 5px 0;
+}
+
+.sidebar a:hover {
+    text-decoration: underline;
+}
+
+.content-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 2rem;
+    background-color: #fff;
+
+    display: flex;
+    flex-direction: column;
+}
+
+
+/* Если хочешь, чтобы футер всегда был внизу при коротком контенте */
+footer {
+    margin-top: auto;
+}

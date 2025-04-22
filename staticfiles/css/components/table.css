@@ -1,0 +1,117 @@
+.table {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.table th,
+.table td {
+    font-size: 1.1rem;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.table th {
+    background: #007bff;
+    color: white;
+    font-weight: bold;
+}
+
+.table td.text-end,
+.table th.text-end {
+    text-align: right;
+}
+
+.table td.text-center,
+.table th.text-center,
+.table td:last-child {
+    text-align: center;
+}
+
+.table .btn-edit,
+.table .btn-outline-primary {
+    font-size: 14px;
+    padding: 4px 12px;
+    white-space: nowrap;
+}
+
+.table tbody tr {
+    height: 50px;
+    transition: background-color 0.3s;
+}
+
+/* Таблица-обёртка */
+.table-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    min-height: 420px;
+    transition: min-height 0.2s ease;
+}
+
+/* Прокрутка */
+#item-table {
+    display: block;
+    width: 100%;
+    max-height: 400px;
+    min-height: 300px;
+    overflow-y: auto;
+}
+
+/* Колонки */
+#item-table th:nth-child(1),
+#item-table td:nth-child(1) {
+    width: 50px;
+    text-align: center;
+}
+
+#item-table th:nth-child(2),
+#item-table td:nth-child(2) {
+    width: 60%;
+    max-width: 500px;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
+
+#item-table th:nth-child(3),
+#item-table td:nth-child(3) {
+    width: 120px;
+    text-align: right;
+}
+
+#item-table th:nth-child(4),
+#item-table td:nth-child(4) {
+    width: 160px;
+    text-align: center;
+}
+
+/* Ссылки в заголовке */
+.table th a {
+    color: inherit !important;
+    text-decoration: none;
+}
+
+.table th a:hover {
+    text-decoration: underline;
+}
+
+/* Подсветка найденного */
+mark {
+    background-color: #ffe18d;
+    padding: 0 2px;
+    border-radius: 1px;
+}
+
+
+.stats-block {
+    margin-top: 0.5rem; /* вместо 5rem */
+}
+
+.btn-edit + form {
+    margin-left: 0.25rem;
+}
+
+.right-column-offset {
+    padding-top: 6rem; /* настрой по вкусу */
+}

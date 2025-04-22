@@ -5,7 +5,10 @@
 {% block content %}
     <div class="container my-4">
         <h2 class="mb-4">Снимки расчётов</h2>
-        <table class="table table-bordered table-hover">
+        <table id="snapshot-table" class="table table-bordered table-hover">
+
+
+
             <thead class="table-light">
             <tr>
                 <th>ID</th>
@@ -49,4 +52,7 @@
         </table>
         <a href="{% url 'calculations_list' %}" class="btn btn-secondary mt-3">Вернуться к списку расчётов</a>
     </div>
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/pages/calculation_snapshot_list.css' %}">
+
 {% endblock %}

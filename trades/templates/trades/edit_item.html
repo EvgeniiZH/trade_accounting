@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}Редактирование товара{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <h2 class="mb-4 text-primary">✏ Редактирование товара</h2>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="name" class="form-label">Название:</label>
+            <input type="text" class="form-control" id="name" name="name" value="{{ item.name }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="price" class="form-label">Цена:</label>
+            <input type="number" class="form-control" id="price" name="price" step="0.01" value="{{ item.price }}" required>
+        </div>
+        <button type="submit" class="btn btn-success">💾 Сохранить</button>
+        <a href="{% url 'item_list' %}" class="btn btn-secondary ms-2">Назад</a>
+    </form>
+</div>
+{% endblock %}

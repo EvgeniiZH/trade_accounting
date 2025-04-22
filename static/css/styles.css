@@ -1,235 +1,235 @@
-/* ====== Чекбоксы ====== */
-/* Стили для невыбранного чекбокса */
-input[type="checkbox"] {
-    border: 2px solid #343a40; /* Тёмный серый */
-    width: 20px;
-    height: 20px;
-    appearance: none; /* Убираем стандартное оформление */
-    cursor: pointer;
-}
+/*!* ====== Чекбоксы ====== *!*/
+/*!* Стили для невыбранного чекбокса *!*/
+/*input[type="checkbox"] {*/
+/*    border: 2px solid #343a40; !* Тёмный серый *!*/
+/*    width: 20px;*/
+/*    height: 20px;*/
+/*    appearance: none; !* Убираем стандартное оформление *!*/
+/*    cursor: pointer;*/
+/*}*/
 
-/* Стили для выбранного чекбокса */
-input[type="checkbox"]:checked {
-    border: 2px solid #007bff; /* Синий для выбранного состояния */
-    background-color: #27f606; /* Заливка синего цвета */
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+/*!* Стили для выбранного чекбокса *!*/
+/*input[type="checkbox"]:checked {*/
+/*    border: 2px solid #007bff; !* Синий для выбранного состояния *!*/
+/*    background-color: #27f606; !* Заливка синего цвета *!*/
+/*    color: white;*/
+/*    display: flex;*/
+/*    align-items: center;*/
+/*    justify-content: center;*/
+/*}*/
 
-/* Hover-эффект для чекбокса */
-input[type="checkbox"]:hover {
-    border-color: #495057; /* Ещё более тёмный серый */
-}
+/*!* Hover-эффект для чекбокса *!*/
+/*input[type="checkbox"]:hover {*/
+/*    border-color: #495057; !* Ещё более тёмный серый *!*/
+/*}*/
 
-/* ====== Анимация ====== */
-@keyframes highlight {
-    0% {
-        background-color: #d4edda;
-    }
-    100% {
-        background-color: transparent;
-    }
-}
+/*!* ====== Анимация ====== *!*/
+/*@keyframes highlight {*/
+/*    0% {*/
+/*        background-color: #d4edda;*/
+/*    }*/
+/*    100% {*/
+/*        background-color: transparent;*/
+/*    }*/
+/*}*/
 
-/* ====== Глобальные стили ====== */
-body {
-    font-family: "Arial", sans-serif;
-    background-color: #f8f9fa;
-    color: #333;
-}
+/*!* ====== Глобальные стили ====== *!*/
+/*body {*/
+/*    font-family: "Arial", sans-serif;*/
+/*    background-color: #f8f9fa;*/
+/*    color: #333;*/
+/*}*/
 
-/* ====== Шапка и навигация ====== */
-header {
-    background-color: #ffffff;
-    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-}
+/*!* ====== Шапка и навигация ====== *!*/
+/*header {*/
+/*    background-color: #ffffff;*/
+/*    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);*/
+/*}*/
 
-.navbar-brand {
-    color: #007bff !important;
-}
+/*.navbar-brand {*/
+/*    color: #007bff !important;*/
+/*}*/
 
-.nav-link {
-    color: #007bff !important;
-    transition: color 0.2s ease-in-out;
-}
+/*.nav-link {*/
+/*    color: #007bff !important;*/
+/*    transition: color 0.2s ease-in-out;*/
+/*}*/
 
-.nav-link:hover {
-    color: #0056b3 !important;
-}
+/*.nav-link:hover {*/
+/*    color: #0056b3 !important;*/
+/*}*/
 
-/* ====== Сообщения ====== */
-.alert {
-    font-size: 18px;
-    width: 300px;
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 9999;
-    text-align: center;
-    word-wrap: break-word;
-    padding-right: 2.5rem;
-}
+/*!* ====== Сообщения ====== *!*/
+/*.alert {*/
+/*    font-size: 18px;*/
+/*    width: 300px;*/
+/*    position: fixed;*/
+/*    top: 20px;*/
+/*    right: 20px;*/
+/*    z-index: 9999;*/
+/*    text-align: center;*/
+/*    word-wrap: break-word;*/
+/*    padding-right: 2.5rem;*/
+/*}*/
 
-/* Если требуется отдельное позиционирование для всплывающих уведомлений (toast) – этот блок можно оставить */
-.toast {
-    position: fixed;
-    top: 15px;
-    right: 15px;
-    z-index: 9999;
-    background: rgba(0, 0, 0, 0.8);
-    color: white;
-    padding: 10px 15px;
-    border-radius: 5px;
-    display: none;
-}
+/*!* Если требуется отдельное позиционирование для всплывающих уведомлений (toast) – этот блок можно оставить *!*/
+/*.toast {*/
+/*    position: fixed;*/
+/*    top: 15px;*/
+/*    right: 15px;*/
+/*    z-index: 9999;*/
+/*    background: rgba(0, 0, 0, 0.8);*/
+/*    color: white;*/
+/*    padding: 10px 15px;*/
+/*    border-radius: 5px;*/
+/*    display: none;*/
+/*}*/
 
-/* Контейнер для сообщений (если используется) */
-#message-container {
-    max-width: 400px;
-}
+/*!* Контейнер для сообщений (если используется) *!*/
+/*#message-container {*/
+/*    max-width: 400px;*/
+/*}*/
 
-/* Фиксируем положение кнопки закрытия в сообщениях */
-.alert .btn-close {
-    position: absolute;
-    right: 10px;
-    top: 10px;
-}
+/*!* Фиксируем положение кнопки закрытия в сообщениях *!*/
+/*.alert .btn-close {*/
+/*    position: absolute;*/
+/*    right: 10px;*/
+/*    top: 10px;*/
+/*}*/
 
-/* ====== Таблицы ====== */
-.table {
-    background: white;
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    overflow: hidden;
-    width: 100%;
-    border-collapse: collapse;
-}
+/*!* ====== Таблицы ====== *!*/
+/*.table {*/
+/*    background: white;*/
+/*    border: 1px solid #dee2e6;*/
+/*    border-radius: 8px;*/
+/*    overflow: hidden;*/
+/*    width: 100%;*/
+/*    border-collapse: collapse;*/
+/*}*/
 
-.table th,
-.table td {
-    font-size: 1.1rem;
-    text-align: center;
-    vertical-align: middle;
-}
+/*.table th,*/
+/*.table td {*/
+/*    font-size: 1.1rem;*/
+/*    text-align: center;*/
+/*    vertical-align: middle;*/
+/*}*/
 
-/* Заголовки таблицы — выбрана синяя заливка для единообразия с навигацией */
-.table th {
-    background: #007bff;
-    color: white;
-    font-weight: bold;
-}
+/*!* Заголовки таблицы — выбрана синяя заливка для единообразия с навигацией *!*/
+/*.table th {*/
+/*    background: #007bff;*/
+/*    color: white;*/
+/*    font-weight: bold;*/
+/*}*/
 
-/* Специальный стиль для ячейки "Наименование" */
-.table-name-cell {
-    width: 58%;
-    white-space: normal;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-}
+/*!* Специальный стиль для ячейки "Наименование" *!*/
+/*.table-name-cell {*/
+/*    width: 58%;*/
+/*    white-space: normal;*/
+/*    word-wrap: break-word;*/
+/*    overflow-wrap: break-word;*/
+/*}*/
 
-.table-name-cell textarea {
-    width: 100%;
-    height: auto;
-    min-height: 35px;
-    max-height: 80px; /* Ограничение по высоте */
-    resize: none;
-    overflow-y: hidden;
-    word-wrap: break-word;
-    white-space: normal;
-    border: 1px solid #ccc;
-    box-sizing: border-box;
-    padding: 5px;
-}
+/*.table-name-cell textarea {*/
+/*    width: 100%;*/
+/*    height: auto;*/
+/*    min-height: 35px;*/
+/*    max-height: 80px; !* Ограничение по высоте *!*/
+/*    resize: none;*/
+/*    overflow-y: hidden;*/
+/*    word-wrap: break-word;*/
+/*    white-space: normal;*/
+/*    border: 1px solid #ccc;*/
+/*    box-sizing: border-box;*/
+/*    padding: 5px;*/
+/*}*/
 
-/* Таблица с прокруткой (если требуется) */
-#item-table {
-    display: block;
-    max-height: 700px;
-    overflow-y: auto;
-    width: 100%;
-}
+/*!* Таблица с прокруткой (если требуется) *!*/
+/*#item-table {*/
+/*    display: block;*/
+/*    max-height: 700px;*/
+/*    overflow-y: auto;*/
+/*    width: 100%;*/
+/*}*/
 
-/* ====== Формы и поля ввода ====== */
-.form-label {
-    font-size: 1.2rem;
-}
+/*!* ====== Формы и поля ввода ====== *!*/
+/*.form-label {*/
+/*    font-size: 1.2rem;*/
+/*}*/
 
-.form-control {
-    font-size: 16px;
-    padding: 10px;
-    border-radius: 5px;
-}
+/*.form-control {*/
+/*    font-size: 16px;*/
+/*    padding: 10px;*/
+/*    border-radius: 5px;*/
+/*}*/
 
-/* Растягиваем поля ввода внутри форм */
-form input,
-form select,
-form button {
-    height: 40px;
-}
+/*!* Растягиваем поля ввода внутри форм *!*/
+/*form input,*/
+/*form select,*/
+/*form button {*/
+/*    height: 40px;*/
+/*}*/
 
-/* ====== Кнопки ====== */
-.btn {
-    font-size: 16px;
-    padding: 8px 15px;
-    border-radius: 5px;
-}
+/*!* ====== Кнопки ====== *!*/
+/*.btn {*/
+/*    font-size: 16px;*/
+/*    padding: 8px 15px;*/
+/*    border-radius: 5px;*/
+/*}*/
 
-/* ====== Дополнительные стили ====== */
-/* Выравнивание формы добавления товара */
-.add-item-form {
-    display: flex;
-    flex-wrap: nowrap;
-    align-items: center;
-    gap: 10px;
-}
+/*!* ====== Дополнительные стили ====== *!*/
+/*!* Выравнивание формы добавления товара *!*/
+/*.add-item-form {*/
+/*    display: flex;*/
+/*    flex-wrap: nowrap;*/
+/*    align-items: center;*/
+/*    gap: 10px;*/
+/*}*/
 
-.add-item-form select,
-.add-item-form input {
-    flex: 1;
-    min-width: 150px;
-    max-width: 250px;
-}
+/*.add-item-form select,*/
+/*.add-item-form input {*/
+/*    flex: 1;*/
+/*    min-width: 150px;*/
+/*    max-width: 250px;*/
+/*}*/
 
-.add-item-form button {
-    flex-shrink: 0;
-}
+/*.add-item-form button {*/
+/*    flex-shrink: 0;*/
+/*}*/
 
-/* Общие стили для таблиц */
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
+/*!* Общие стили для таблиц *!*/
+/*table {*/
+/*    width: 100%;*/
+/*    border-collapse: collapse;*/
+/*}*/
 
-/* Высота строк таблицы */
-table tbody tr {
-    height: 50px;
-}
+/*!* Высота строк таблицы *!*/
+/*table tbody tr {*/
+/*    height: 50px;*/
+/*}*/
 
-/* Заголовки страницы */
-h2 {
-    font-size: 24px;
-    font-weight: bold;
-    margin-bottom: 15px;
-}
+/*!* Заголовки страницы *!*/
+/*h2 {*/
+/*    font-size: 24px;*/
+/*    font-weight: bold;*/
+/*    margin-bottom: 15px;*/
+/*}*/
 
-/* Стили для поля поиска, чтобы оно было поменьше */
-#search-input {
-    max-width: 500px; /* Ограничение максимальной ширины */
-    padding: 5px 5px; /* Немного уменьшенный отступ */
-    font-size: 16px; /* Меньший размер шрифта */
-    height: 40px; /* Фиксированная высота */
-}
+/*!* Стили для поля поиска, чтобы оно было поменьше *!*/
+/*#search-input {*/
+/*    max-width: 500px; !* Ограничение максимальной ширины *!*/
+/*    padding: 5px 5px; !* Немного уменьшенный отступ *!*/
+/*    font-size: 16px; !* Меньший размер шрифта *!*/
+/*    height: 40px; !* Фиксированная высота *!*/
+/*}*/
 
-/* Пример стилей для вертикального меню */
-.sidebar {
-    height: 100vh;
-    background-color: #f8f9fa;
-    border-right: 1px solid #dee2e6;
-    padding: 1rem;
-}
+/*!* Пример стилей для вертикального меню *!*/
+/*.sidebar {*/
+/*    height: 100vh;*/
+/*    background-color: #f8f9fa;*/
+/*    border-right: 1px solid #dee2e6;*/
+/*    padding: 1rem;*/
+/*}*/
 
-.content-area {
-    padding: 1rem;
-}
+/*.content-area {*/
+/*    padding: 1rem;*/
+/*}*/

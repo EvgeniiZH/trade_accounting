@@ -1,150 +1,168 @@
 {% extends 'base.html' %}
-
 {% block title %}Список товаров{% endblock %}
 
 {% block content %}
     <div class="container my-4">
-        <h2 class="mb-4">Список товаров</h2>
+        <div class="row">
+            <!-- Левая колонка: таблица -->
+            <div class="col-lg-9 mb-4">
+                <h2 class="mb-4 text-primary">📦 Список товаров</h2>
 
-        <!-- Поиск -->
-        <h3 class="mb-3">Поиск по товарам</h3>
-        <form method="get" class="mb-4">
-            <div class="row g-3 align-items-center">
-                <div class="input-group">
-                    <input type="text" id="search-input" name="search" class="form-control"
+                <!-- Поиск -->
+                <div class="input-group mb-3">
+                    <input type="text" id="search-input" class="form-control"
                            placeholder="🔍 Введите название товара...">
                     <button type="button" id="clear-search" class="btn btn-outline-secondary">Очистить</button>
                 </div>
-            </div>
-        </form>
 
-        <!-- Таблица товаров -->
-        <div class="table-responsive">
-            <form method="post">
-                {% csrf_token %}
-                <table class="table table-bordered table-hover" id="item-table">
-                    <thead class="table-light">
-                    <tr>
-                        <th>#</th>
-                        <th>Наименование</th>
-                        <th>Цена</th>
-                        <th>Действия</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for item in items %}
-                        <tr id="item-{{ item.id }}">
-                            <td>{{ forloop.counter }}</td>
-                            <td class="table-name-cell">
-                                <textarea class="form-control auto-expand"
-                                          name="name_{{ item.id }}">{{ item.name }}</textarea>
-                            </td>
-                            <td>
-                                <input type="number" class="form-control" name="price_{{ item.id }}"
-                                       value="{{ item.price|floatformat:2 }}" step="0.01" min="1">
-                            </td>
-                            <td>
-                                <button type="button" name="edit_item" value="{{ item.id }}"
-                                        class="btn btn-warning btn-sm">
-                                    Сохранить
-                                </button>
-                                <button type="button" name="delete_item" value="{{ item.id }}"
-                                        class="btn btn-danger btn-sm">
-                                    Удалить
-                                </button>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </form>
+                <!-- Таблица -->
+                <div class="table-container">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover" id="item-table">
+                            <thead class="table-light">
+                            <tr>
+                                <th style="width: 50px;">#</th>
+                                <th>
+                                    <a href="?sort=name&direction={% if sort_by == 'name' and direction == 'asc' %}desc{% else %}asc{% endif %}&search={{ search }}">
+                                        Наименование
+                                        {% if sort_by == 'name' %}
+                                            {% if direction == 'asc' %}↑{% else %}↓{% endif %}
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th class="text-end" style="width: 120px;">
+                                    <a href="?sort=price&direction={% if sort_by == 'price' and direction == 'asc' %}desc{% else %}asc{% endif %}&search={{ search }}">
+                                        Цена
+                                        {% if sort_by == 'price' %}
+                                            {% if direction == 'asc' %}↑{% else %}↓{% endif %}
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th class="text-center" style="width: 160px;">Действия</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for item in items %}
+                                <tr id="item-{{ item.id }}">
+                                    <td>{{ forloop.counter }}</td>
+                                    <td class="item-name">{{ item.name }}</td>
+                                    <td class="text-end">{{ item.price|floatformat:2 }} ₽</td>
+                                    <td class="text-center">
+                                        <div class="d-flex justify-content-center gap-2">
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-primary btn-edit"
+                                                    data-id="{{ item.id }}"
+                                                    data-name="{{ item.name }}"
+                                                    data-price="{{ item.price }}"
+                                                    onclick="openEditModal(this)">
+                                                ✏ Редактировать
+                                            </button>
+
+
+                                            <form method="post" style="display:inline;">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="delete_item" value="{{ item.id }}">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger btn-edit"
+                                                        onclick="return confirm('Удалить товар {{ item.name }}?')">
+                                                    🗑 Удалить
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Правая колонка: формы -->
+            <div class="col-lg-3 right-column-offset">
+
+                <!-- Добавление -->
+                <h4 class="text-success mb-3">➕ Добавить товар</h4>
+                <form method="post" class="mb-4">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <input type="text" name="name" class="form-control" placeholder="Название" required
+                               autocomplete="off">
+                    </div>
+                    <div class="mb-3">
+                        <input type="number" name="price" class="form-control" placeholder="Цена" step="0.01" min="1"
+                               required autocomplete="off">
+                    </div>
+                    <button type="submit" name="add_item" class="btn btn-success w-100">Добавить</button>
+                </form>
+
+                <!-- Загрузка -->
+                <h4 class="text-primary mb-3">📤 Загрузить из файла</h4>
+                <form method="post" enctype="multipart/form-data" class="mb-3">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <input type="file" name="file" accept=".xlsx, .xls" class="form-control">
+                    </div>
+                    <button type="submit" name="upload_file" class="btn btn-info text-white w-100">Загрузить</button>
+                </form>
+
+                <div class="text-center">
+                    <a href="{% url 'download_import_template' %}" class="btn btn-outline-info w-100">
+                        ⬇ Скачать шаблон
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 📊 Статистика -->
+    <div class="stats-block p-4 bg-light border rounded text-center">
+
+        <h5 class="mb-3 text-secondary">📈 Статистика по товарам</h5>
+        <div class="row justify-content-center">
+            <div class="col-md-3">
+                <p><strong>Всего товаров:</strong><br> {{ total_items }}</p>
+            </div>
+            <div class="col-md-3">
+                <p><strong>Общая сумма:</strong><br> {{ total_price|floatformat:2 }} ₽</p>
+            </div>
+            <div class="col-md-3">
+                <p><strong>Средняя цена:</strong><br> {{ avg_price|floatformat:2 }} ₽</p>
+            </div>
         </div>
 
-        <!-- Добавление нового товара -->
-        <h3 class="mb-3">Добавить новый товар</h3>
-        <form method="post" class="mb-4">
-            {% csrf_token %}
-            <div class="row g-3 align-items-center">
-                <div class="col-md-5">
-                    <input type="text" name="name" class="form-control" placeholder="Название" required>
-                </div>
-                <div class="col-md-3">
-                    <input type="number" name="price" class="form-control" placeholder="Цена" step="0.01" min="1"
-                           required>
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" name="add_item" class="btn btn-success">Добавить</button>
-                </div>
+        <!-- Кнопка Экспорт (если реализована) -->
+        {#         <a href="{% url 'export_items_excel' %}" class="btn btn-outline-success mt-3">⬇ Экспортировать в Excel</a>#}
+    </div>
+    <!-- 🧩 Модальное окно редактирования -->
+    <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="editItemForm">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editModalLabel">Редактировать товар</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                    </div>
+                    <div class="modal-body">
+                        {% csrf_token %}
+                        <input type="hidden" id="editItemId">
+                        <div class="mb-3">
+                            <label for="editItemName" class="form-label">Название</label>
+                            <input type="text" id="editItemName" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editItemPrice" class="form-label">Цена</label>
+                            <input type="number" id="editItemPrice" class="form-control" step="0.01" min="1" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success">💾 Сохранить</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    </div>
+                </form>
             </div>
-        </form>
-
-        <!-- Загрузка товаров из файла -->
-        <h3 class="mb-3">Загрузить товары из файла</h3>
-        <form method="post" enctype="multipart/form-data" class="mb-4">
-            {% csrf_token %}
-            <div class="row g-3 align-items-center">
-                <div class="col-md-6">
-                    <input type="file" name="file" accept=".xlsx, .xls" class="form-control">
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" name="upload_file" class="btn btn-info text-white">Загрузить</button>
-                </div>
-            </div>
-        </form>
-
-        <div>
-            <!-- Кнопка для скачивания шаблона импорта товаров -->
-            <a href="{% url 'download_import_template' %}" class="btn btn-info">
-                Скачать шаблон импорта товаров
-            </a>
         </div>
     </div>
 
-    <!-- Поиск с прокруткой и подсветкой -->
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const searchInput = document.querySelector('#search-input');
-            const clearButton = document.querySelector('#clear-search');
-            const tableBody = document.querySelector('#item-table tbody');
 
-            // Обработчик для поиска с подсветкой и скроллом
-            searchInput.addEventListener('input', () => {
-                const searchTerm = searchInput.value.trim().toLowerCase();
-                const rows = tableBody.querySelectorAll('tr');
-                let found = false;
-
-                rows.forEach(row => {
-                    const nameInput = row.querySelector("textarea[name^='name']");
-                    const itemName = nameInput ? nameInput.value.trim().toLowerCase() : "";
-
-                    if (searchTerm === "" || itemName.startsWith(searchTerm)) {
-                        row.style.display = "";
-                        // Подсвечиваем первую строку, соответствующую запросу
-                        if (!found && searchTerm !== "") {
-                            row.scrollIntoView({behavior: 'smooth', block: 'center'});
-                            row.style.backgroundColor = '#d4edda';
-                            setTimeout(() => row.style.backgroundColor = '', 2000);
-                            found = true;
-                        }
-                    } else {
-                        row.style.display = "none";
-                    }
-                });
-
-                if (!found && searchTerm !== "") {
-                    console.log('Товар не найден:', searchTerm);
-                }
-            });
-
-            // Обработчик для кнопки "Очистить"
-            if (clearButton) {
-                clearButton.addEventListener('click', () => {
-                    searchInput.value = "";
-                    // Генерируем событие input для обновления списка
-                    searchInput.dispatchEvent(new Event('input'));
-                });
-            }
-        });
-    </script>
-
+    {% load static %}
+    <script src="{% static 'js/search_filter.js' %}" defer></script>
 {% endblock %}

@@ -1,0 +1,136 @@
+/* ================== ОСНОВНАЯ СЕТКА ================== */
+#create-calculation-wrapper .table-responsive {
+  max-height: 400px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+#calculation-table {
+  table-layout: fixed;
+}
+
+/* ================== СТОЛБЦЫ ================== */
+
+/* № */
+#calculation-table th:nth-child(1),
+#calculation-table td:nth-child(1) {
+  width: 40px;
+  text-align: center;
+}
+
+/* Товар */
+#calculation-table th:nth-child(2),
+#calculation-table td:nth-child(2) {
+  max-width: 600px;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Цена */
+#calculation-table th:nth-child(3),
+#calculation-table td:nth-child(3) {
+  width: 120px;
+  text-align: right;
+}
+
+/* Количество */
+#calculation-table th:nth-child(4),
+#calculation-table td:nth-child(4) {
+  width: 115px;
+  text-align: center;
+}
+
+#calculation-table td input.quantity-input {
+  width: 90px;
+  text-align: center;
+}
+
+/* Выбрать */
+#calculation-table th:nth-child(5),
+#calculation-table td:nth-child(5) {
+  width: 90px;
+  text-align: center;
+}
+
+/* Ячейка цены */
+#calculation-table .item-price {
+  text-align: right;
+}
+
+/* Переопределение из table.css */
+#calculation-table td.item-name {
+  white-space: nowrap;
+}
+
+
+/* ================== ПРАВАЯ КОЛОНКА ================== */
+
+#create-calculation-wrapper .summary-column {
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  padding-left: 0.5rem;
+}
+
+#create-calculation-wrapper .summary-column > div {
+  width: 100%;
+  max-width: 300px;
+  margin-top: 3rem;
+}
+
+#create-calculation-wrapper .summary-block {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.05);
+  font-size: 0.95rem;
+}
+
+#create-calculation-wrapper .summary-block h5 {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+  color: #198754;
+}
+
+#create-calculation-wrapper .summary-block span {
+  font-weight: bold;
+}
+
+#create-calculation-wrapper .summary-block .d-flex {
+  padding: 0.3rem 0;
+  justify-content: space-between;
+}
+
+
+/* ================== ФОРМА ================== */
+#create-calculation-wrapper .form-label {
+  font-weight: 600;
+}
+
+
+/* Скрытие вертикального скролла */
+#create-calculation-wrapper .table-responsive::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+#create-calculation-wrapper .table-responsive {
+  scrollbar-width: none;         /* Firefox */
+  -ms-overflow-style: none;      /* Internet Explorer 10+ */
+}
+
+
+
+/* 💡 Подсветка строки при включённом чекбоксе */
+#calculation-table tbody tr.highlighted {
+  background-color: #e6f4ea !important;
+  transition: background-color 0.3s ease-in-out;
+}
+
+/* 💡 Удалим стиль чередующихся строк, если был */
+#calculation-table.table-striped tbody tr:nth-of-type(odd) {
+  background-color: inherit;
+}

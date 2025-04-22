@@ -28,3 +28,18 @@ def format_percentage(value):
         return f"{formatted_value}%"
     except (ValueError, TypeError):
         return value
+
+
+@register.filter
+def get_item(dictionary, key):
+    try:
+        return dictionary.get(str(key))
+    except (AttributeError, TypeError):
+        return ''
+
+@register.filter
+def mul(value, arg):
+    try:
+        return float(value) * float(arg)
+    except (ValueError, TypeError):
+        return ''

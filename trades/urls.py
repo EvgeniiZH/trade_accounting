@@ -23,5 +23,7 @@ urlpatterns = [
     # Новые AJAX URL'ы:
     path('ajax/edit_item/', views.edit_item_ajax, name='edit_item_ajax'),
     path('ajax/delete_item/', views.delete_item_ajax, name='delete_item_ajax'),
+    path('calculations/<int:calculation_id>/copy/', views.copy_calculation, name='copy_calculation'),
+    path('items/<int:item_id>/edit/', views.edit_item_page, name='edit_item'),
 
 ]

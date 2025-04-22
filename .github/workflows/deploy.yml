@@ -43,7 +43,7 @@ jobs:
 
             echo "==> Копирование STATIC в /var/www"
             rm -rf /var/www/trade_accounting/staticfiles/*
-            cp -r staticfiles/* /var/www/trade_accounting/staticfiles/
+            cp -r staticfiles/. /var/www/trade_accounting/staticfiles/
             chown -R www-data:www-data /var/www/trade_accounting/staticfiles
 
             echo "==> Копирование MEDIA в /var/www"

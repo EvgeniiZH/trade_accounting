@@ -42,7 +42,9 @@ jobs:
             docker compose exec web python manage.py collectstatic --noinput
 
             echo "==> Обновление nginx-конфига"
-            cp nginx/django.conf /etc/nginx/sites-available/django
+            cp deploy/nginx/django.conf /etc/nginx/sites-available/django
+
+
             ln -sf /etc/nginx/sites-available/django /etc/nginx/sites-enabled/django
 
             echo "==> Проверка конфигурации nginx"

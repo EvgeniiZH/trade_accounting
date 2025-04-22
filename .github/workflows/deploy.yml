@@ -22,32 +22,40 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no root@${{ secrets.SERVER_IP }} << 'EOF'
             set -e
-            echo "==> Переход в проект"
+            echo "==> Переход в директорию проекта"
             cd /root/trade_accounting
 
             echo "==> Сброс локальных изменений"
             git reset --hard HEAD
 
-            echo "==> Получение свежего кода"
+            echo "==> Обновление кода"
             git pull origin main
 
-            echo "==> Пересборка Docker"
+            echo "==> Сборка и запуск контейнеров"
             docker compose build --no-cache
             docker compose up -d
 
-            echo "==> Выполнение миграций"
+            echo "==> Миграции"
             docker compose exec web python manage.py migrate --noinput
 
-            echo "==> Сбор статики"
+            echo "==> Сборка статики"
             docker compose exec web python manage.py collectstatic --noinput
 
-            echo "==> Обновление nginx-конфига"
+            echo "==> Копирование STATIC в /var/www"
+            rm -rf /var/www/trade_accounting/staticfiles/*
+            cp -r staticfiles/* /var/www/trade_accounting/staticfiles/
+            chown -R www-data:www-data /var/www/trade_accounting/staticfiles
+
+            echo "==> Копирование MEDIA в /var/www"
+            rm -rf /var/www/trade_accounting/media/*
+            cp -r media/* /var/www/trade_accounting/media/
+            chown -R www-data:www-data /var/www/trade_accounting/media
+
+            echo "==> Обновление конфигурации nginx"
             cp deploy/nginx/django.conf /etc/nginx/sites-available/django
-
-
             ln -sf /etc/nginx/sites-available/django /etc/nginx/sites-enabled/django
 
-            echo "==> Проверка конфигурации nginx"
+            echo "==> Проверка nginx"
             nginx -t
 
             echo "==> Перезапуск nginx"

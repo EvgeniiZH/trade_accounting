@@ -7,7 +7,7 @@ DEBUG = False
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'kiteh.ru,www.kiteh.ru,89.111.153.46').split(',')
 
-SECRET_KEY = os.getenv('SECRET_KEY', 'замени-на-настоящий')
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-3-q)1+uqx7(8i(+6zg4+r^9ed4h%&5bmc%g%nm@w2-=$89ibr-')
 
 DATABASES = {
     'default': {

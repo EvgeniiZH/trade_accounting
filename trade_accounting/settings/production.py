@@ -19,10 +19,11 @@ DATABASES = {
         'PORT': os.getenv('POSTGRES_PORT', '5432'),
     }
 }
+STATICFILES_DIRS = [BASE_DIR / 'static']
 
 STATIC_ROOT = '/var/www/trade_accounting/staticfiles'
 MEDIA_ROOT = '/var/www/trade_accounting/media'
-STATICFILES_DIRS = [BASE_DIR / 'static']
+
 
 MEDIA_URL = '/media/'
 

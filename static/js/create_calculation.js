@@ -113,4 +113,33 @@ document.addEventListener('DOMContentLoaded', () => {
             searchInput.dispatchEvent(new Event('input'));
         });
     }
+
+    // === Сортировка по заголовкам ===
+    document.querySelectorAll('#calculation-table th').forEach((headerCell, colIndex) => {
+        headerCell.style.cursor = 'pointer';
+        headerCell.addEventListener('click', () => {
+            const rows = Array.from(calcTableBody.querySelectorAll('tr'));
+            const isNumeric = headerCell.innerText.toLowerCase().includes('цен') || headerCell.innerText.toLowerCase().includes('кол');
+            const ascending = headerCell.dataset.sorted !== 'asc';
+
+            rows.sort((a, b) => {
+                const aText = a.children[colIndex].innerText.trim();
+                const bText = b.children[colIndex].innerText.trim();
+
+                if (isNumeric) {
+                    return ascending
+                        ? parseFloat(aText.replace(',', '.')) - parseFloat(bText.replace(',', '.'))
+                        : parseFloat(bText.replace(',', '.')) - parseFloat(aText.replace(',', '.'));
+                } else {
+                    return ascending
+                        ? aText.localeCompare(bText)
+                        : bText.localeCompare(aText);
+                }
+            });
+
+            headerCell.dataset.sorted = ascending ? 'asc' : 'desc';
+
+            rows.forEach(row => calcTableBody.appendChild(row));
+        });
+    });
 });

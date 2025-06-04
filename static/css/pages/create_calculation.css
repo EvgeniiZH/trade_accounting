@@ -78,6 +78,8 @@
     width: 100%;
     max-width: 300px;
     margin-top: 3rem;
+    position: sticky;
+    top: 1rem;
 }
 
 #create-calculation-wrapper .summary-block {
@@ -139,7 +141,3 @@
     padding: 0 2px;
     border-radius: 3px;
 }
-
-
-
-

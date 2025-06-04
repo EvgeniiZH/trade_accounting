@@ -29,11 +29,19 @@
 
                     <!-- Общая таблица товаров -->
                     <h5 class="mb-3">📦 Товары</h5>
+
                     <!-- 🔍 Поиск товаров -->
-                    <div class="input-group mb-3">
+                    <div class="input-group mb-2">
                         <input type="text" id="search-input" name="search" value=""
                                class="form-control" placeholder="🔍 Введите название товара...">
                         <button type="button" id="clear-search" class="btn btn-outline-secondary">Очистить</button>
+                    </div>
+
+                    <!-- 🔘 Фильтр только выбранные -->
+                    <div class="mb-3">
+                        <button type="button" id="filter-selected" class="btn btn-outline-secondary btn-sm">
+                            🔘 Показать только выбранные
+                        </button>
                     </div>
 
                     <div class="table-responsive mb-4">

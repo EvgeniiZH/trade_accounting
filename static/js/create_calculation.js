@@ -8,6 +8,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.querySelector('#search-input');
     const clearButton = document.querySelector('#clear-search');
     const calcTableBody = table?.querySelector('tbody');
+    const filterBtn = document.querySelector('#filter-selected');
+
+    function applyFilterOnlySelected(active) {
+        const rows = calcTableBody.querySelectorAll('tr');
+        rows.forEach(row => {
+            const checkbox = row.querySelector('.item-checkbox');
+            if (!checkbox) return;
+            const shouldShow = checkbox.checked || !active;
+            row.style.display = shouldShow ? '' : 'none';
+        });
+    }
+
+    if (filterBtn && calcTableBody) {
+        filterBtn.dataset.active = 'false';
+
+        filterBtn.addEventListener('click', () => {
+            const active = filterBtn.dataset.active === 'true';
+            const newState = !active;
+            filterBtn.dataset.active = String(newState);
+            filterBtn.textContent = newState ? '🔄 Показать все' : '🔘 Показать только выбранные';
+            applyFilterOnlySelected(newState);
+        });
+    }
 
     function recalculateTotals() {
         if (!table || !markupInput || !totalWithout || !totalWith) return;
@@ -41,7 +64,11 @@ document.addEventListener('DOMContentLoaded', () => {
         table.addEventListener('change', recalculateTotals);
         markupInput.addEventListener('input', recalculateTotals);
         table.querySelectorAll('.item-checkbox').forEach(cb => {
-            cb.addEventListener('change', recalculateTotals);
+            cb.addEventListener('change', () => {
+                recalculateTotals();
+                const active = filterBtn?.dataset.active === 'true';
+                if (active) applyFilterOnlySelected(true);
+            });
         });
         recalculateTotals();
     }
@@ -80,7 +107,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
-
 
         clearButton.addEventListener('click', () => {
             searchInput.value = '';

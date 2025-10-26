@@ -2,11 +2,9 @@
 from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include
-from django.http import HttpResponse, JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-import json
-import os
-import requests
+from django.http import HttpResponse
+
+from .webhooks import sentry_webhook
 
 def healthz(_request):
     # Лёгкий healthcheck без БД
@@ -16,32 +14,6 @@ def trigger_error(_request):
     # Тестовая ошибка для проверки Sentry
     _ = 1 / 0
     return HttpResponse("never here")
-
-@csrf_exempt
-def sentry_webhook(request):
-    if request.method != "POST":
-        return JsonResponse({"error": "Invalid request"}, status=400)
-
-    try:
-        data = json.loads(request.body or b"{}")
-        title = data.get("title", "Неизвестная ошибка")
-        url = data.get("url", "Нет ссылки")
-        message = f"🚨 Ошибка в Sentry!\n🔹 {title}\n🔗 {url}"
-
-        # Токен и чат берём из ENV (см. ниже .env.production)
-        bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
-        chat_id = os.getenv("TELEGRAM_CHAT_ID")
-
-        if bot_token and chat_id:
-            requests.post(
-                f"https://api.telegram.org/bot{bot_token}/sendMessage",
-                data={"chat_id": chat_id, "text": message},
-                timeout=5,
-            )
-
-        return JsonResponse({"status": "ok"})
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
 
 urlpatterns = [
     path("healthz", healthz),               # ✅ для docker healthcheck

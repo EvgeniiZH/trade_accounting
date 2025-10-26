@@ -1,5 +1,6 @@
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
+from django.core.exceptions import ImproperlyConfigured
 from .base import *
 import os
 
@@ -7,18 +8,31 @@ DEBUG = False
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'kiteh.ru,www.kiteh.ru,89.111.153.46').split(',')
 
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-3-q)1+uqx7(8i(+6zg4+r^9ed4h%&5bmc%g%nm@w2-=$89ibr-')
+# Получаем SECRET_KEY из переменных окружения
+SECRET_KEY = os.getenv('SECRET_KEY')
+if not SECRET_KEY:
+    raise ImproperlyConfigured(
+        'SECRET_KEY must be set in production. Please check your environment variables.'
+    )
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('POSTGRES_DB', 'django_project_db'),
-        'USER': os.getenv('POSTGRES_USER', 'django'),
-        'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'me4ut9oodi3W'),
+        'NAME': os.getenv('POSTGRES_DB'),
+        'USER': os.getenv('POSTGRES_USER'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
         'HOST': os.getenv('POSTGRES_HOST', 'db'),
         'PORT': os.getenv('POSTGRES_PORT', '5432'),
     }
 }
+
+# Проверка обязательных настроек БД
+required_settings = ['POSTGRES_DB', 'POSTGRES_USER', 'POSTGRES_PASSWORD']
+missing_settings = [setting for setting in required_settings if not os.getenv(setting)]
+if missing_settings:
+    raise ImproperlyConfigured(
+        f'The following settings must be set in production: {", ".join(missing_settings)}'
+    )
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
 STATIC_ROOT = '/var/www/trade_accounting/staticfiles'

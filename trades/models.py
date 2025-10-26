@@ -55,11 +55,22 @@ class CalculationItem(models.Model):
     def __str__(self):
         return f"{self.item.name} x {self.quantity}"
 
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)  # вызов оригинального сохранения
-        self.calculation.total_price = self.calculation.total_price_without_markup_calc()
-        self.calculation.total_price_with_markup = self.calculation.calculate_total_price_with_markup()
-        self.calculation.save()
+    def save(self, *args, update_calculation=True, **kwargs):
+        """
+        Сохраняет элемент расчета и опционально обновляет итоговые суммы расчета.
+        
+        :param update_calculation: если True, обновит итоговые суммы в расчете
+        """
+        super().save(*args, **kwargs)
+        
+        if update_calculation:
+            from django.db import transaction
+            # Получаем свежую версию расчета из БД и блокируем для обновления
+            with transaction.atomic():
+                calculation = Calculation.objects.select_for_update().get(pk=self.calculation_id)
+                calculation.total_price = calculation.total_price_without_markup_calc()
+                calculation.total_price_with_markup = calculation.calculate_total_price_with_markup()
+                calculation.save()
 
 
 class PriceHistory(models.Model):

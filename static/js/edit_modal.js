@@ -1,4 +1,4 @@
-function openEditModal(button) {
+﻿function openEditModal(button) {
   const itemId = button.dataset.id;
   const itemName = button.dataset.name;
   const itemPrice = button.dataset.price;
@@ -13,41 +13,65 @@ function openEditModal(button) {
 
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('editItemForm');
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
+  const modalElement = document.getElementById('editModal');
 
-    const itemId = document.getElementById('editItemId').value;
-    const name = document.getElementById('editItemName').value;
-    const price = document.getElementById('editItemPrice').value;
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+  if (!form || !modalElement) {
+    return;
+  }
 
-    fetch("/ajax/edit_item/", {
-      method: "POST",
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+
+    const itemIdField = document.getElementById('editItemId');
+    const nameField = document.getElementById('editItemName');
+    const priceField = document.getElementById('editItemPrice');
+    const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+
+    if (!itemIdField || !nameField || !priceField || !csrfInput) {
+      console.warn('Пропущены поля формы для редактирования товара.');
+      return;
+    }
+
+    const itemId = itemIdField.value;
+    const name = nameField.value;
+    const price = priceField.value;
+
+    const body = new URLSearchParams();
+    body.append('edit_item', itemId);
+    body.append(`name_${itemId}`, name);
+    body.append(`price_${itemId}`, price);
+
+    fetch('/ajax/edit_item/', {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        "X-CSRFToken": csrfToken,
-        "X-Requested-With": "XMLHttpRequest"
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-CSRFToken': csrfInput.value,
+        'X-Requested-With': 'XMLHttpRequest',
       },
-      body: new URLSearchParams({
-        edit_item: itemId,
-        [`name_${itemId}`]: name,
-        [`price_${itemId}`]: price
-      })
+      body,
     })
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) {
-        const row = document.getElementById(`item-${itemId}`);
-        if (row) {
-          row.querySelector('.item-name').innerHTML = name;
-          row.querySelector('td:nth-child(3)').innerHTML = parseFloat(price).toFixed(2) + " ₽";
-          row.style.backgroundColor = "#d4edda";
-          setTimeout(() => row.style.backgroundColor = "", 2000);
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          const row = document.getElementById(`item-${itemId}`);
+          if (row) {
+            row.querySelector('.item-name').textContent = name;
+            const priceCell = row.querySelector('td:nth-child(3)');
+            if (priceCell) {
+              priceCell.textContent = `${parseFloat(price).toFixed(2)} ₽`;
+            }
+            row.style.backgroundColor = '#d4edda';
+            setTimeout(() => {
+              row.style.backgroundColor = '';
+            }, 2000);
+          }
+          const modalInstance =
+            bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
+          modalInstance.hide();
+        } else {
+          alert(data.error || 'Не удалось обновить товар.');
         }
-        bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
-      } else {
-        alert(data.error || "Ошибка редактирования");
-      }
-    });
+      })
+      .catch(() => alert('Ошибка при обращении к серверу.'));
   });
 });

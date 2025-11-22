@@ -6,6 +6,22 @@ class ItemForm(forms.ModelForm):
     class Meta:
         model = Item
         fields = ['name', 'price']
+    
+    def clean_price(self):
+        """Валидация цены - должна быть положительной"""
+        price = self.cleaned_data.get('price')
+        if price and price <= 0:
+            raise forms.ValidationError("Цена должна быть больше нуля")
+        return price
+    
+    def clean_name(self):
+        """Валидация названия - минимум 2 символа"""
+        name = self.cleaned_data.get('name')
+        if name:
+            name = name.strip()
+            if len(name) < 2:
+                raise forms.ValidationError("Название должно содержать минимум 2 символа")
+        return name
 
 
 class CalculationForm(forms.ModelForm):
@@ -17,6 +33,23 @@ class CalculationForm(forms.ModelForm):
             'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Название расчёта'}),
             'markup': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Наценка (%)'}),
         }
+    
+    def clean_markup(self):
+        """Валидация наценки - от 0 до 1000%"""
+        markup = self.cleaned_data.get('markup')
+        if markup is not None:
+            if markup < 0 or markup > 1000:
+                raise forms.ValidationError("Наценка должна быть от 0% до 1000%")
+        return markup
+    
+    def clean_title(self):
+        """Валидация названия - минимум 3 символа"""
+        title = self.cleaned_data.get('title')
+        if title:
+            title = title.strip()
+            if len(title) < 3:
+                raise forms.ValidationError("Название должно содержать минимум 3 символа")
+        return title
 
 
 class CalculationItemForm(forms.ModelForm):
@@ -36,6 +69,20 @@ class UploadPricesForm(forms.Form):
         label="Выберите файл Excel",
         widget=forms.ClearableFileInput(attrs={'class': 'form-control'})
     )
+    
+    def clean_file(self):
+        """Валидация загружаемого файла - размер и формат"""
+        file = self.cleaned_data.get('file')
+        if file:
+            # Проверка размера файла (максимум 10MB)
+            max_size = 10 * 1024 * 1024
+            if file.size > max_size:
+                raise forms.ValidationError("Файл слишком большой. Максимальный размер: 10MB")
+            
+            # Проверка расширения файла
+            if not file.name.endswith(('.xlsx', '.xls')):
+                raise forms.ValidationError("Поддерживаются только файлы Excel (.xlsx, .xls)")
+        return file
 
 
 class UserCreateForm(UserCreationForm):

@@ -8,9 +8,11 @@
 
 .table th,
 .table td {
-    font-size: 1.1rem;
+    font-size: 1rem;
     vertical-align: middle;
-    white-space: nowrap;
+    white-space: normal;
+    padding: 0.6rem 0.75rem;
+    word-break: break-word;
 }
 
 .table th {
@@ -19,15 +21,28 @@
     font-weight: bold;
 }
 
+.table th a {
+    color: white;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.table th a:hover {
+    color: #e0e0e0;
+    text-decoration: underline;
+}
+
 .table td.text-end,
 .table th.text-end {
     text-align: right;
+    white-space: nowrap;
 }
 
 .table td.text-center,
 .table th.text-center,
 .table td:last-child {
     text-align: center;
+    white-space: nowrap;
 }
 
 .table .btn-edit,
@@ -39,7 +54,23 @@
 
 .table tbody tr {
     height: 50px;
-    transition: background-color 0.3s;
+    transition: background-color 0.25s ease, transform 0.2s ease;
+}
+
+.table tbody tr:hover {
+    background-color: #f7fbff;
+    transform: translateX(2px);
+}
+
+.table tbody tr.highlighted {
+    background-color: #f0fdf4 !important;
+}
+
+.table tbody tr.search-hit {
+    animation: none;
+    background: linear-gradient(90deg, #f0f8ff 0%, #e3f2fd 100%) !important;
+    box-shadow: inset 0 0 0 1px rgba(25, 118, 210, 0.35);
+    transition: background-color 0.4s ease;
 }
 
 /* Таблица-обёртка */
@@ -51,12 +82,146 @@
 }
 
 /* Прокрутка */
-#item-table {
-    display: block;
-    width: 100%;
-    max-height: 400px;
-    min-height: 300px;
+.table-scroll {
+    --table-max-height: calc(100vh - 200px); /* Увеличена рабочая область - уменьшено до 200px */
+    flex: 1 1 0 !important; /* Занимает всё доступное пространство - фиксируем высоту */
+    min-height: 400px;
+    max-height: var(--table-max-height);
     overflow-y: auto;
+    overflow-x: hidden;
+    margin-bottom: 10px;
+    position: relative; /* Для правильного позиционирования sticky элементов */
+}
+
+.table-scroll table {
+    width: 100%;
+    table-layout: fixed;
+    margin-bottom: 40px; /* Отступ снизу таблицы для полной видимости последней строки */
+}
+
+.table-scroll thead {
+    position: sticky;
+    top: 0;
+    z-index: 6;
+}
+
+.table-scroll tbody tr {
+    transition: opacity 0.15s ease;
+}
+
+/* Loader styles */
+.table-loader {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    backdrop-filter: blur(2px); /* Добавляем легкий блюр для красоты */
+}
+
+.table-loader.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #007bff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Адаптивные ширины колонок для списка товаров */
+#item-table th:nth-child(1),
+#item-table td:nth-child(1) {
+    width: 50px;
+    min-width: 50px;
+}
+
+#item-table th:nth-child(2),
+#item-table td:nth-child(2) {
+    min-width: 150px;
+}
+
+#item-table th:nth-child(3),
+#item-table td:nth-child(3) {
+    width: 120px;
+    min-width: 120px;
+}
+
+#item-table th:nth-child(4),
+#item-table td:nth-child(4) {
+    width: 200px;
+    min-width: 180px;
+}
+
+@media (max-width: 768px) {
+    #item-table th:nth-child(4),
+    #item-table td:nth-child(4) {
+        width: 140px;
+        min-width: 140px;
+    }
+
+    .btn-edit {
+        font-size: 11px;
+        padding: 2px 4px;
+        white-space: nowrap;
+    }
+
+    .page-wrapper {
+        padding: 0.75rem;
+    }
+
+    .page-header {
+        flex-direction: column;
+        align-items: stretch !important;
+    }
+
+    .page-content .row {
+        flex-direction: column;
+    }
+
+    .page-content .row > [class*='col-'] {
+        max-width: 100%;
+        flex: 0 0 auto;
+    }
+
+    .table-scroll {
+        max-height: 50vh;
+    }
+}
+
+.page-wrapper .table-scroll {
+    --table-max-height: calc(100vh - 200px); /* Увеличена рабочая область - уменьшено до 200px */
+}
+
+/* Фиксация элементов формы для предотвращения "дёргания" таблицы при фильтрации */
+form.d-flex.flex-column > *:not(.table-scroll) {
+    flex-shrink: 0; /* Элементы формы не сжимаются */
+}
+
+form.d-flex.flex-column {
+    min-height: 0; /* Важно для flex контейнера */
+}
+
+form.d-flex.flex-column .table-scroll {
+    flex: 1 1 0 !important; /* Таблица занимает всё доступное пространство - фиксируем высоту */
+    min-height: 300px; /* Минимальная высота для таблицы */
 }
 
 /* Колонки */
@@ -96,6 +261,16 @@
     text-decoration: underline;
 }
 
+/* Индикаторы сортировки в заголовках таблиц */
+.table th a.asc::after,
+.table th a.desc::after {
+    display: inline-block;
+    margin-left: 6px;
+    font-weight: 700;
+}
+.table th a.asc::after { content: '↑'; }
+.table th a.desc::after { content: '↓'; }
+
 /* Подсветка найденного */
 mark {
     background-color: #ffe18d;
@@ -114,4 +289,96 @@ mark {
 
 .right-column-offset {
     padding-top: 6rem; /* настрой по вкусу */
+}
+
+/* Стили для таблицы создания/редактирования расчета */
+#calculation-table {
+    table-layout: fixed !important;
+    overflow: visible !important; /* Важно для работы position: sticky */
+}
+
+#calculation-table thead {
+    background: #007bff !important;
+}
+
+#calculation-table thead tr {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10 !important;
+    background: #007bff !important;
+}
+
+#calculation-table thead th {
+    background: #007bff !important;
+    color: white !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10 !important;
+    vertical-align: middle !important;
+    border-bottom: 2px solid white !important;
+}
+
+/* Ссылки сортировки в шапке таблицы */
+#calculation-table thead th a {
+    color: white !important;
+    text-decoration: none;
+    display: inline-block;
+}
+
+#calculation-table thead th a:hover {
+    text-decoration: underline !important;
+}
+
+/* Стрелочки сортировки */
+#calculation-table thead th a.asc::after,
+#calculation-table thead th a.desc::after {
+    display: inline-block;
+    margin-left: 6px;
+    font-weight: 700;
+}
+
+#calculation-table thead th a.asc::after {
+    content: '↑';
+}
+
+#calculation-table thead th a.desc::after {
+    content: '↓';
+}
+
+/* Столбец с порядковыми номерами - сделаем шире */
+#calculation-table th:nth-child(1),
+#calculation-table td:nth-child(1) {
+    width: 70px !important;
+    min-width: 70px !important;
+    max-width: 70px !important;
+    text-align: center;
+}
+
+/* Столбец с названием товара */
+#calculation-table th:nth-child(2),
+#calculation-table td:nth-child(2) {
+    min-width: 200px;
+}
+
+/* Столбец с ценой */
+#calculation-table th:nth-child(3),
+#calculation-table td:nth-child(3) {
+    width: 120px;
+    min-width: 120px;
+    text-align: right;
+}
+
+/* Столбец с количеством */
+#calculation-table th:nth-child(4),
+#calculation-table td:nth-child(4) {
+    width: 110px;
+    min-width: 110px;
+}
+
+/* Столбец с checkbox */
+#calculation-table th:nth-child(5),
+#calculation-table td:nth-child(5) {
+    width: 100px;
+    min-width: 100px;
+    text-align: center;
 }

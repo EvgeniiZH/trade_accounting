@@ -1,0 +1,19 @@
+version: "3.9"
+services:
+  web:
+    # override env file and port for staging
+    env_file:
+      - .env.staging
+    ports:
+      - "127.0.0.1:8001:8000"
+    volumes:
+      - .:/app
+      - /var/www/trade_accounting_staging/staticfiles:/var/www/trade_accounting/staticfiles
+      - /var/www/trade_accounting_staging/media:/var/www/trade_accounting/media
+  db:
+    env_file:
+      - .env.staging
+    volumes:
+      - postgres_data_staging:/var/lib/postgresql/data/
+volumes:
+  postgres_data_staging:

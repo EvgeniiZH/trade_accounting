@@ -1,6 +1,7 @@
 .layout {
     display: flex;
     height: 100vh; /* фиксируем на весь экран */
+    width: 100vw; /* полная ширина экрана */
     overflow: hidden; /* убираем прокрутку страницы */
 }
 
@@ -43,16 +44,130 @@
 
 .content-area {
     flex: 1;
-    overflow-y: auto;
-    padding: 2rem;
+    overflow: hidden;
+    padding: 0;
     background-color: #fff;
-
     display: flex;
     flex-direction: column;
+    width: 100%; /* Занимает всю доступную ширину */
+    min-width: 0; /* Важно для flex */
 }
 
 
 /* Если хочешь, чтобы футер всегда был внизу при коротком контенте */
 footer {
     margin-top: auto;
+}
+
+.page-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding: 1.5rem 2rem;
+    overflow-y: hidden;
+    min-height: 0;
+    width: 100%; /* Занимает всю ширину */
+    max-width: 100%; /* Не ограничиваем ширину */
+}
+
+.page-header,
+.page-footer {
+    flex-shrink: 0;
+}
+
+.page-footer {
+    position: fixed;
+    bottom: 0;
+    left: 240px; /* ширина sidebar */
+    right: 0;
+    padding: 1rem 2rem;
+    background-color: #f8f9fa;
+    border-top: 2px solid #007bff;
+    z-index: 10;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+}
+
+.page-footer .pagination {
+    margin-bottom: 0;
+}
+
+.page-footer .form-select {
+    min-width: 80px;
+}
+
+@media (max-width: 768px) {
+    .page-footer {
+        padding: 0.75rem 0;
+    }
+
+    .page-footer .d-flex {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .page-footer .pagination {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+}
+
+.page-content {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    overflow-y: hidden; /* Убрали скролл со страницы - скролл только внутри таблиц */
+    position: relative;
+    padding-bottom: 60px; /* Оптимизировано место для пагинации */
+    width: 100%; /* Занимает всю ширину */
+}
+
+/* Убеждаемся, что container-fluid занимает всю ширину */
+.page-wrapper.container-fluid {
+    width: 100%;
+    max-width: 100%;
+    padding-left: 2rem;
+    padding-right: 2rem;
+}
+
+.page-content > .row {
+    flex: 1;
+    min-height: 0;
+}
+
+.page-content > .row > [class*='col-'] {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1 1 0; /* Колонка занимает доступное пространство */
+    overflow: hidden; /* Фиксируем overflow для предотвращения "дёргания" таблиц */
+}
+
+/* Левая колонка на странице создания расчета занимает максимум доступной ширины */
+#create-calculation-wrapper .row > [class*='col-']:first-child {
+    flex: 1 1 0 !important;
+    max-width: none !important;
+    overflow: visible !important; /* Убираем overflow:hidden для работы sticky */
+}
+
+/* Правая колонка фиксированной ширины - минимизируем её */
+#create-calculation-wrapper .row > [class*='col-']:last-child {
+    flex: 0 0 auto !important;
+    width: 250px !important;
+    min-width: 250px !important;
+    max-width: 250px !important;
+}
+
+/* Фиксация формы внутри колонки */
+.page-content > .row > [class*='col-'] form.d-flex.flex-column {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.page-content > .row > [class*='col-'].overflow-auto {
+    flex: 0 0 auto;
 }

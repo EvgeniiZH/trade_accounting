@@ -1,0 +1,28 @@
+                    {% for calc in page_obj %}
+                        <tr id="calc-{{ calc.id }}">
+                            <td class="text-center">
+                                {{ page_obj.start_index|add:forloop.counter0 }}
+                            </td>
+                            <td><input type="checkbox" name="calc_ids" value="{{ calc.id }}"></td>
+
+                            <td class="calc-title">
+                                <a href="{% url 'calculation_detail' calc.id %}" class="text-decoration-none">
+                                    {{ calc.title }}
+                                </a>
+                            </td>
+                            <td>{{ calc.items_count }}</td>
+                            <td>{{ calc.total_price|floatformat:2 }}</td>
+                            <td>{{ calc.total_price_with_markup|floatformat:2 }}</td>
+                            <td>{{ calc.created_at|date:"d.m.Y H:i" }}</td>
+                            <td>{{ calc.user.username|default:"Не указан" }}</td>
+                            <td>
+                                <button type="submit" name="delete_calc" value="{{ calc.id }}"
+                                        class="btn btn-danger btn-sm">
+                                    Удалить
+                                </button>
+                                <a href="{% url 'copy_calculation' calc.id %}" class="btn btn-info btn-sm">
+                                    Копировать
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}

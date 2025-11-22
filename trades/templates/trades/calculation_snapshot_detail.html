@@ -1,41 +1,71 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Детали снимка расчёта{% endblock %}
 
 {% block content %}
-<div class="container my-4">
-    <h2>Детали снимка расчёта</h2>
-    <p><strong>Расчёт:</strong> {{ snapshot.calculation.title }}</p>
-    <p><strong>Создан:</strong> {{ snapshot.created_at|date:"d.m.Y H:i" }}</p>
-    <p><strong>Стоимость без наценки:</strong> {{ snapshot.frozen_total_price|floatformat:2 }} ₽</p>
-    <p><strong>Стоимость с наценкой:</strong> {{ snapshot.frozen_total_price_with_markup|floatformat:2 }} ₽</p>
-    <h3>Товары в расчёте:</h3>
-    <table class="table table-bordered table-hover">
-        <thead>
-            <tr>
-                <th>ID товара</th>
-                <th>Наименование</th>
-                <th>Цена</th>
-                <th>Количество</th>
-                <th>Итого</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in snapshot.items.all %}
-            <tr>
-                <td>{{ item.snapshot.id }}</td>
-                <td>{{ item.item_name }}</td>
-                <td>{{ item.item_price|floatformat:2 }}</td>
-                <td>{{ item.quantity }}</td>
-                <td>{{ item.total_price|floatformat:2 }}</td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="5" class="text-center">Товары не найдены</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="container-fluid page-wrapper">
+    <div class="page-header">
+        <h2 class="mb-0 text-primary">📄 Просмотр архивного расчёта</h2>
+    </div>
+
+    <div class="page-content">
+    <div class="row g-4 h-100 overflow-hidden">
+        <div class="col-12 col-xl-4 overflow-auto">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <p class="mb-2"><strong>Расчёт:</strong> {{ snapshot.calculation.title }}</p>
+                    <p class="mb-2"><strong>Создан:</strong> {{ snapshot.created_at|date:"d.m.Y H:i" }}</p>
+                    <p class="mb-2"><strong>Стоимость без наценки:</strong> {{ snapshot.frozen_total_price|floatformat:2 }} ₽</p>
+                    <p class="mb-0"><strong>Стоимость с наценкой:</strong> {{ snapshot.frozen_total_price_with_markup|floatformat:2 }} ₽</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-xl-8 overflow-hidden">
+            <div class="input-group mb-3" data-table-search data-table-id="snapshot-detail-table" data-cell-selector=".search-target">
+                <span class="input-group-text">🔍</span>
+                <input type="text" class="form-control" placeholder="Поиск товара..." data-role="search-input" data-focus-hotkey="/">
+                <button type="button" class="btn btn-outline-secondary" data-role="clear-search">Очистить</button>
+            </div>
+
+            <div class="table-scroll border rounded shadow-sm">
+                <table class="table table-bordered table-hover mb-0" id="snapshot-detail-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID товара</th>
+                            <th>Наименование</th>
+                            <th class="text-end">Цена</th>
+                            <th class="text-center">Количество</th>
+                            <th class="text-end">Итого</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in page_obj %}
+                        <tr>
+                            <td>{{ item.snapshot.id }}</td>
+                            <td class="search-target">{{ item.item_name }}</td>
+                            <td class="text-end">{{ item.item_price|floatformat:2 }}</td>
+                            <td class="text-center">{{ item.quantity }}</td>
+                            <td class="text-end">{{ item.total_price|floatformat:2 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">Товары не найдены</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="page-footer mt-2">
+                {% include 'includes/pagination.html' %}
+            </div>
+        </div>
+    </div>
+
     <a href="{% url 'calculation_snapshot_list' %}" class="btn btn-secondary mt-3">Вернуться к списку снимков</a>
+    </div>
 </div>
+
+<script src="{% static 'js/table_search.js' %}" defer></script>
 {% endblock %}

@@ -1,0 +1,20 @@
+{% load custom_filters %}
+{% for item in items %}
+    {% with item.id|stringformat:"s" as item_id_str %}
+        <tr id="item-{{ item.id }}">
+            <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
+            <td class="item-name">{{ item.name }}</td>
+            <td class="item-price">{{ item.price }}</td>
+            <td>
+                <input type="number" name="quantity_{{ item.id }}"
+                       value="{{ initial_quantities|get_item:item_id_str|default:'1' }}"
+                       min="1" class="form-control quantity-input">
+            </td>
+            <td class="text-center">
+                <input type="checkbox" name="items" value="{{ item.id }}"
+                       class="form-check-input item-checkbox"
+                       {% if item_id_str in selected_items_ids %}checked{% endif %}>
+            </td>
+        </tr>
+    {% endwith %}
+{% endfor %}

@@ -12,9 +12,14 @@ from django.http import HttpResponse, JsonResponse
 from django.conf import settings
 
 
+def _get_setting(name, default=None):
+    return getattr(settings, name, None) or os.getenv(name, default)
+
+
+
 def verify_sentry_signature(request):
     """Проверяет подпись запроса от Sentry."""
-    webhook_secret = os.getenv('WEBHOOK_SECRET')
+    webhook_secret = _get_setting('WEBHOOK_SECRET')
     if not webhook_secret:
         return False
 
@@ -50,8 +55,8 @@ def require_webhook_signature(view_func):
 
 def send_telegram_notification(message):
     """Отправляет уведомление в Telegram с таймаутом и retry."""
-    bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
-    chat_id = os.getenv("TELEGRAM_CHAT_ID")
+    bot_token = _get_setting("TELEGRAM_BOT_TOKEN")
+    chat_id = _get_setting("TELEGRAM_CHAT_ID")
 
     if not (bot_token and chat_id):
         return False
@@ -59,13 +64,10 @@ def send_telegram_notification(message):
     try:
         response = requests.post(
             f"https://api.telegram.org/bot{bot_token}/sendMessage",
-            data={"chat_id": chat_id, "text": message},
+            json={"chat_id": chat_id, "text": message},
             timeout=5,
             # Добавляем заголовки для безопасности
-            headers={
-                'User-Agent': 'Trade-Accounting-Bot/1.0',
-                'Content-Type': 'application/json'
-            }
+            headers={'User-Agent': 'Trade-Accounting-Bot/1.0'}
         )
         return response.status_code == 200
     except (requests.RequestException, ValueError) as e:
@@ -92,9 +94,9 @@ def sentry_webhook(request):
         url = data.get("url", "Нет ссылки")
         
         message = (
-            f"🚨 Ошибка в Sentry!\n"
-            f"🔹 {title}\n"
-            f"🔗 {url}"
+            "⚠️ Новое событие в Sentry!\n"
+            f"Событие: {title}\n"
+            f"Подробнее: {url}"
         )
 
         if send_telegram_notification(message):

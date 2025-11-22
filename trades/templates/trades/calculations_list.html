@@ -3,83 +3,33 @@
 {% block title %}Список расчётов{% endblock %}
 
 {% block content %}
-    <div class="container my-4">
-        <h2 class="mb-4">Список расчётов</h2>
-
-        <div class="row g-3 align-items-center mb-3">
-            <div class="input-group">
-                <input type="text" id="search-input" class="form-control" placeholder="🔍 Поиск расчёта...">
-                <button id="clear-search" class="btn btn-secondary">Очистить</button>
-            </div>
+     <div class="container-fluid page-wrapper">
+        <div class="page-header d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+    <h2 class="mb-0 text-primary">📊 Список расчётов</h2>
+    <div class="input-group">
+        <span class="input-group-text">🔍</span>
+        <input type="text" id="search-input" class="form-control" 
+               placeholder="Поиск расчёта..." data-focus-hotkey="/">
+        <button type="button" id="clear-search" class="btn btn-outline-secondary">Очистить</button>
+    </div>
         </div>
 
-        <form method="post" action="{% url 'calculations_list' %}">
-            {% csrf_token %}
-
-            <div style="max-height: 500px; overflow-y: auto;" class="border rounded shadow-sm">
-                <table class="table table-bordered table-hover mb-0" id="calculation-table">
-                    <thead class="table-light position-sticky top-0 z-1">
-                    <tr>
-                        <th><input type="checkbox" id="select_all"></th>
-
-                        <th>
-                            <a href="?sort=title&direction={% if sort_by == 'title' and direction == 'asc' %}desc{% else %}asc{% endif %}">
-                                Название
-                                {% if sort_by == 'title' %}{% if direction == 'asc' %}↑{% else %}↓{% endif %}{% endif %}
-                            </a>
-                        </th>
-
-                        <th>Наценка</th>
-
-                        <th>Стоимость</th>
-
-                        <th> С наценкой</th>
-
-                        <th>
-                            <a href="?sort=created_at&direction={% if sort_by == 'created_at' and direction == 'asc' %}desc{% else %}asc{% endif %}">
-                                Дата {% if sort_by == 'created_at' %}{% if direction == 'asc' %}↑{% else %}↓
-                            {% endif %}{% endif %}
-                            </a>
-                        </th>
-
-                        <th>Автор</th>
-                        <th>Действия</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for calc in calculations %}
-                        <tr id="calc-{{ calc.id }}">
-                            <td><input type="checkbox" name="calc_ids" value="{{ calc.id }}"></td>
-
-                            <td class="calc-title">
-                                <a href="{% url 'calculation_detail' calc.id %}" class="text-decoration-none">
-                                    {{ calc.title }}
-                                </a>
-                            </td>
-                            <td>{{ calc.markup|floatformat:0 }}</td>
-                            <td>{{ calc.total_price_without_markup_calc|floatformat:2 }}</td>
-                            <td>{{ calc.calculate_total_price_with_markup|floatformat:2 }}</td>
-                            <td>{{ calc.created_at|date:"d.m.Y H:i" }}</td>
-                            <td>{{ calc.user.username|default:"Не указан" }}</td>
-                            <td>
-                                <button type="submit" name="delete_calc" value="{{ calc.id }}"
-                                        class="btn btn-danger btn-sm">
-                                    Удалить
-                                </button>
-                                <a href="{% url 'copy_calculation' calc.id %}" class="btn btn-info btn-sm">
-                                    Копировать
-                                </a>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
+        <div class="page-content">
+            <div id="calculations-list-container" class="flex-grow-1 d-flex flex-column">
+                {% include 'trades/includes/calculations_list_content.html' %}
             </div>
+<<<<<<< Current (Your changes)
 
-            <button type="submit" name="export_excel" value="1" class="btn btn-success mt-3">
-                Экспорт в Excel
-            </button>
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mt-3 flex-shrink-0">
+                <button type="submit" name="export_excel" value="1" class="btn btn-success">
+                    Экспорт в Excel
+                </button>
+            </div>
         </form>
+        </form>
+=======
+>>>>>>> Incoming (Background Agent changes)
+        </div>
     </div>
 
     {% load static %}

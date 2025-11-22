@@ -4,15 +4,16 @@
 
 {% block content %}
 <div class="container my-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow-sm">
+    <div class="row justify-content-center g-4">
+        <div class="col-lg-5">
+            <div class="card shadow-sm h-100">
                 <div class="card-header bg-primary text-white">
-                    <h2 class="mb-0">✏️ Редактирование пользователя</h2>
+                    <h2 class="mb-0">✏️ Профиль пользователя</h2>
                 </div>
                 <div class="card-body">
                     <form method="post" novalidate>
                         {% csrf_token %}
+                        <input type="hidden" name="action" value="update_user">
                         {% for field in form %}
                         <div class="mb-3">
                             <label for="{{ field.id_for_label }}" class="form-label">
@@ -31,7 +32,44 @@
                             {% endif %}
                         </div>
                         {% endfor %}
-                        <button type="submit" class="btn btn-success w-100">Сохранить</button>
+                        <button type="submit" class="btn btn-success w-100">Сохранить профиль</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card shadow-sm h-100" id="password-card">
+                <div class="card-header bg-dark text-white">
+                    <h2 class="mb-0">🔐 Смена пароля</h2>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="change_password">
+                        {% if password_form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in password_form.non_field_errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        {% for field in password_form %}
+                        <div class="mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label">
+                                {{ field.label }}
+                            </label>
+                            {{ field }}
+                            {% if field.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in field.errors %}
+                                <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        <button type="submit" class="btn btn-outline-primary w-100">Обновить пароль</button>
                     </form>
                 </div>
             </div>

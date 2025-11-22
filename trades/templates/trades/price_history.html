@@ -1,30 +1,40 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}История изменения цен{% endblock %}
 
 {% block content %}
-    <div class="container my-4">
-        <h2 class="text-primary">📊 История изменения цен</h2>
+    <div class="container-fluid page-wrapper">
+        <div class="page-header d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+            <h2 class="mb-0 text-primary">📊 История изменения цен</h2>
+        </div>
 
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover">
+        <div class="page-content">
+        <div class="input-group" data-table-search data-table-id="price-history-table" data-cell-selector=".search-target">
+            <span class="input-group-text">🔍</span>
+            <input type="text" class="form-control" placeholder="Поиск по товару или пользователю..." data-role="search-input" data-focus-hotkey="/">
+            <button type="button" class="btn btn-outline-secondary" data-role="clear-search">Очистить</button>
+        </div>
+
+        <div class="table-scroll border rounded shadow-sm">
+            <table class="table table-bordered table-hover mb-0" id="price-history-table">
                 <thead class="table-light">
                 <tr>
                     <th>Товар</th>
-                    <th>Старая цена</th>
-                    <th>Новая цена</th>
-                    <th>Дата изменения</th>
-                    <th>Изменил</th>
+                    <th class="text-end">Старая цена</th>
+                    <th class="text-end">Новая цена</th>
+                    <th class="text-center">Дата изменения</th>
+                    <th class="text-center">Изменил</th>
                 </tr>
                 </thead>
                 <tbody>
-                {% for history in price_history %}
+                {% for history in page_obj %}
                     <tr>
-                        <td>{{ history.item.name }}</td>
+                        <td class="search-target">{{ history.item.name }}</td>
                         <td class="text-end">{{ history.old_price|floatformat:2 }} ₽</td>
                         <td class="text-end fw-bold text-success">{{ history.new_price|floatformat:2 }} ₽</td>
                         <td class="text-center">{{ history.changed_at|date:"d.m.Y H:i" }}</td>
-                        <td class="text-center">
+                        <td class="text-center search-target">
                             {% if history.changed_by %}
                                 {{ history.changed_by.username }}
                             {% else %}
@@ -40,5 +50,10 @@
                 </tbody>
             </table>
         </div>
+        <div class="page-footer">
+            {% include 'includes/pagination.html' %}
+        </div>
+        </div>
     </div>
+    <script src="{% static 'js/table_search.js' %}" defer></script>
 {% endblock %}

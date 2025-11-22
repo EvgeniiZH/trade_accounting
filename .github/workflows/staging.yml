@@ -1,0 +1,64 @@
+name: Deploy Staging (develop)
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.STAGING_SSH_PRIVATE_KEY }}
+
+      - name: Deploy to VPS (staging)
+        env:
+          REPO_SSH: ${{ github.repository }}
+        run: |
+          set -e
+          REPO_URL="git@github.com:${{ github.repository }}.git"
+          SSH_HOST="${{ secrets.STAGING_SERVER_IP }}"
+          SSH_USER="${{ secrets.STAGING_SSH_USER || 'root' }}"
+          REMOTE_DIR="/root/trade_accounting_staging"
+          ssh -o StrictHostKeyChecking=no ${SSH_USER}@${SSH_HOST} << 'EOF'
+            set -e
+            REPO_URL="git@github.com:${{ github.repository }}.git"
+            REMOTE_DIR="/root/trade_accounting_staging"
+            if [ ! -d "$REMOTE_DIR" ]; then
+              mkdir -p "$REMOTE_DIR"
+              cd "$REMOTE_DIR"
+              git clone "$REPO_URL" .
+            else
+              cd "$REMOTE_DIR"
+            fi
+            git fetch --all --prune
+            git reset --hard HEAD
+            git checkout develop
+            git pull origin develop
+
+            # Ensure staging env file exists
+            if [ ! -f .env.staging ]; then
+              echo "[staging] Missing .env.staging on server"; exit 1;
+            fi
+
+            echo "==> Build and run staging compose"
+            docker compose -f docker-compose.yml -f docker-compose.staging.yml build --no-cache
+            docker compose -f docker-compose.yml -f docker-compose.staging.yml up -d
+
+            echo "==> Apply migrations"
+            docker compose -f docker-compose.yml -f docker-compose.staging.yml exec -T web python manage.py migrate --noinput || true
+
+            echo "==> Collect static"
+            docker compose -f docker-compose.yml -f docker-compose.staging.yml exec -T web python manage.py collectstatic --noinput || true
+
+            echo "==> Sync STATIC/MEDIA to /var/www/trade_accounting_staging"
+            docker compose -f docker-compose.yml -f docker-compose.staging.yml exec -T web bash -lc 'mkdir -p /var/www/trade_accounting_staging/staticfiles /var/www/trade_accounting_staging/media && cp -r /app/staticfiles/. /var/www/trade_accounting_staging/staticfiles/ && cp -r /app/media/. /var/www/trade_accounting_staging/media/ || true'
+
+            echo "==> Done"
+          EOF

@@ -1,5 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.views import LoginView
+from django.contrib.auth.forms import AdminPasswordChangeForm
+from django.core.exceptions import PermissionDenied
 from django.db import IntegrityError
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
@@ -12,15 +15,29 @@ import decimal
 import io
 import zipfile
 from django.urls import reverse
-from .utils import update_or_create_item_clean
+from django.db.models import Count
 from django.db.models.functions import Collate
-from .utils import calculate_total_price
+from django.core.paginator import Paginator
+from functools import wraps
+
+from .utils import update_or_create_item_clean, calculate_total_price, paginate_queryset
 
 
 # Фиксированные настройки (шаг цены и наценки)
 PRICE_STEP = 0.01
 MARKUP_STEP = 1
 DECIMAL_PLACES = 1
+PAGE_SIZE_OPTIONS = [10, 25, 50, 100, 200]
+
+
+def admin_required(view_func):
+    """Декоратор для проверки прав администратора."""
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        if not (request.user.is_admin or request.user.is_superuser):
+            raise PermissionDenied("Только администраторы имеют доступ к этой странице")
+        return view_func(request, *args, **kwargs)
+    return wrapper
 
 
 def handle_add_item(request):
@@ -182,20 +199,28 @@ def item_list(request):
             handle_upload_file(request)
 
     # Поиск и сортировка
-    search = request.GET.get("search", "")
+    search = request.GET.get("search", "").strip()
     sort_by = request.GET.get("sort", "name")
     direction = request.GET.get("direction", "asc")
     order = sort_by if direction == "asc" else f"-{sort_by}"
 
-    items = Item.objects.filter(name__icontains=search).order_by(order)
+    # Применяем фильтр только если есть поисковый запрос
+    items_qs = Item.objects.filter(name__icontains=search).order_by(order) if search else Item.objects.all().order_by(order)
 
-    # Статистика
-    total_items = items.count()
-    total_price = sum(item.price for item in items)
+    # Пагинация
+    page_obj, page_range, page_size, page_size_options = paginate_queryset(items_qs, request)
+
+    # Статистика по текущему фильтру (без учёта пагинации)
+    total_items = items_qs.count()
+    total_price = sum(item.price for item in items_qs)
     avg_price = total_price / total_items if total_items else 0
 
-    return render(request, "trades/item_list.html", {
-        "items": items,
+    context = {
+        "items": page_obj.object_list,
+        "page_obj": page_obj,
+        "page_range": page_range,
+        "page_size": page_size,
+        "page_size_options": page_size_options,
         "price_step": PRICE_STEP,
         "search": search,
         "sort_by": sort_by,
@@ -203,7 +228,12 @@ def item_list(request):
         "total_items": total_items,
         "total_price": total_price,
         "avg_price": avg_price,
-    })
+    }
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return render(request, "trades/includes/item_list_content.html", context)
+
+    return render(request, "trades/item_list.html", context)
 
 
 from pyuca import Collator
@@ -217,6 +247,11 @@ def calculations_list(request):
     sort_by = request.GET.get("sort", "title")
     direction = request.GET.get("direction", "asc")
     reverse = direction == "desc"
+    
+    # Разрешенные поля для сортировки
+    allowed_sort_fields = ['title', 'created_at', 'total_price', 'total_price_with_markup', 'user']
+    if sort_by not in allowed_sort_fields:
+        sort_by = 'title'
 
     if request.method == "POST":
         if "delete_calc" in request.POST:
@@ -232,23 +267,73 @@ def calculations_list(request):
         elif "export_excel" in request.POST:
             calc_ids = request.POST.getlist("calc_ids")
             if calc_ids:
-                calculations_for_export = Calculation.objects.filter(id__in=calc_ids)
+                calculations_for_export = (
+                    Calculation.objects
+                    .filter(id__in=calc_ids)
+                    .select_related('user')
+                    .prefetch_related('items__item')
+                )
                 zip_buffer = io.BytesIO()
                 with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
                     for calc in calculations_for_export:
-                        total, total_with_markup = calculate_total_price(calc)
+                        total = calc.total_price
+                        total_with_markup = calc.total_price_with_markup
+                        
+                        # Общая информация о расчёте
                         df_calc = pd.DataFrame({
                             "ID": [calc.id],
                             "Создал": [calc.user.username if calc.user else "Не указан"],
                             "Название": [calc.title],
                             "Наценка (%)": [calc.markup],
                             "Стоимость": [total],
-                            "Стоимость с наценкой": [total_with_markup]
+                            "Стоимость с наценкой": [total_with_markup],
+                            "Дата создания": [calc.created_at.strftime("%d.%m.%Y %H:%M")]
                         })
+                        
+                        # Детальный список товаров
+                        items_data = []
+                        for idx, calc_item in enumerate(calc.items.all(), start=1):
+                            item_total = calc_item.item.price * calc_item.quantity
+                            item_total_with_markup = item_total * (1 + calc.markup / 100)
+                            items_data.append({
+                                "№": idx,
+                                "Наименование": calc_item.item.name,
+                                "Цена за ед.": float(calc_item.item.price),
+                                "Количество": calc_item.quantity,
+                                "Сумма": float(item_total),
+                                f"Сумма с наценкой ({calc.markup}%)": float(item_total_with_markup)
+                            })
+                        
+                        df_items = pd.DataFrame(items_data) if items_data else pd.DataFrame()
+                        
+                        # Сохраняем в Excel с двумя листами
                         excel_buffer = io.BytesIO()
                         with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
-                            df_calc.to_excel(writer, index=False, sheet_name="Информация о расчёте")
-                        zip_file.writestr(f"calculation_{calc.id}.xlsx", excel_buffer.getvalue())
+                            df_calc.to_excel(writer, index=False, sheet_name="Информация")
+                            if not df_items.empty:
+                                df_items.to_excel(writer, index=False, sheet_name="Позиции")
+                                
+                                # Форматирование для красоты
+                                workbook = writer.book
+                                worksheet = writer.sheets["Позиции"]
+                                
+                                # Форматы
+                                money_format = workbook.add_format({'num_format': '#,##0.00 ₽'})
+                                header_format = workbook.add_format({
+                                    'bold': True,
+                                    'bg_color': '#4472C4',
+                                    'font_color': 'white',
+                                    'align': 'center'
+                                })
+                                
+                                # Применяем форматы к столбцам с ценами
+                                worksheet.set_column('C:C', 15, money_format)  # Цена за ед.
+                                worksheet.set_column('E:F', 18, money_format)  # Сумма и Сумма с наценкой
+                                worksheet.set_column('A:A', 5)   # №
+                                worksheet.set_column('B:B', 40)  # Наименование
+                                worksheet.set_column('D:D', 12)  # Количество
+                        
+                        zip_file.writestr(f"calculation_{calc.id}_{calc.title[:30]}.xlsx", excel_buffer.getvalue())
                 zip_buffer.seek(0)
                 return HttpResponse(
                     zip_buffer.getvalue(),
@@ -261,24 +346,48 @@ def calculations_list(request):
 
         return redirect('calculations_list')
 
+    # Получаем поисковый запрос
+    search = request.GET.get("search", "").strip()
+    
+    base_queryset = (
+        Calculation.objects
+        .select_related('user')
+        .prefetch_related('items__item')
+        .annotate(items_count=Count('items', distinct=True))
+    )
+    
+    # Применяем поиск если есть
+    if search:
+        base_queryset = base_queryset.filter(title__icontains=search)
+
     # 🔠 Локализованная сортировка по title через Python
     if sort_by == "title":
-        qs = Calculation.objects.all()
-        calculations = sorted(
-            qs,
+        calculations_list = sorted(
+            base_queryset,
             key=lambda c: collator.sort_key(c.title),
             reverse=reverse
         )
     else:
         order = sort_by if not reverse else f"-{sort_by}"
-        calculations = Calculation.objects.all().order_by(order)
+        calculations_list = list(base_queryset.order_by(order))
 
-    return render(request, "trades/calculations_list.html", {
-        "calculations": calculations,
+    page_obj, page_range, page_size, page_size_options = paginate_queryset(calculations_list, request)
+
+    context = {
+        "page_obj": page_obj,
+        "page_range": page_range,
+        "page_size": page_size,
+        "page_size_options": page_size_options,
         "sort_by": sort_by,
         "direction": direction,
         "updated_calc_id": updated_calc_id,
-    })
+        "search": search,
+    }
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return render(request, "trades/includes/calculations_list_content.html", context)
+
+    return render(request, "trades/calculations_list.html", context)
 
 
 @login_required(login_url='/login/')
@@ -359,19 +468,41 @@ def create_calculation(request):
             initial_quantities[item_id] = request.GET.get(key)
 
     search_query = request.GET.get('search', '')
-    items = Item.objects.filter(name__icontains=search_query) if search_query else Item.objects.all()
+    items_qs = Item.objects.filter(name__icontains=search_query) if search_query else Item.objects.all()
+    
+    # Сортировка
+    sort_by = request.GET.get('sort_by', 'name')
+    direction = request.GET.get('direction', 'asc')
+    
+    if sort_by in ['name', 'price']:
+        order_field = f"{'-' if direction == 'desc' else ''}{sort_by}"
+        items_qs = items_qs.order_by(order_field)
+    
+    # Пагинация для списка товаров при создании расчёта
+    page_obj, page_range, page_size, page_size_options = paginate_queryset(items_qs, request)
 
-    return render(request, "trades/create_calculation.html", {
-        "items": items,
+    context = {
+        "items": page_obj.object_list,
+        "page_obj": page_obj,
+        "page_range": page_range,
+        "page_size": page_size,
+        "page_size_options": page_size_options,
         "search_query": search_query,
         "title": title,
         "markup": markup,
         "selected_items_ids": selected_items_ids,
         "initial_quantities": initial_quantities,
+        "sort_by": sort_by,
+        "direction": direction,
         "user_settings": {
             "markup_step": 1  # или получи из профиля пользователя
         },
-    })
+    }
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return render(request, "trades/includes/create_calculation_content.html", context)
+
+    return render(request, "trades/create_calculation.html", context)
 
 
 @login_required(login_url='/login/')
@@ -405,26 +536,31 @@ def save_calculation_snapshot(request, pk):
 @login_required(login_url='/login/')
 def calculation_snapshot_list(request):
     """Страница списка снимков расчётов."""
-    snapshots = CalculationSnapshot.objects.all().order_by('-created_at')
-    return render(request, 'trades/calculation_snapshot_list.html', {'snapshots': snapshots})
+    snapshots_qs = CalculationSnapshot.objects.select_related('calculation', 'created_by').order_by('-created_at')
+    page_obj, page_range, page_size, page_size_options = paginate_queryset(snapshots_qs, request)
+
+    return render(request, 'trades/calculation_snapshot_list.html', {
+        'page_obj': page_obj,
+        'page_range': page_range,
+        'page_size': page_size,
+        'page_size_options': page_size_options,
+    })
 
 
 @login_required(login_url='/login/')
 def calculation_snapshot_detail(request, snapshot_id):
     """Детальный просмотр снимка расчёта, включая список товаров."""
     snapshot = get_object_or_404(CalculationSnapshot, id=snapshot_id)
-    return render(request, 'trades/calculation_snapshot_detail.html', {'snapshot': snapshot})
+    items_qs = snapshot.items.all().order_by('item_name')
+    page_obj, page_range, page_size, page_size_options = paginate_queryset(items_qs, request)
 
-
-def calculate_total_price(calculation):
-    """Функция для вычисления общей стоимости расчёта с учётом наценки."""
-    total = sum(item.quantity * item.item.price for item in
-                calculation.items.all())  # Суммируем цену всех товаров с их количеством
-    total_with_markup = total + (total * calculation.markup / 100)  # Применяем наценку
-    return total, total_with_markup
-
-
-@login_required(login_url='/login/')
+    return render(request, 'trades/calculation_snapshot_detail.html', {
+        'snapshot': snapshot,
+        'page_obj': page_obj,
+        'page_range': page_range,
+        'page_size': page_size,
+        'page_size_options': page_size_options,
+    })
 @login_required(login_url='/login/')
 def calculation_detail(request, pk):
     calculation = get_object_or_404(Calculation, pk=pk)
@@ -440,43 +576,77 @@ def calculation_detail(request, pk):
             return redirect(request.path)  # Вернуться на ту же страницу после удаления
 
         elif "save_calculation" in request.POST:
-            # Обновление количества уже добавленных товаров
-            for calc_item in calculation.items.all():
-                quantity = request.POST.get(f"quantity_{calc_item.id}")
-                if quantity:
-                    try:
-                        calc_item.quantity = int(quantity)
-                        calc_item.save()
-                    except ValueError:
-                        messages.error(request, f"Ошибка количества у {calc_item.item.name}")
+            selected_raw_ids = request.POST.getlist("items")
+            selected_item_ids = set()
+            for raw_id in selected_raw_ids:
+                try:
+                    selected_item_ids.add(int(raw_id))
+                except (TypeError, ValueError):
+                    continue
 
+            # Обновление количества и удаление снятых товаров
+            existing_items = {
+                calc_item.item_id: calc_item
+                for calc_item in calculation.items.select_related("item")
+            }
+
+            for item_id, calc_item in list(existing_items.items()):
+                if item_id not in selected_item_ids:
+                    calc_item.delete()
+                    continue
+
+                quantity_value = request.POST.get(f"quantity_{item_id}")
+                if quantity_value is None:
+                    continue
+                try:
+                    quantity_int = int(quantity_value)
+                    if quantity_int < 1:
+                        raise ValueError
+                    calc_item.quantity = quantity_int
+                    calc_item.save(update_fields=["quantity"])
+                except ValueError:
+                    messages.error(request, f"Ошибка количества у {calc_item.item.name}")
+
+            # Обновление названия
+            title = request.POST.get("title", "").strip()
+            if title:
+                calculation.title = title
+            
             # Обновление наценки
             markup = request.POST.get("markup", "0")
             try:
                 calculation.markup = decimal.Decimal(markup)
+                calculation.save(update_fields=["markup", "title"])
             except decimal.InvalidOperation:
                 messages.error(request, "Введите корректную наценку!")
 
             # Добавление новых товаров
-            item_ids = request.POST.getlist("items")
-            for item_id in item_ids:
-                if not calculation.items.filter(item_id=item_id).exists():
-                    quantity = request.POST.get(f"quantity_{item_id}", 1)
-                    try:
-                        item = Item.objects.get(id=item_id)
-                        CalculationItem.objects.create(
-                            calculation=calculation,
-                            item=item,
-                            quantity=int(quantity)
-                        )
-                    except (Item.DoesNotExist, ValueError):
-                        messages.error(request, f"Ошибка при добавлении товара ID={item_id}")
+            for item_id in selected_item_ids:
+                if item_id in existing_items:
+                    continue
+                quantity_value = request.POST.get(f"quantity_{item_id}", 1)
+                try:
+                    quantity_int = int(quantity_value)
+                    if quantity_int < 1:
+                        raise ValueError
+                except ValueError:
+                    messages.error(request, f"Ошибка количества у товара ID={item_id}")
+                    continue
+
+                try:
+                    item = Item.objects.get(id=item_id)
+                except Item.DoesNotExist:
+                    messages.error(request, f"Товар с ID={item_id} не найден!")
+                    continue
+
+                CalculationItem.objects.create(
+                    calculation=calculation,
+                    item=item,
+                    quantity=quantity_int
+                )
 
             # Обновление сумм
-            total, total_with_markup = calculate_total_price(calculation)
-            calculation.total_price = total
-            calculation.total_price_with_markup = total_with_markup
-            calculation.save()
+            calculation.refresh_totals()
 
             messages.success(request, "Расчёт успешно обновлён!")
             return redirect(reverse("calculations_list") + f"?updated_calc={calculation.id}")
@@ -488,32 +658,73 @@ def calculation_detail(request, pk):
         selected_items_ids.append(str(ci.item.id))
         initial_quantities[str(ci.item.id)] = ci.quantity
 
-    items = Item.objects.all()
+    # Поиск
+    search_query = request.GET.get('search', '')
+    items_qs = Item.objects.filter(name__icontains=search_query) if search_query else Item.objects.all()
+    
+    # Сортировка
+    sort_by = request.GET.get('sort_by', 'name')
+    direction = request.GET.get('direction', 'asc')
+    
+    if sort_by in ['name', 'price']:
+        order_field = f"{'-' if direction == 'desc' else ''}{sort_by}"
+        items_qs = items_qs.order_by(order_field)
+    
+    # Пагинация для списка товаров при редактировании расчёта
+    page_obj, page_range, page_size, page_size_options = paginate_queryset(items_qs, request)
 
     return render(request, "trades/calculation_detail.html", {
         "calculation": calculation,
-        "items": items,
+        "items": page_obj.object_list,
+        "page_obj": page_obj,
+        "page_range": page_range,
+        "page_size": page_size,
+        "page_size_options": page_size_options,
         "markup_step": 1,
         "initial_quantities": initial_quantities,
         "selected_items_ids": selected_items_ids,
+        "sort_by": sort_by,
+        "direction": direction,
+        "search_query": search_query,
+        "initial_totals": {
+            "without_markup": calculation.total_price,
+            "with_markup": calculation.total_price_with_markup,
+        }
     })
 
 
+@login_required(login_url='/login/')
 def price_history_view(request):
-    price_history = PriceHistory.objects.all().order_by('-changed_at')  # Сортируем по дате (новые сверху)
-    return render(request, "trades/price_history.html", {"price_history": price_history})
+    price_history_qs = PriceHistory.objects.select_related('item', 'changed_by').order_by('-changed_at')
+    page_obj, page_range, page_size, page_size_options = paginate_queryset(price_history_qs, request)
+
+    return render(request, "trades/price_history.html", {
+        "page_obj": page_obj,
+        "page_range": page_range,
+        "page_size": page_size,
+        "page_size_options": page_size_options,
+    })
 
 
-@login_required
+@login_required(login_url='/login/')
+@admin_required
 def manage_users(request):
-    """Страница управления пользователями"""
-    users = CustomUser.objects.all()
-    return render(request, 'trades/manage_users.html', {'users': users})
+    """Страница управления пользователями (только для администраторов)"""
+    users_qs = CustomUser.objects.all().order_by('username')
+    page_obj, page_range, page_size, page_size_options = paginate_queryset(users_qs, request)
+
+    return render(request, 'trades/manage_users.html', {
+        'page_obj': page_obj,
+        'page_range': page_range,
+        'page_size': page_size,
+        'page_size_options': page_size_options,
+    })
 
 
-@login_required
+@login_required(login_url='/login/')
+@admin_required
 def create_user(request):
-    """Создание нового пользователя"""
+    """Создание нового пользователя (только для администраторов)"""
     if request.method == "POST":
         form = UserCreateForm(request.POST)
         if form.is_valid():
@@ -525,24 +736,42 @@ def create_user(request):
     return render(request, 'trades/create_user.html', {'form': form})
 
 
-@login_required
+@login_required(login_url='/login/')
+@admin_required
 def edit_user(request, user_id):
-    """Редактирование пользователя"""
+    """Редактирование пользователя (только для администраторов)"""
     user = get_object_or_404(CustomUser, id=user_id)
-    if request.method == "POST":
+    action = request.POST.get("action")
+
+    if request.method == "POST" and action == "update_user":
         form = UserEditForm(request.POST, instance=user)
+        password_form = AdminPasswordChangeForm(user)
         if form.is_valid():
             form.save()
             messages.success(request, "Пользователь успешно обновлён!")
             return redirect('manage_users')
+    elif request.method == "POST" and action == "change_password":
+        form = UserEditForm(instance=user)
+        password_form = AdminPasswordChangeForm(user, request.POST)
+        if password_form.is_valid():
+            password_form.save()
+            messages.success(request, "Пароль пользователя успешно обновлён!")
+            return redirect('manage_users')
     else:
         form = UserEditForm(instance=user)
-    return render(request, 'trades/edit_user.html', {'form': form, 'user': user})
+        password_form = AdminPasswordChangeForm(user)
+
+    return render(request, 'trades/edit_user.html', {
+        'form': form,
+        'password_form': password_form,
+        'user': user
+    })
 
 
-@login_required
+@login_required(login_url='/login/')
+@admin_required
 def delete_user(request, user_id):
-    """Удаление пользователя"""
+    """Удаление пользователя (только для администраторов)"""
     user = get_object_or_404(CustomUser, id=user_id)
     if request.method == "POST":
         user.delete()
@@ -620,3 +849,9 @@ def edit_item_page(request, item_id):
             messages.error(request, "Некорректная цена!")
 
     return render(request, "trades/edit_item.html", {"item": item})
+
+
+class CustomLoginView(LoginView):
+    """Кастомный вид входа с поддержкой username или email через UsernameOrEmailBackend"""
+    template_name = 'trades/login.html'
+    redirect_authenticated_user = True

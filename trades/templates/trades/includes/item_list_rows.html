@@ -1,0 +1,33 @@
+          {% for item in page_obj %}
+            <tr id="item-{{ item.id }}">
+                <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
+              <td class="item-name">{{ item.name }}</td>
+              <td class="text-end">{{ item.price|floatformat:2 }} ₽</td>
+              <td class="text-center">
+                  <div class="d-flex justify-content-center gap-1 flex-wrap">
+                  <button type="button"
+                          class="btn btn-sm btn-outline-primary btn-edit"
+                          data-id="{{ item.id }}"
+                          data-name="{{ item.name }}"
+                          data-price="{{ item.price }}"
+                            onclick="openEditModal(this)"
+                            title="Редактировать">
+                      ✏️
+                  </button>
+                  <form method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="delete_item" value="{{ item.id }}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger btn-edit"
+                              onclick="return confirm('Удалить товар {{ item.name }}?')"
+                              title="Удалить">
+                        🗑
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="4" class="text-center text-muted py-4">Товары не найдены.</td>
+            </tr>
+          {% endfor %}

@@ -5,8 +5,86 @@
     overflow-x: hidden;
 }
 
+/* Максимальная ширина для левой колонки на странице создания расчета */
+#create-calculation-wrapper .row > .col-12:first-child {
+    flex: 1 1 0 !important;
+    max-width: none !important;
+}
+
+/* Фиксированная ширина для правой колонки */
+#create-calculation-wrapper .row > .summary-column {
+    flex: 0 0 250px !important;
+    width: 250px !important;
+    min-width: 250px !important;
+    max-width: 250px !important;
+}
+
+/* Панель с основными полями */
+#create-calculation-wrapper .form-toolbar {
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    flex-shrink: 0;
+}
+
+#create-calculation-wrapper .form-toolbar .input-group-text {
+    background-color: #f1f3f5;
+    border-right: 0;
+}
+
+#create-calculation-wrapper .form-toolbar .input-group .form-control {
+    border-left: 0;
+}
+
+/* Фиксация таблицы для предотвращения "дёргания" при фильтрации */
+#create-calculation-wrapper .table-scroll {
+    flex: 1 1 0 !important; /* Фиксируем высоту таблицы - занимает всё доступное пространство */
+    min-height: 400px !important; /* Минимальная высота */
+    max-height: calc(100vh - 200px) !important; /* Максимальная высота */
+    height: auto !important; /* Автоматическая высота в пределах min/max */
+    width: 100% !important; /* Таблица занимает всю доступную ширину */
+}
+
+/* Ширина столбца с номерами */
+#calculation-table th:nth-child(1),
+#calculation-table td:nth-child(1) {
+    width: 70px !important;
+    min-width: 70px !important;
+    max-width: 70px !important;
+    text-align: center;
+}
+
+/* КРИТИЧНО: overflow:hidden ломает position:sticky */
+#calculation-table {
+    overflow: visible !important;
+}
+
+/* Убираем overflow:hidden с колонки для работы sticky */
+#create-calculation-wrapper .row > [class*='col-']:first-child {
+    overflow: visible !important;
+}
+
+#create-calculation-wrapper .table-actions {
+    padding: 0.5rem 0.25rem;
+}
+
+#create-calculation-wrapper #filter-selected {
+    white-space: nowrap;
+}
+
+/* Закрепление шапки таблицы */
+#calculation-table thead th {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 999 !important;
+    background: #007bff !important;
+    color: white !important;
+}
+
 #calculation-table {
     table-layout: fixed;
+    width: 100% !important; /* Таблица занимает всю доступную ширину */
 }
 
 /* ================== СТОЛБЦЫ ================== */
@@ -21,8 +99,8 @@
 /* Товар */
 #calculation-table th:nth-child(2),
 #calculation-table td:nth-child(2) {
-    max-width: 600px;
-    width: 100%;
+    width: 100%; /* Занимает всё доступное пространство */
+    max-width: 600px; /* Ограничение ширины для читаемости */
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

@@ -80,4 +80,7 @@ LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/login/'
 
 AUTH_USER_MODEL = 'trades.CustomUser'
-AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.ModelBackend']
+AUTHENTICATION_BACKENDS = [
+    'trade_accounting.auth_backends.UsernameOrEmailBackend',
+    'django.contrib.auth.backends.ModelBackend'
+]

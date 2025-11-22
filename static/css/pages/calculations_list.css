@@ -23,51 +23,68 @@
 /* =============== КОЛОНКИ =============== */
 #calculation-table th:nth-child(1),
 #calculation-table td:nth-child(1) {
-  width: 40px;
+  width: 48px;
+  min-width: 48px;
   text-align: center;
 }
 
 #calculation-table th:nth-child(2),
 #calculation-table td:nth-child(2) {
-  width: 280px;
-  white-space: normal;
-  text-align: left;
-  word-break: break-word;
+  width: 64px;
+  min-width: 64px;
+  text-align: center;
 }
 
 #calculation-table th:nth-child(3),
 #calculation-table td:nth-child(3) {
-  width: 100px;
-  text-align: right;
+  width: 35%;
+  min-width: 360px;
+  text-align: left;
+  white-space: normal;
+  word-break: break-word;
 }
 
 #calculation-table th:nth-child(4),
 #calculation-table td:nth-child(4) {
-  width: 120px;
-  text-align: right;
+  width: 110px;
+  min-width: 110px;
+  text-align: center;
 }
 
 #calculation-table th:nth-child(5),
 #calculation-table td:nth-child(5) {
-  width: 100px;
+  width: 140px;
+  min-width: 140px;
   text-align: right;
 }
 
 #calculation-table th:nth-child(6),
 #calculation-table td:nth-child(6) {
-  width: 140px;
-  text-align: center;
+  width: 150px;
+  min-width: 150px;
+  text-align: right;
 }
 
 #calculation-table th:nth-child(7),
 #calculation-table td:nth-child(7) {
-  width: 120px;
+  width: 150px;
+  min-width: 150px;
   text-align: center;
+  white-space: nowrap;
 }
 
 #calculation-table th:nth-child(8),
 #calculation-table td:nth-child(8) {
-  width: 180px;
+  width: 160px;
+  min-width: 150px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+#calculation-table th:nth-child(9),
+#calculation-table td:nth-child(9) {
+  width: 200px;
+  min-width: 180px;
   text-align: center;
   white-space: nowrap;
 }
@@ -105,9 +122,9 @@
     padding: 6px;
   }
 
-  #calculation-table th:nth-child(2),
-  #calculation-table td:nth-child(2) {
-    max-width: 200px;
+  #calculation-table th:nth-child(3),
+  #calculation-table td:nth-child(3) {
+    min-width: 260px;
   }
 }
 

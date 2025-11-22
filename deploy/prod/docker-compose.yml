@@ -1,0 +1,29 @@
+version: "3.9"
+services:
+  web:
+    image: ghcr.io/${GITHUB_REPOSITORY:-owner/repo}:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DJANGO_SETTINGS_MODULE: trade_accounting.settings.production
+      MIGRATE_ON_START: "1"
+      COLLECTSTATIC_ON_START: "1"
+      DJANGO_WAIT_FOR_DB: "1"
+    command: ["/bin/sh", "-c", "chmod +x /app/scripts/entrypoint.sh && /app/scripts/entrypoint.sh gunicorn trade_accounting.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 60"]
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - /var/www/trade_accounting/static:/var/www/trade_accounting/staticfiles
+      - /var/www/trade_accounting/media:/var/www/trade_accounting/media
+    depends_on:
+      - db
+  db:
+    image: postgres:14
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+volumes:
+  pgdata:

@@ -1,39 +1,55 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Управление пользователями{% endblock %}
 
 {% block content %}
-<div class="container my-4">
-    <h2 class="mb-4 text-primary">👤 Управление пользователями</h2>
+<div class="container-fluid my-4 px-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <h2 class="mb-0 text-primary">👤 Управление пользователями</h2>
+        <a href="{% url 'create_user' %}" class="btn btn-success">➕ Добавить пользователя</a>
+    </div>
 
-    <a href="{% url 'create_user' %}" class="btn btn-success mb-3">➕ Добавить пользователя</a>
+    <div class="input-group mb-3" data-table-search data-table-id="user-table" data-cell-selector=".search-target">
+        <span class="input-group-text">🔍</span>
+        <input type="text" class="form-control" placeholder="Поиск пользователя..." data-role="search-input" data-focus-hotkey="/">
+        <button type="button" class="btn btn-outline-secondary" data-role="clear-search">Очистить</button>
+    </div>
 
-    <table class="table table-bordered table-hover">
-        <thead class="table-light">
-            <tr>
-                <th>Имя пользователя</th>
-                <th>Email</th>
-                <th>Роль</th>
-                <th>Действия</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for user in users %}
+    <div class="table-scroll border rounded shadow-sm">
+        <table class="table table-bordered table-hover mb-0" id="user-table">
+            <thead class="table-light">
                 <tr>
-                    <td>{{ user.username }}</td>
-                    <td>{{ user.email }}</td>
-                    <td>{% if user.is_admin %}Администратор{% else %}Пользователь{% endif %}</td>
-                    <td>
-                        <a href="{% url 'edit_user' user.id %}" class="btn btn-warning btn-sm">✏️</a>
-                        <a href="{% url 'delete_user' user.id %}" class="btn btn-danger btn-sm">🗑</a>
-                    </td>
+                    <th>Имя пользователя</th>
+                    <th>Email</th>
+                    <th class="text-center">Роль</th>
+                    <th class="text-center">Действия</th>
                 </tr>
-            {% empty %}
-                <tr>
-                    <td colspan="4" class="text-center text-muted">Нет пользователей</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                {% for user in page_obj %}
+                    <tr>
+                        <td class="search-target">{{ user.username }}</td>
+                        <td class="search-target">{{ user.email }}</td>
+                        <td class="text-center">{% if user.is_admin %}Администратор{% else %}Пользователь{% endif %}</td>
+                        <td class="text-center d-flex gap-2 justify-content-center">
+                            <a href="{% url 'edit_user' user.id %}" class="btn btn-warning btn-sm" title="Редактировать">✏️</a>
+                            <a href="{% url 'edit_user' user.id %}#password-card" class="btn btn-outline-primary btn-sm" title="Сменить пароль">🔐</a>
+                            <a href="{% url 'delete_user' user.id %}" class="btn btn-danger btn-sm" title="Удалить">🗑</a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted">Нет пользователей</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="page-footer">
+        {% include 'includes/pagination.html' %}
+    </div>
 </div>
+
+<script src="{% static 'js/table_search.js' %}" defer></script>
 {% endblock %}

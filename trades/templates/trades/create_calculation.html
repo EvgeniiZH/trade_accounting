@@ -5,85 +5,50 @@
 {% block title %}Создание расчёта{% endblock %}
 
 {% block content %}
-    <div id="create-calculation-wrapper" class="container my-4">
-        <div class="row">
+    <div id="create-calculation-wrapper" class="container-fluid page-wrapper">
+        <div class="page-header">
+            <h2 class="mb-0 text-primary">➕ Создание расчёта</h2>
+        </div>
+        <div class="page-content">
+        <div class="row g-2 flex-grow-1">
             <!-- Левая колонка: таблица -->
-            <div class="col-md-8">
-                <h2 class="mb-4 text-primary">📋 Новый расчёт</h2>
-
-                <form method="post">
-                    {% csrf_token %}
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-8">
-                            <label for="title" class="form-label">Название расчёта</label>
-                            <input type="text" name="title" id="title" value="{{ title }}" class="form-control"
-                                   required>
+            <div class="col-12 col-xxl-10 col-xl-9 col-lg-9">
+                <div class="d-flex flex-column h-100 gap-3">
+                    <form method="post" id="create-calc-form" class="form-toolbar card border-0 shadow-sm">
+                        {% csrf_token %}
+                        <div id="selected-items-container" style="display: none;"></div> <!-- Контейнер для сохранения выбора -->
+                        <div class="row g-3 align-items-end">
+                            <div class="col-12 col-lg-4">
+                                <label for="title" class="form-label">Название расчёта</label>
+                                <input type="text" name="title" id="title" value="{{ title }}" class="form-control"
+                                       required>
+                            </div>
+                            <div class="col-6 col-lg-2">
+                                <label for="markup" class="form-label">Наценка (%)</label>
+                                <input type="number" name="markup" id="markup" value="{{ markup }}"
+                                       step="{{ user_settings.markup_step|default:1 }}" class="form-control" required>
+                            </div>
+                            <div class="col-12 col-lg-6">
+                                <label for="search-input" class="form-label">Поиск товара</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">🔍</span>
+                                    <input type="text" id="search-input" class="form-control"
+                                           placeholder="Введите название..." data-focus-hotkey="/">
+                                    <button type="button" id="clear-search" class="btn btn-outline-secondary">Очистить</button>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-4">
-                            <label for="markup" class="form-label">Наценка (%)</label>
-                            <input type="number" name="markup" id="markup" value="{{ markup }}"
-                                   step="{{ user_settings.markup_step|default:1 }}" class="form-control" required>
-                        </div>
+                    </form>
+                    
+                    <div id="create-calculation-container" class="flex-grow-1 d-flex flex-column">
+                        {% include 'trades/includes/create_calculation_content.html' %}
                     </div>
-
-
-                    <!-- Поиск -->
-                    <div class="input-group mb-3">
-                        <input type="text" id="search-input" name="search" value="{{ search_query }}"
-                               class="form-control" placeholder="🔍 Введите название товара...">
-                        <button type="button" id="clear-search" class="btn btn-outline-secondary">Очистить</button>
-                    </div>
-                    <!-- Фильтр -->
-                    <div class="mb-3">
-                        <button type="button" id="filter-selected" class="btn btn-outline-secondary btn-sm">
-                            🔘 Показать только выбранные
-                        </button>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-hover" id="calculation-table">
-                            <thead class="table-light">
-                            <tr>
-                                <th>#</th>
-                                <th>Товар</th>
-                                <th>Цена</th>
-                                <th style="width: 110px;">Кол-во</th>
-                                <th class="text-center">Выбрать</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {% for item in items %}
-                                {% with item.id|stringformat:"s" as item_id_str %}
-                                    <tr id="item-{{ item.id }}">
-                                        <td>{{ forloop.counter }}</td>
-                                        <td class="item-name">{{ item.name }}</td>
-                                        <td class="item-price">{{ item.price }}</td>
-                                        <td>
-                                            <input type="number" name="quantity_{{ item.id }}"
-                                                   value="{{ initial_quantities|get_item:item_id_str|default:'1' }}"
-                                                   min="1" class="form-control quantity-input">
-                                        </td>
-                                        <td class="text-center">
-                                            <input type="checkbox" name="items" value="{{ item.id }}"
-                                                   class="form-check-input item-checkbox"
-                                                   {% if item_id_str in selected_items_ids %}checked{% endif %}>
-                                        </td>
-                                    </tr>
-                                {% endwith %}
-                            {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Кнопка сохранить -->
-                    <div class="text-center mt-4">
-                        <button type="submit" class="btn btn-success btn-lg w-100">💾 Сохранить расчёт</button>
-                    </div>
-                </form>
+                </div>
             </div>
 
             <!-- Правая колонка: итог -->
-            <div class="col-md-4 summary-column">
-                <div class="w-100 mt-4">
+            <div class="col-12 col-xxl-2 col-xl-3 col-lg-3 col-md-3 summary-column">
+                <div class="w-100 mt-3 mt-xl-0">
                     <div class="summary-block">
                         <h5 class="text-success">💰 Итоговая стоимость</h5>
                         <div class="d-flex justify-content-between">
@@ -95,8 +60,15 @@
                             <span id="total-with-markup">0.00 ₽</span>
                         </div>
                     </div>
+                    
+                    <!-- Кнопки сохранить/отменить -->
+                    <div class="d-flex flex-column gap-2 mt-4">
+                        <button type="submit" form="create-calc-form" class="btn btn-success btn-lg w-100">💾 Сохранить</button>
+                        <a href="{% url 'calculations_list' %}" class="btn btn-secondary btn-lg w-100">❌ Отменить</a>
+                    </div>
                 </div>
             </div>
+        </div>
         </div>
     </div>
 

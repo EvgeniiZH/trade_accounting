@@ -1,58 +1,74 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Снимки расчётов{% endblock %}
 
 {% block content %}
-    <div class="container my-4">
-        <h2 class="mb-4">Снимки расчётов</h2>
-        <table id="snapshot-table" class="table table-bordered table-hover">
+    <div class="container-fluid page-wrapper">
+        <div class="page-header d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+            <h2 class="mb-0 text-primary">📁 Архив расчётов</h2>
+        </div>
 
+        <div class="page-content">
+        <div class="input-group" data-table-search data-table-id="snapshot-table" data-cell-selector=".search-target">
+            <span class="input-group-text">🔍</span>
+            <input type="text" class="form-control" placeholder="Поиск по названию или автору..." data-role="search-input" data-focus-hotkey="/">
+            <button type="button" class="btn btn-outline-secondary" data-role="clear-search">Очистить</button>
+        </div>
 
-
-            <thead class="table-light">
-            <tr>
-                <th>ID</th>
-                <th>Расчёт</th>
-                <th>Автор</th>
-                <th>Дата создания</th>
-                <th>Наценка (%)</th>
-                <th>Стоимость без наценки</th>
-                <th>Стоимость с наценкой</th>
-                <th>Действия</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for snapshot in snapshots %}
+        <div class="table-scroll border rounded shadow-sm">
+            <table id="snapshot-table" class="table table-bordered table-hover mb-0">
+                <thead class="table-light">
                 <tr>
-                    <td>{{ snapshot.id }}</td>
-                    <td>{{ snapshot.calculation.title }}</td>
-                    <td>
-                        {% if snapshot.created_by %}
-                            {{ snapshot.created_by.username }}
-                        {% else %}
-                            Не указан
-                        {% endif %}
-                    </td>
-                    <td>{{ snapshot.created_at|date:"d.m.Y H:i" }}</td>
-                    <td>{{ snapshot.calculation.markup|floatformat:2 }}%</td>
-                    <td>{{ snapshot.frozen_total_price|floatformat:2 }} ₽</td>
-                    <td>{{ snapshot.frozen_total_price_with_markup|floatformat:2 }} ₽</td>
-                    <td>
-                        <a href="{% url 'calculation_snapshot_detail' snapshot.id %}" class="btn btn-primary btn-sm">
-                            Просмотр
-                        </a>
-                    </td>
+                    <th>ID</th>
+                    <th>Расчёт</th>
+                    <th>Автор</th>
+                    <th class="text-center">Дата создания</th>
+                    <th class="text-end">Наценка (%)</th>
+                    <th class="text-end">Стоимость без наценки</th>
+                    <th class="text-end">Стоимость с наценкой</th>
+                    <th class="text-center">Действия</th>
                 </tr>
-            {% empty %}
-                <tr>
-                    <td colspan="8" class="text-center">Нет сохранённых снимков расчётов</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                {% for snapshot in page_obj %}
+                    <tr>
+                        <td>{{ snapshot.id }}</td>
+                        <td class="search-target">{{ snapshot.calculation.title }}</td>
+                        <td class="search-target">
+                            {% if snapshot.created_by %}
+                                {{ snapshot.created_by.username }}
+                            {% else %}
+                                Не указан
+                            {% endif %}
+                        </td>
+                        <td class="text-center">{{ snapshot.created_at|date:"d.m.Y H:i" }}</td>
+                        <td class="text-end">{{ snapshot.calculation.markup|floatformat:2 }}%</td>
+                        <td class="text-end">{{ snapshot.frozen_total_price|floatformat:2 }} ₽</td>
+                        <td class="text-end">{{ snapshot.frozen_total_price_with_markup|floatformat:2 }} ₽</td>
+                        <td class="text-center">
+                            <a href="{% url 'calculation_snapshot_detail' snapshot.id %}" class="btn btn-primary btn-sm">
+                                Просмотр
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted">Нет сохранённых снимков расчётов</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
         <a href="{% url 'calculations_list' %}" class="btn btn-secondary mt-3">Вернуться к списку расчётов</a>
+        <div class="page-footer">
+            {% include 'includes/pagination.html' %}
+        </div>
+        </div>
     </div>
-{% load static %}
-<link rel="stylesheet" href="{% static 'css/pages/calculation_snapshot_list.css' %}">
+
+    <link rel="stylesheet" href="{% static 'css/pages/calculation_snapshot_list.css' %}">
+    <script src="{% static 'js/table_search.js' %}" defer></script>
 
 {% endblock %}

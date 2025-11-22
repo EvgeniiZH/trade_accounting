@@ -1,5 +1,7 @@
 from django import template
 from decimal import Decimal, ROUND_HALF_UP
+from urllib.parse import urlencode
+from collections import OrderedDict
 
 register = template.Library()
 
@@ -43,3 +45,40 @@ def mul(value, arg):
         return float(value) * float(arg)
     except (ValueError, TypeError):
         return ''
+
+@register.simple_tag(takes_context=True)
+def querystring(context, **kwargs):
+    """
+    Создаёт query string из текущих GET параметров, обновляя указанные значения.
+    Использование: {% querystring page=2 %}
+    """
+    request = context.get('request')
+    if not request:
+        return urlencode(kwargs)
+    
+    # Получаем текущие GET параметры как словарь
+    # QueryDict можно итерировать, но для urlencode нужен обычный dict
+    params = {}
+    for key in request.GET:
+        # Для параметров с несколькими значениями берем все
+        values = request.GET.getlist(key)
+        if len(values) == 1:
+            params[key] = values[0]
+        else:
+            # Для множественных значений создаём список
+            params[key] = values
+    
+    # Обновляем указанными значениями
+    for key, value in kwargs.items():
+        params[key] = str(value)
+    
+    # Обрабатываем множественные значения для urlencode
+    query_parts = []
+    for key, value in params.items():
+        if isinstance(value, list):
+            for v in value:
+                query_parts.append((key, v))
+        else:
+            query_parts.append((key, value))
+    
+    return urlencode(query_parts)

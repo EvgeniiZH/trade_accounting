@@ -1,117 +1,273 @@
 document.addEventListener('DOMContentLoaded', () => {
-  console.log("🟢 JS стартует");
+<<<<<<< Current (Your changes)
+<<<<<<< Current (Your changes)
 
-  // === ПОИСК ===
+  // === СЕРВЕРНЫЙ ПОИСК ===
   const searchInput = document.querySelector('#search-input');
   const clearButton = document.querySelector('#clear-search');
-  const tableBody = document.querySelector('#item-table tbody');
+  const searchForm = document.querySelector('#search-form');
+  
+  let searchTimeout;
 
-  if (searchInput && clearButton && tableBody) {
+  if (searchInput && clearButton && searchForm) {
+    // Автоотправка формы при вводе (с задержкой 1500мс - 1.5 секунды)
     searchInput.addEventListener('input', () => {
-      const searchTerm = searchInput.value.trim().toLowerCase();
-      const rows = tableBody.querySelectorAll('tr');
-      let found = false;
-
-      rows.forEach(row => {
-        const nameCell = row.querySelector('.item-name');
-        const text = nameCell ? nameCell.textContent.trim().toLowerCase() : '';
-        const match = text.includes(searchTerm);
-        row.style.display = match ? '' : 'none';
-
-        if (match && !found && searchTerm !== '') {
-          row.scrollIntoView({behavior: 'smooth', block: 'center'});
-          row.style.backgroundColor = '#d4edda';
-          setTimeout(() => row.style.backgroundColor = '', 1500);
-          found = true;
-        }
-      });
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        searchForm.submit();
+      }, 1500);
     });
 
+    // Отправка по Enter (мгновенно)
+    searchInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        clearTimeout(searchTimeout);
+        searchForm.submit();
+      }
+    });
+
+    // Очистка поиска
     clearButton.addEventListener('click', () => {
       searchInput.value = '';
-      searchInput.dispatchEvent(new Event('input'));
+      searchForm.submit();
     });
   }
 
-  // === СОРТИРОВКА ===
-  const table = document.querySelector('#item-table');
-  const headers = table.querySelectorAll('th.sortable');
-  let sortDirection = 1;
-  let activeColumn = 'name';
+  // === Подсветка найденного текста (после перезагрузки) ===
+  const urlParams = new URLSearchParams(window.location.search);
+  const searchTerm = urlParams.get('search');
 
-  const manualAlphabet = ' абвгдеёжзийклмнопрстуфхцчшщъыьэюяabcdefghijklmnopqrstuvwxyz0123456789';
-
-  const normalizeForSort = (str) => {
-    return str.toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^\p{L}\p{N}]/gu, '');
-  };
-
-  const getManualSortKey = (text) => {
-    const clean = normalizeForSort(text);
-    return [...clean]
-      .map(char => manualAlphabet.indexOf(char))
-      .filter(index => index >= 0);
-  };
-
-  const sortTable = (column) => {
-    const rows = Array.from(table.querySelectorAll('tbody tr'));
-
-    if (activeColumn === column) {
-      sortDirection *= -1;
-    } else {
-      activeColumn = column;
-      sortDirection = 1;
-    }
-
-    headers.forEach(h => {
-      const arrow = h.querySelector('.sort-arrow');
-      if (arrow) arrow.textContent = '↕';
-    });
-
-    const arrow = document.querySelector(`th[data-sort="${column}"] .sort-arrow`);
-    if (arrow) arrow.textContent = sortDirection === 1 ? '↑' : '↓';
-
-    const getCellValue = (row) => {
-      if (column === 'index') return parseInt(row.cells[0].textContent.trim());
-      if (column === 'name') return row.cells[1].textContent;
-      if (column === 'price') return parseFloat(row.cells[2].textContent.trim()) || 0;
-    };
-
-    rows.sort((a, b) => {
-      const valA = getCellValue(a);
-      const valB = getCellValue(b);
-      console.log('🔍 Сравнение:', valA, 'vs', valB);
-
-      if (typeof valA === 'string' && typeof valB === 'string') {
-        const codeA = getManualSortKey(valA);
-        const codeB = getManualSortKey(valB);
-
-        for (let i = 0; i < Math.min(codeA.length, codeB.length); i++) {
-          if (codeA[i] !== codeB[i]) {
-            return (codeA[i] - codeB[i]) * sortDirection;
-          }
+  if (searchTerm) {
+    const term = searchTerm.trim().toLowerCase();
+    if (term) {
+      const elements = document.querySelectorAll('.item-name');
+      elements.forEach(el => {
+        const text = el.textContent;
+        if (text.toLowerCase().includes(term)) {
+          const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const regex = new RegExp(`(${escapedTerm})`, 'gi');
+          el.innerHTML = text.replace(regex, '<mark>$1</mark>');
         }
-        return (codeA.length - codeB.length) * sortDirection;
-      }
+      });
+    }
+  }
 
-      return (valA - valB) * sortDirection;
-    });
-
-    const tbody = table.querySelector('tbody');
-    tbody.innerHTML = '';
-    rows.forEach(row => tbody.appendChild(row));
-  };
+  // === СОРТИРОВКА (серверная через клик на заголовок) ===
+  const table = document.querySelector('#item-table');
+  const headers = table ? table.querySelectorAll('th.sortable') : [];
 
   headers.forEach(header => {
     header.addEventListener('click', () => {
-      const column = header.getAttribute('data-sort');
-      sortTable(column);
+      const sortField = header.getAttribute('data-sort');
+      const currentSort = new URLSearchParams(window.location.search).get('sort');
+      const currentDirection = new URLSearchParams(window.location.search).get('direction') || 'asc';
+      
+      // Переключаем направление если кликнули на тот же столбец
+      const newDirection = (currentSort === sortField && currentDirection === 'asc') ? 'desc' : 'asc';
+      
+      // Формируем новый URL с параметрами сортировки
+      const url = new URL(window.location);
+      url.searchParams.set('sort', sortField);
+      url.searchParams.set('direction', newDirection);
+      
+      // Переходим на новый URL
+      window.location.href = url.toString();
     });
   });
-
-  // 🚀 Автосортировка
-  sortTable('name');
-  console.log("🚀 Автосортировка по name запущена");
 });
+=======
+    const searchInput = document.querySelector('#search-input');
+    const clearButton = document.querySelector('#clear-search');
+    const table = document.querySelector('#item-table');
+    const tableBody = table?.querySelector('tbody');
+    
+    let searchTimeout;
+
+    function performSearch() {
+        const searchTerm = searchInput.value.trim();
+        const url = new URL(window.location.href);
+        url.searchParams.set('search', searchTerm);
+        if (searchTerm !== (url.searchParams.get('search') || '')) {
+             url.searchParams.set('page', 1);
+        }
+
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(response => response.text())
+        .then(html => {
+            if (tableBody) {
+                tableBody.innerHTML = html;
+                
+                // Подсветка
+                if (searchTerm) {
+                    const term = searchTerm.toLowerCase();
+                    tableBody.querySelectorAll('.item-name').forEach(cell => {
+                        if (cell.textContent.toLowerCase().includes(term)) {
+                            const regex = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                            cell.innerHTML = cell.textContent.replace(regex, '<mark>$1</mark>');
+                            cell.closest('tr').classList.add('search-hit');
+                            setTimeout(() => cell.closest('tr').classList.remove('search-hit'), 3000);
+                        }
+                    });
+                    // Скролл к первому
+                    const firstMatch = tableBody.querySelector('.search-hit');
+                    if (firstMatch) firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        });
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(performSearch, 1000);
+        });
+
+        searchInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                clearTimeout(searchTimeout);
+                performSearch();
+            }
+        });
+        
+        document.addEventListener('keydown', (event) => {
+            if (event.key === '/' && document.activeElement !== searchInput) {
+                event.preventDefault();
+                searchInput.focus();
+            }
+        });
+    }
+
+    if (clearButton) {
+        clearButton.addEventListener('click', () => {
+            searchInput.value = '';
+            performSearch();
+            searchInput.focus();
+        });
+    }
+});
+>>>>>>> Incoming (Background Agent changes)
+=======
+    const searchInput = document.querySelector('#search-input');
+    const clearButton = document.querySelector('#clear-search');
+    const container = document.querySelector('#item-list-container');
+    
+    let searchTimeout;
+
+    // === Loader ===
+    function toggleLoader(show) {
+        const loader = document.querySelector('.table-loader');
+        if (loader) {
+            if (show) loader.classList.add('active');
+            else loader.classList.remove('active');
+        }
+    }
+
+    // === Инициализация событий (сортировка, пагинация) ===
+    function initEvents() {
+        if (!container) return;
+
+        // Сортировка и Пагинация (делегирование)
+        container.addEventListener('click', (e) => {
+            const link = e.target.closest('a.page-link, a.sort-link');
+            if (link) {
+                e.preventDefault();
+                const url = new URL(link.getAttribute('href'), window.location.href);
+                fetchData(url);
+            }
+        });
+    }
+
+    // === AJAX Запрос ===
+    function fetchData(url) {
+        toggleLoader(true);
+        
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(response => response.text())
+        .then(html => {
+            if (container) {
+                container.innerHTML = html;
+                // initEvents не нужно вызывать заново, так как мы используем делегирование на container,
+                // который не меняется (меняется его содержимое). 
+                // А стоп, container.innerHTML меняет всё внутри.
+                // Делегирование работает, если обработчик висит на самом container.
+                // Так что всё ок.
+                
+                // Обновляем URL
+                window.history.pushState({}, '', url);
+                
+                // Подсветка поиска
+                const searchTerm = url.searchParams.get('search');
+                if (searchTerm) highlightSearch(searchTerm);
+            }
+        })
+        .catch(err => console.error('Error:', err))
+        .finally(() => toggleLoader(false));
+    }
+
+    // === Поиск ===
+    function performSearch() {
+        const searchTerm = searchInput.value.trim();
+        const url = new URL(window.location.href);
+        url.searchParams.set('search', searchTerm);
+        if (searchTerm !== (url.searchParams.get('search') || '')) {
+             url.searchParams.set('page', 1); // Сброс на 1 страницу при новом поиске
+        }
+        fetchData(url);
+    }
+
+    // === Подсветка ===
+    function highlightSearch(term) {
+        if (!term) return;
+        const tableBody = document.querySelector('#item-table tbody');
+        if (!tableBody) return;
+
+        term = term.toLowerCase();
+        tableBody.querySelectorAll('.item-name').forEach(cell => {
+            if (cell.textContent.toLowerCase().includes(term)) {
+                const regex = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                cell.innerHTML = cell.textContent.replace(regex, '<mark>$1</mark>');
+                cell.closest('tr').classList.add('search-hit');
+                setTimeout(() => cell.closest('tr').classList.remove('search-hit'), 3000);
+            }
+        });
+        
+        const firstMatch = tableBody.querySelector('.search-hit');
+        if (firstMatch) firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(performSearch, 1000);
+        });
+
+        searchInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                clearTimeout(searchTimeout);
+                performSearch();
+            }
+        });
+        
+        document.addEventListener('keydown', (event) => {
+            if (event.key === '/' && document.activeElement !== searchInput) {
+                event.preventDefault();
+                searchInput.focus();
+            }
+        });
+    }
+
+    if (clearButton) {
+        clearButton.addEventListener('click', () => {
+            searchInput.value = '';
+            performSearch();
+            searchInput.focus();
+        });
+    }
+
+    // Инициализация
+    initEvents();
+});
+>>>>>>> Incoming (Background Agent changes)

@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm, UserChangeForm
+from django.contrib.auth.forms import UserCreationForm, UserChangeForm, SetPasswordForm
 from .models import Item, Calculation, CalculationItem, CustomUser
 
 class ItemForm(forms.ModelForm):
@@ -171,3 +171,26 @@ class UserEditForm(UserChangeForm):
         for field_name, field in self.fields.items():
             if not isinstance(field.widget, forms.CheckboxInput):
                 field.widget.attrs.setdefault('class', 'form-control')
+
+
+class AdminSetPasswordForm(SetPasswordForm):
+    """Форма смены пароля администратором с русскими подписями и подсказками."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        hints = [
+            "Не должен быть похож на персональные данные пользователя.",
+            "Минимальная длина — 8 символов.",
+            "Не может быть слишком распространённым паролем.",
+            "Не может состоять только из цифр."
+        ]
+
+        self.fields['new_password1'].label = "Новый пароль"
+        self.fields['new_password1'].help_text = "• " + "\n• ".join(hints)
+        self.fields['new_password1'].widget.attrs.setdefault('class', 'form-control')
+        self.fields['new_password1'].widget.attrs.setdefault('placeholder', 'Введите новый пароль')
+
+        self.fields['new_password2'].label = "Подтверждение пароля"
+        self.fields['new_password2'].help_text = "Повторите пароль для проверки."
+        self.fields['new_password2'].widget.attrs.setdefault('class', 'form-control')
+        self.fields['new_password2'].widget.attrs.setdefault('placeholder', 'Повторите пароль')

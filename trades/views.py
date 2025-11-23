@@ -6,7 +6,7 @@ from django.db import IntegrityError
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from .forms import UserCreateForm, UserEditForm
+from .forms import UserCreateForm, UserEditForm, AdminSetPasswordForm
 from .models import Item, Calculation, CalculationItem, PriceHistory, CustomUser, CalculationSnapshot, \
     CalculationSnapshotItem
 import pandas as pd
@@ -740,15 +740,31 @@ def create_user(request):
 def edit_user(request, user_id):
     """Редактирование пользователя (только для администраторов)"""
     user = get_object_or_404(CustomUser, id=user_id)
-    if request.method == "POST":
+    action = request.POST.get('action')
+
+    if request.method == "POST" and action == 'update_user':
         form = UserEditForm(request.POST, instance=user)
+        password_form = AdminSetPasswordForm(user)
         if form.is_valid():
             form.save()
-            messages.success(request, "Пользователь успешно обновлён!")
+            messages.success(request, "Профиль пользователя обновлён.")
+            return redirect('manage_users')
+    elif request.method == "POST" and action == 'change_password':
+        form = UserEditForm(instance=user)
+        password_form = AdminSetPasswordForm(user, request.POST)
+        if password_form.is_valid():
+            password_form.save()
+            messages.success(request, f"Пароль пользователя «{user.username}» обновлён.")
             return redirect('manage_users')
     else:
         form = UserEditForm(instance=user)
-    return render(request, 'trades/edit_user.html', {'form': form, 'user': user})
+        password_form = AdminSetPasswordForm(user)
+
+    return render(request, 'trades/edit_user.html', {
+        'form': form,
+        'password_form': password_form,
+        'user_obj': user
+    })
 
 
 @login_required(login_url='/login/')

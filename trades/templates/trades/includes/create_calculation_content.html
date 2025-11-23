@@ -1,14 +1,15 @@
 <div class="card border-0 shadow-sm flex-grow-1 d-flex flex-column">
     <div class="card-body p-3 d-flex flex-column flex-grow-1">
         <!-- Поиск и фильтр -->
-        <div class="d-flex flex-column flex-md-row gap-2 mb-3">
+        <div class="search-toolbar flex-column flex-md-row gap-2 mb-3">
             <div class="input-group flex-grow-1">
-                <span class="input-group-text">🔍</span>
+                <span class="input-group-text" aria-hidden="true">🔍</span>
                 <input type="text" id="search-input" class="form-control"
-                       placeholder="Поиск товара..." data-focus-hotkey="/">
-                <button type="button" id="clear-search" class="btn btn-outline-secondary">Очистить</button>
+                       placeholder="Поиск товара..." data-focus-hotkey="/"
+                       autocomplete="off" aria-label="Поиск по товарам">
+                <button type="button" id="clear-search" class="btn btn-outline-secondary text-nowrap">Очистить</button>
             </div>
-            <button type="button" id="filter-selected" class="btn btn-outline-secondary text-nowrap">
+            <button type="button" id="filter-selected" class="btn btn-outline-secondary text-nowrap search-filter-btn">
                 🔘 Показать только выбранные
             </button>
         </div>

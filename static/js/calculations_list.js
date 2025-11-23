@@ -2,43 +2,81 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.querySelector('#search-input');
     const clearButton = document.querySelector('#clear-search');
     const container = document.querySelector('#calculations-list-container');
-    
+    const DEBOUNCE_DELAY = 500;
     let searchTimeout;
 
-    // === Loader ===
     function toggleLoader(show) {
-        const loader = document.querySelector('.table-loader');
+        if (!container) return;
+        const loader = container.querySelector('.table-loader');
         if (loader) {
-            if (show) loader.classList.add('active');
-            else loader.classList.remove('active');
+            loader.classList.toggle('active', Boolean(show));
         }
     }
 
-    // === Инициализация событий (вызывать после AJAX) ===
+    function applySearchParam(url, searchTerm) {
+        const previousSearch = url.searchParams.get('search') || '';
+        if (searchTerm) {
+            url.searchParams.set('search', searchTerm);
+        } else {
+            url.searchParams.delete('search');
+        }
+        if (searchTerm !== previousSearch) {
+            url.searchParams.set('page', 1);
+        }
+        return url;
+    }
+
+    function highlightSearch(term) {
+        const tableBody = container?.querySelector('tbody');
+        if (!tableBody) return;
+
+        const normalizedTerm = term?.toLowerCase() || '';
+        let firstMatch = null;
+
+        tableBody.querySelectorAll('.calc-title a').forEach(cell => {
+            const rawText = cell.dataset.rawText || cell.textContent;
+            cell.dataset.rawText = rawText;
+            const row = cell.closest('tr');
+            row?.classList.remove('search-hit');
+
+            if (!normalizedTerm) {
+                cell.innerHTML = rawText;
+                return;
+            }
+
+            if (rawText.toLowerCase().includes(normalizedTerm)) {
+                const regex = new RegExp(`(${normalizedTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                cell.innerHTML = rawText.replace(regex, '<mark>$1</mark>');
+                row?.classList.add('search-hit');
+                if (!firstMatch) firstMatch = row;
+                setTimeout(() => row?.classList.remove('search-hit'), 2000);
+            } else {
+                cell.innerHTML = rawText;
+            }
+        });
+
+        if (firstMatch) {
+            firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+
     function initEvents() {
         if (!container) return;
 
-        // Делегирование кликов на контейнере (для сортировки и пагинации)
-        // Мы не удаляем старые обработчики, так как контейнер перерисовывается полностью
-        // Но лучше вешать на сам container один раз (см. ниже)
-        
         const tableBody = container.querySelector('tbody');
         if (tableBody) {
-            // === Подтверждение удаления ===
             const deleteButtons = tableBody.querySelectorAll('button[name="delete_calc"]');
             deleteButtons.forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const row = btn.closest('tr');
                     const title = row?.querySelector('.calc-title')?.textContent.trim() || 'этот расчёт';
-                    const confirmed = confirm(`Вы действительно хотите удалить расчёт: «${title}»?`);
-                    if (!confirmed) {
+                    if (!confirm(`Вы действительно хотите удалить расчёт: «${title}»?`)) {
                         e.preventDefault();
                     }
                 });
             });
         }
 
-        // === Select All ===
         const selectAll = container.querySelector('#select_all');
         if (selectAll) {
             selectAll.addEventListener('change', () => {
@@ -48,78 +86,46 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // === AJAX Запрос ===
     function fetchData(url) {
         toggleLoader(true);
-        
-        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-        .then(response => response.text())
-        .then(html => {
-            if (container) {
+        fetch(url.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(response => response.text())
+            .then(html => {
+                if (!container) return;
                 container.innerHTML = html;
                 initEvents();
-                window.history.pushState({}, '', url);
-                
-                // Подсветка
-                const searchTerm = url.searchParams.get('search');
-                if (searchTerm) highlightSearch(searchTerm);
-            }
-        })
-        .catch(err => console.error('Error:', err))
-        .finally(() => toggleLoader(false));
+                window.history.pushState({}, '', url.toString());
+                highlightSearch(url.searchParams.get('search'));
+            })
+            .catch(err => console.error('Error:', err))
+            .finally(() => toggleLoader(false));
     }
 
-    // === Поиск ===
     function performSearch() {
+        if (!searchInput) return;
         const searchTerm = searchInput.value.trim();
-        const url = new URL(window.location.href);
-        url.searchParams.set('search', searchTerm);
-        if (searchTerm !== (url.searchParams.get('search') || '')) {
-             url.searchParams.set('page', 1);
-        }
+        const url = applySearchParam(new URL(window.location.href), searchTerm);
         fetchData(url);
     }
 
-    // === Подсветка ===
-    function highlightSearch(term) {
-        if (!term) return;
-        const tableBody = container.querySelector('tbody');
-        if (!tableBody) return;
-
-        term = term.toLowerCase();
-        tableBody.querySelectorAll('.calc-title a').forEach(cell => {
-            if (cell.textContent.toLowerCase().includes(term)) {
-                const regex = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-                cell.innerHTML = cell.textContent.replace(regex, '<mark>$1</mark>');
-                cell.closest('tr').classList.add('search-hit');
-                setTimeout(() => cell.closest('tr').classList.remove('search-hit'), 3000);
-            }
-        });
-        
-        const firstMatch = tableBody.querySelector('.search-hit');
-        if (firstMatch) firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-
-    // === Глобальный слушатель кликов (для пагинации и сортировки) ===
     if (container) {
         container.addEventListener('click', (e) => {
             const link = e.target.closest('a.page-link, a.sort-link');
-            if (link) {
-                e.preventDefault();
-                const url = new URL(link.getAttribute('href'), window.location.href);
-                // Сохраняем текущий поиск
-                const currentSearch = searchInput.value.trim();
-                if (currentSearch) url.searchParams.set('search', currentSearch);
-                
-                fetchData(url);
+            if (!link) return;
+            e.preventDefault();
+            const url = new URL(link.getAttribute('href'), window.location.href);
+            const currentSearch = searchInput?.value.trim();
+            if (currentSearch) {
+                url.searchParams.set('search', currentSearch);
             }
+            fetchData(url);
         });
     }
 
     if (searchInput) {
         searchInput.addEventListener('input', () => {
             clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(performSearch, 1000);
+            searchTimeout = setTimeout(performSearch, DEBOUNCE_DELAY);
         });
 
         searchInput.addEventListener('keydown', (event) => {
@@ -129,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 performSearch();
             }
         });
-        
+
         document.addEventListener('keydown', (event) => {
             if (event.key === '/' && document.activeElement !== searchInput) {
                 event.preventDefault();
@@ -140,16 +146,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (clearButton) {
         clearButton.addEventListener('click', () => {
+            if (!searchInput) return;
             searchInput.value = '';
             performSearch();
             searchInput.focus();
         });
     }
 
-    // Инициализация при загрузке
     initEvents();
 
-    // === Прокрутка к обновлённому (только при загрузке) ===
     const params = new URLSearchParams(window.location.search);
     const updatedCalcId = params.get('updated_calc') || params.get('new_calc');
     if (updatedCalcId) {

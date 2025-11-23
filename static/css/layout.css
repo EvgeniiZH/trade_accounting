@@ -145,6 +145,48 @@ footer {
     overflow: hidden; /* Фиксируем overflow для предотвращения "дёргания" таблиц */
 }
 
+/* Унифицированная панель поиска */
+.search-toolbar {
+    display: flex;
+    align-items: stretch;
+    gap: 0.5rem;
+}
+
+.search-toolbar .input-group {
+    flex: 1 1 auto;
+}
+
+.search-toolbar .input-group-text {
+    background-color: #fff;
+    border-right: 0;
+    font-size: 1.1rem;
+}
+
+.search-toolbar .form-control {
+    border-left: 0;
+    box-shadow: none;
+}
+
+.search-toolbar .btn-outline-secondary {
+    border-color: #ced4da;
+    white-space: nowrap;
+}
+
+.search-toolbar .search-filter-btn {
+    flex: 0 0 auto;
+}
+
+@media (max-width: 768px) {
+    .search-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .search-toolbar .search-filter-btn {
+        width: 100%;
+    }
+}
+
 /* Левая колонка на странице создания расчета занимает максимум доступной ширины */
 /* Применяем только к главному row (прямой ребенок page-content), не к вложенным */
 #create-calculation-wrapper .page-content > .row > [class*='col-']:first-child {

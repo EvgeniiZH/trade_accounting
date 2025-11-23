@@ -2,95 +2,104 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.querySelector('#search-input');
     const clearButton = document.querySelector('#clear-search');
     const container = document.querySelector('#item-list-container');
-    
+    const DEBOUNCE_DELAY = 500;
     let searchTimeout;
 
-    // === Loader ===
     function toggleLoader(show) {
-        const loader = document.querySelector('.table-loader');
+        if (!container) return;
+        const loader = container.querySelector('.table-loader');
         if (loader) {
-            if (show) loader.classList.add('active');
-            else loader.classList.remove('active');
+            loader.classList.toggle('active', Boolean(show));
         }
     }
 
-    // === Инициализация событий (сортировка, пагинация) ===
-    function initEvents() {
-        if (!container) return;
+    function applySearchParam(url, searchTerm) {
+        const previousSearch = url.searchParams.get('search') || '';
+        if (searchTerm) {
+            url.searchParams.set('search', searchTerm);
+        } else {
+            url.searchParams.delete('search');
+        }
+        if (searchTerm !== previousSearch) {
+            url.searchParams.set('page', 1);
+        }
+        return url;
+    }
 
-        // Сортировка и Пагинация (делегирование)
-        container.addEventListener('click', (e) => {
-            const link = e.target.closest('a.page-link, a.sort-link');
-            if (link) {
-                e.preventDefault();
-                const url = new URL(link.getAttribute('href'), window.location.href);
-                fetchData(url);
+    function highlightSearch(term) {
+        const tableBody = container?.querySelector('#item-table tbody');
+        if (!tableBody) return;
+
+        const normalizedTerm = term?.toLowerCase() || '';
+        let firstMatch = null;
+
+        tableBody.querySelectorAll('.item-name').forEach(cell => {
+            const rawText = cell.dataset.rawText || cell.textContent;
+            cell.dataset.rawText = rawText;
+            const row = cell.closest('tr');
+            row?.classList.remove('search-hit');
+
+            if (!normalizedTerm) {
+                cell.innerHTML = rawText;
+                return;
+            }
+
+            if (rawText.toLowerCase().includes(normalizedTerm)) {
+                const regex = new RegExp(`(${normalizedTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                cell.innerHTML = rawText.replace(regex, '<mark>$1</mark>');
+                row?.classList.add('search-hit');
+                if (!firstMatch) firstMatch = row;
+                setTimeout(() => row?.classList.remove('search-hit'), 2000);
+            } else {
+                cell.innerHTML = rawText;
             }
         });
+
+        if (firstMatch) {
+            firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
     }
 
-    // === AJAX Запрос ===
     function fetchData(url) {
         toggleLoader(true);
-        
-        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-        .then(response => response.text())
-        .then(html => {
-            if (container) {
+        fetch(url.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(response => response.text())
+            .then(html => {
+                if (!container) return;
                 container.innerHTML = html;
-                // initEvents не нужно вызывать заново, так как мы используем делегирование на container,
-                // который не меняется (меняется его содержимое). 
-                // А стоп, container.innerHTML меняет всё внутри.
-                // Делегирование работает, если обработчик висит на самом container.
-                // Так что всё ок.
-                
-                // Обновляем URL
-                window.history.pushState({}, '', url);
-                
-                // Подсветка поиска
-                const searchTerm = url.searchParams.get('search');
-                if (searchTerm) highlightSearch(searchTerm);
-            }
-        })
-        .catch(err => console.error('Error:', err))
-        .finally(() => toggleLoader(false));
+                window.history.pushState({}, '', url.toString());
+                highlightSearch(url.searchParams.get('search'));
+            })
+            .catch(err => console.error('Error:', err))
+            .finally(() => toggleLoader(false));
     }
 
-    // === Поиск ===
     function performSearch() {
+        if (!searchInput) return;
         const searchTerm = searchInput.value.trim();
-        const url = new URL(window.location.href);
-        url.searchParams.set('search', searchTerm);
-        if (searchTerm !== (url.searchParams.get('search') || '')) {
-             url.searchParams.set('page', 1); // Сброс на 1 страницу при новом поиске
-        }
+        const url = applySearchParam(new URL(window.location.href), searchTerm);
         fetchData(url);
     }
 
-    // === Подсветка ===
-    function highlightSearch(term) {
-        if (!term) return;
-        const tableBody = document.querySelector('#item-table tbody');
-        if (!tableBody) return;
-
-        term = term.toLowerCase();
-        tableBody.querySelectorAll('.item-name').forEach(cell => {
-            if (cell.textContent.toLowerCase().includes(term)) {
-                const regex = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-                cell.innerHTML = cell.textContent.replace(regex, '<mark>$1</mark>');
-                cell.closest('tr').classList.add('search-hit');
-                setTimeout(() => cell.closest('tr').classList.remove('search-hit'), 3000);
+    function initEvents() {
+        if (!container) return;
+        container.addEventListener('click', (e) => {
+            const link = e.target.closest('a.page-link, a.sort-link');
+            if (!link) return;
+            e.preventDefault();
+            const url = new URL(link.getAttribute('href'), window.location.href);
+            const currentSearch = searchInput?.value.trim();
+            if (typeof currentSearch === 'string' && currentSearch.length) {
+                url.searchParams.set('search', currentSearch);
             }
+            fetchData(url);
         });
-        
-        const firstMatch = tableBody.querySelector('.search-hit');
-        if (firstMatch) firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     if (searchInput) {
         searchInput.addEventListener('input', () => {
             clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(performSearch, 1000);
+            searchTimeout = setTimeout(performSearch, DEBOUNCE_DELAY);
         });
 
         searchInput.addEventListener('keydown', (event) => {
@@ -100,7 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 performSearch();
             }
         });
-        
+
         document.addEventListener('keydown', (event) => {
             if (event.key === '/' && document.activeElement !== searchInput) {
                 event.preventDefault();
@@ -111,12 +120,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (clearButton) {
         clearButton.addEventListener('click', () => {
+            if (!searchInput) return;
             searchInput.value = '';
             performSearch();
             searchInput.focus();
         });
     }
 
-    // Инициализация
     initEvents();
 });

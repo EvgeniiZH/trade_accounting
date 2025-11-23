@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let filterActive = false;
     const selectedItemsContainer = document.querySelector('#selected-items-container');
     const form = document.querySelector('#create-calc-form');
+    const DEBOUNCE_DELAY = 500;
     
     // Контейнер, который мы будем обновлять
     const container = document.querySelector('#create-calculation-container');
@@ -24,10 +25,57 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // === Loader ===
     function toggleLoader(show) {
-        const loader = document.querySelector('.table-loader');
+        if (!container) return;
+        const loader = container.querySelector('.table-loader');
         if (loader) {
-            if (show) loader.classList.add('active');
-            else loader.classList.remove('active');
+            loader.classList.toggle('active', Boolean(show));
+        }
+    }
+
+    function applySearchParam(url, searchTerm) {
+        const previousSearch = url.searchParams.get('search') || '';
+        if (searchTerm) {
+            url.searchParams.set('search', searchTerm);
+        } else {
+            url.searchParams.delete('search');
+        }
+        if (searchTerm !== previousSearch) {
+            url.searchParams.set('page', 1);
+        }
+        return url;
+    }
+
+    function highlightSearch(term) {
+        const tableBody = container?.querySelector('tbody');
+        if (!tableBody) return;
+
+        const normalizedTerm = term?.toLowerCase() || '';
+        let firstMatch = null;
+
+        tableBody.querySelectorAll('.item-name').forEach(cell => {
+            const rawText = cell.dataset.rawText || cell.textContent;
+            cell.dataset.rawText = rawText;
+            const row = cell.closest('tr');
+            row?.classList.remove('search-hit');
+
+            if (!normalizedTerm) {
+                cell.innerHTML = rawText;
+                return;
+            }
+
+            if (rawText.toLowerCase().includes(normalizedTerm)) {
+                const regex = new RegExp(`(${normalizedTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                cell.innerHTML = rawText.replace(regex, '<mark>$1</mark>');
+                row?.classList.add('search-hit');
+                if (!firstMatch) firstMatch = row;
+                setTimeout(() => row?.classList.remove('search-hit'), 2000);
+            } else {
+                cell.innerHTML = rawText;
+            }
+        });
+
+        if (firstMatch) {
+            firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     }
 
@@ -150,15 +198,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (container) {
         container.addEventListener('click', (e) => {
             const link = e.target.closest('a.page-link, a.sort-link');
-            if (link) {
-                e.preventDefault();
-                const url = new URL(link.getAttribute('href'), window.location.href);
-                // Сохраняем текущий поиск
+            if (!link) return;
+            e.preventDefault();
+            const url = new URL(link.getAttribute('href'), window.location.href);
+            if (searchInput) {
                 const currentSearch = searchInput.value.trim();
-                if (currentSearch) url.searchParams.set('search', currentSearch);
-                
-                fetchData(url);
+                if (currentSearch) {
+                    url.searchParams.set('search', currentSearch);
+                } else {
+                    url.searchParams.delete('search');
+                }
             }
+            fetchData(url);
         });
     }
 
@@ -166,34 +217,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function fetchData(url) {
         toggleLoader(true);
         
-        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        fetch(url.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
         .then(response => response.text())
         .then(html => {
             if (container) {
                 container.innerHTML = html;
                 initEvents(); // Восстанавливаем состояние
-                window.history.pushState({}, '', url);
-                
-                // Подсветка
-                const searchTerm = url.searchParams.get('search');
-                if (searchTerm) {
-                    const term = searchTerm.toLowerCase();
-                    const tableBody = container.querySelector('tbody');
-                    if (tableBody) {
-                        let firstMatch = null;
-                        tableBody.querySelectorAll('.item-name').forEach(cell => {
-                            if (cell.textContent.toLowerCase().includes(term)) {
-                                const regex = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-                                cell.innerHTML = cell.textContent.replace(regex, '<mark>$1</mark>');
-                                const row = cell.closest('tr');
-                                row.classList.add('search-hit');
-                                setTimeout(() => row.classList.remove('search-hit'), 3000);
-                                if (!firstMatch) firstMatch = row;
-                            }
-                        });
-                        if (firstMatch) firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }
-                }
+                window.history.pushState({}, '', url.toString());
+                highlightSearch(url.searchParams.get('search'));
             }
         })
         .catch(err => console.error('Error:', err))
@@ -202,19 +233,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // === Поиск ===
     function performSearch() {
+        if (!searchInput) return;
         const searchTerm = searchInput.value.trim();
-        const url = new URL(window.location.href);
-        url.searchParams.set('search', searchTerm);
-        if (searchTerm !== (url.searchParams.get('search') || '')) {
-             url.searchParams.set('page', 1);
-        }
+        const url = applySearchParam(new URL(window.location.href), searchTerm);
         fetchData(url);
     }
 
     if (searchInput) {
         searchInput.addEventListener('input', () => {
             clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(performSearch, 1000);
+            searchTimeout = setTimeout(performSearch, DEBOUNCE_DELAY);
         });
         
         searchInput.addEventListener('keydown', (event) => {
@@ -235,6 +263,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (clearButton) {
         clearButton.addEventListener('click', () => {
+            if (!searchInput) return;
             searchInput.value = '';
             performSearch();
             searchInput.focus();

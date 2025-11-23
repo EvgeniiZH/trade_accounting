@@ -3,8 +3,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const markupInput = document.querySelector('#markup');
     const totalWithout = document.querySelector('#total-without-markup');
     const totalWith = document.querySelector('#total-with-markup');
-    const searchInput = document.querySelector('#search-input');
-    const clearButton = document.querySelector('#clear-search');
     let filterButton = null;
     let filterActive = false;
     const selectedItemsContainer = document.querySelector('#selected-items-container');
@@ -13,8 +11,10 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Контейнер, который мы будем обновлять
     const container = document.querySelector('#create-calculation-container');
+    const getClearButton = () => container?.querySelector('#clear-search');
     
     let searchTimeout;
+    const getSearchInput = () => container?.querySelector('#search-input');
 
     // Хранилище состояния
     const selectedState = {
@@ -197,19 +197,42 @@ document.addEventListener('DOMContentLoaded', () => {
     // === Глобальный слушатель кликов на контейнере ===
     if (container) {
         container.addEventListener('click', (e) => {
+            if (e.target.closest('#clear-search')) {
+                const input = getSearchInput();
+                if (input) {
+                    input.value = '';
+                    performSearch();
+                    input.focus();
+                }
+                return;
+            }
+
             const link = e.target.closest('a.page-link, a.sort-link');
             if (!link) return;
             e.preventDefault();
             const url = new URL(link.getAttribute('href'), window.location.href);
-            if (searchInput) {
-                const currentSearch = searchInput.value.trim();
-                if (currentSearch) {
-                    url.searchParams.set('search', currentSearch);
-                } else {
-                    url.searchParams.delete('search');
-                }
+            const currentSearch = getSearchInput()?.value.trim();
+            if (currentSearch) {
+                url.searchParams.set('search', currentSearch);
+            } else {
+                url.searchParams.delete('search');
             }
             fetchData(url);
+        });
+
+        container.addEventListener('input', (event) => {
+            if (!event.target.matches('#search-input')) return;
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(performSearch, DEBOUNCE_DELAY);
+        });
+
+        container.addEventListener('keydown', (event) => {
+            if (!event.target.matches('#search-input')) return;
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                clearTimeout(searchTimeout);
+                performSearch();
+            }
         });
     }
 
@@ -233,42 +256,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // === Поиск ===
     function performSearch() {
+        const searchInput = getSearchInput();
         if (!searchInput) return;
         const searchTerm = searchInput.value.trim();
         const url = applySearchParam(new URL(window.location.href), searchTerm);
         fetchData(url);
     }
 
-    if (searchInput) {
-        searchInput.addEventListener('input', () => {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(performSearch, DEBOUNCE_DELAY);
-        });
-        
-        searchInput.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                clearTimeout(searchTimeout);
-                performSearch();
-            }
-        });
-        
-        document.addEventListener('keydown', (event) => {
-            if (event.key === '/' && document.activeElement !== searchInput) {
-                event.preventDefault();
-                searchInput.focus();
-            }
-        });
-    }
-
-    if (clearButton) {
-        clearButton.addEventListener('click', () => {
-            if (!searchInput) return;
-            searchInput.value = '';
-            performSearch();
+    document.addEventListener('keydown', (event) => {
+        const searchInput = getSearchInput();
+        if (event.key === '/' && searchInput && document.activeElement !== searchInput) {
+            event.preventDefault();
             searchInput.focus();
-        });
-    }
+        }
+    });
 
     // === Пересчет итогов ===
     function recalculateTotals() {

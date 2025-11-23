@@ -6,8 +6,27 @@
 
 {% block content %}
     <div id="create-calculation-wrapper" class="container-fluid page-wrapper">
-        <div class="page-header">
+        <div class="page-header d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
             <h2 class="mb-0 text-primary">➕ Создание расчёта</h2>
+            <div class="search-toolbar w-100 w-md-auto">
+                <div class="input-group">
+                    <span class="input-group-text" aria-hidden="true">🔍</span>
+                    <input type="text"
+                           id="search-input"
+                           class="form-control"
+                           placeholder="Поиск товара..."
+                           data-focus-hotkey="/"
+                           autocomplete="off"
+                           aria-label="Поиск по товарам"
+                           value="{{ search_query }}">
+                    <button type="button" id="clear-search" class="btn btn-outline-secondary text-nowrap">
+                        Очистить
+                    </button>
+                </div>
+                <button type="button" id="filter-selected" class="btn btn-outline-secondary search-filter-btn text-nowrap">
+                    🔘 Показать только выбранные
+                </button>
+            </div>
         </div>
         <div class="page-content">
         <div class="row g-2 flex-grow-1">

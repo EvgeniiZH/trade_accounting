@@ -3,18 +3,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const markupInput = document.querySelector('#markup');
     const totalWithout = document.querySelector('#total-without-markup');
     const totalWith = document.querySelector('#total-with-markup');
-    let filterButton = null;
+    const searchInput = document.querySelector('#search-input');
+    const clearButton = document.querySelector('#clear-search');
+    let filterButton = document.querySelector('#filter-selected');
     let filterActive = false;
     const selectedItemsContainer = document.querySelector('#selected-items-container');
     const form = document.querySelector('#create-calc-form');
     const DEBOUNCE_DELAY = 500;
     
-    // Контейнер, который мы будем обновлять
+    // Контейнер, который мы будем обновлять (только таблица)
     const container = document.querySelector('#create-calculation-container');
-    const getClearButton = () => container?.querySelector('#clear-search');
     
     let searchTimeout;
-    const getSearchInput = () => container?.querySelector('#search-input');
 
     // Хранилище состояния
     const selectedState = {
@@ -181,58 +181,50 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Кнопка фильтра
-        filterButton = container.querySelector('#filter-selected');
-        if (filterButton) {
-            filterButton.addEventListener('click', () => {
-                filterActive = !filterActive;
-                updateFilterButton();
-                applyFilterOnlySelected();
-            });
-            updateFilterButton();
-            if (filterActive) applyFilterOnlySelected();
-        }
+        // Кнопка фильтра обновляется, если она внутри контейнера (на случай если переместим обратно)
+        // Но сейчас она вне контейнера, так что обработчик уже установлен
     }
 
-    // === Глобальный слушатель кликов на контейнере ===
+    // === События поиска (поле теперь вне контейнера) ===
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(performSearch, DEBOUNCE_DELAY);
+        });
+
+        searchInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                clearTimeout(searchTimeout);
+                performSearch();
+            }
+        });
+    }
+
+    if (clearButton) {
+        clearButton.addEventListener('click', () => {
+            if (searchInput) {
+                searchInput.value = '';
+                performSearch();
+                searchInput.focus();
+            }
+        });
+    }
+
+    // === Глобальный слушатель кликов на контейнере (пагинация, сортировка) ===
     if (container) {
         container.addEventListener('click', (e) => {
-            if (e.target.closest('#clear-search')) {
-                const input = getSearchInput();
-                if (input) {
-                    input.value = '';
-                    performSearch();
-                    input.focus();
-                }
-                return;
-            }
-
             const link = e.target.closest('a.page-link, a.sort-link');
             if (!link) return;
             e.preventDefault();
             const url = new URL(link.getAttribute('href'), window.location.href);
-            const currentSearch = getSearchInput()?.value.trim();
+            const currentSearch = searchInput?.value.trim();
             if (currentSearch) {
                 url.searchParams.set('search', currentSearch);
             } else {
                 url.searchParams.delete('search');
             }
             fetchData(url);
-        });
-
-        container.addEventListener('input', (event) => {
-            if (!event.target.matches('#search-input')) return;
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(performSearch, DEBOUNCE_DELAY);
-        });
-
-        container.addEventListener('keydown', (event) => {
-            if (!event.target.matches('#search-input')) return;
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                clearTimeout(searchTimeout);
-                performSearch();
-            }
         });
     }
 
@@ -256,15 +248,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // === Поиск ===
     function performSearch() {
-        const searchInput = getSearchInput();
         if (!searchInput) return;
         const searchTerm = searchInput.value.trim();
         const url = applySearchParam(new URL(window.location.href), searchTerm);
         fetchData(url);
     }
 
+    // === Hotkey для фокуса на поиск ===
     document.addEventListener('keydown', (event) => {
-        const searchInput = getSearchInput();
         if (event.key === '/' && searchInput && document.activeElement !== searchInput) {
             event.preventDefault();
             searchInput.focus();
@@ -319,6 +310,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const tableQuantities = form.querySelectorAll('table input[name^="quantity_"]');
             tableQuantities.forEach(qty => qty.removeAttribute('name'));
         });
+    }
+
+    // === Инициализация кнопки фильтра (она теперь вне AJAX-контейнера) ===
+    if (filterButton) {
+        filterButton.addEventListener('click', () => {
+            filterActive = !filterActive;
+            updateFilterButton();
+            applyFilterOnlySelected();
+        });
+        updateFilterButton();
     }
 
     // Запуск

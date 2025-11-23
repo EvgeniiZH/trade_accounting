@@ -12,40 +12,41 @@
         <div class="page-content">
         <div class="row g-2 flex-grow-1">
             <div class="col-12 col-xxl-10 col-xl-9 col-lg-9">
-                <form method="post" id="edit-calc-form" action="{% url 'calculation_detail' calculation.id %}" class="d-flex flex-column h-100 gap-3">
-                    {% csrf_token %}
-
-                    <!-- Название + Наценка -->
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-8">
-                            <label for="title" class="form-label">Название расчёта</label>
-                            <input type="text" name="title" id="title" class="form-control" 
-                                   value="{{ calculation.title }}" required>
+                <div class="d-flex flex-column h-100 gap-3">
+                    <form method="post" id="edit-calc-form" action="{% url 'calculation_detail' calculation.id %}" class="form-toolbar card border-0 shadow-sm">
+                        {% csrf_token %}
+                        <div class="row g-3">
+                            <div class="col-12 col-md-5">
+                                <label for="title" class="form-label fw-semibold">Название расчёта</label>
+                                <input type="text" name="title" id="title" class="form-control" 
+                                       value="{{ calculation.title }}" placeholder="Введите название расчёта" required>
+                            </div>
+                            <div class="col-6 col-md-2">
+                                <label for="markup" class="form-label fw-semibold">Наценка (%)</label>
+                                <input type="number" name="markup" id="markup"
+                                       value="{{ calculation.markup|floatformat:1 }}"
+                                       class="form-control" step="1" min="0" placeholder="0">
+                            </div>
+                            <div class="col-12 col-md-5">
+                                <label for="search-input" class="form-label fw-semibold">Поиск товара</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">🔍</span>
+                                    <input type="text" id="search-input" class="form-control" 
+                                           placeholder="Введите название товара..." data-focus-hotkey="/">
+                                    <button type="button" id="clear-search" class="btn btn-outline-secondary">Очистить</button>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-4">
-                            <label for="markup" class="form-label">Наценка (%)</label>
-                            <input type="number" name="markup" id="markup"
-                                   value="{{ calculation.markup|floatformat:1 }}"
-                                   class="form-control" step="1" min="0">
+                    </form>
+
+                    
+                    <div class="table-scroll border rounded shadow-sm flex-grow-1">
+                        <div class="table-actions d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2 p-2">
+                            <span class="text-muted fw-semibold">Список товаров</span>
+                            <button type="button" id="filter-selected" class="btn btn-outline-secondary btn-sm">
+                                🔘 Показать только выбранные
+                            </button>
                         </div>
-                    </div>
-
-                    <!-- 🔍 Поиск товаров -->
-                    <div class="input-group mb-2">
-                        <span class="input-group-text">🔍</span>
-                        <input type="text" id="search-input" class="form-control" 
-                               placeholder="Поиск товара..." data-focus-hotkey="/">
-                        <button type="button" id="clear-search" class="btn btn-outline-secondary">Очистить</button>
-                    </div>
-
-                    <!-- 🔘 Фильтр только выбранные -->
-                    <div class="mb-3">
-                        <button type="button" id="filter-selected" class="btn btn-outline-secondary btn-sm">
-                            🔘 Показать только выбранные
-                        </button>
-                    </div>
-
-                    <div class="table-scroll border rounded shadow-sm">
                         <table class="table table-bordered table-hover" id="calculation-table">
                             <thead class="position-sticky top-0 z-1">
                             <tr>

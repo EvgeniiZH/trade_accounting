@@ -17,23 +17,23 @@
                     <form method="post" id="create-calc-form" class="form-toolbar card border-0 shadow-sm">
                         {% csrf_token %}
                         <div id="selected-items-container" style="display: none;"></div> <!-- Контейнер для сохранения выбора -->
-                        <div class="row g-3 align-items-end">
-                            <div class="col-12 col-lg-4">
-                                <label for="title" class="form-label">Название расчёта</label>
+                        <div class="row g-3">
+                            <div class="col-12 col-md-5">
+                                <label for="title" class="form-label fw-semibold">Название расчёта</label>
                                 <input type="text" name="title" id="title" value="{{ title }}" class="form-control"
-                                       required>
+                                       placeholder="Введите название расчёта" required>
                             </div>
-                            <div class="col-6 col-lg-2">
-                                <label for="markup" class="form-label">Наценка (%)</label>
+                            <div class="col-6 col-md-2">
+                                <label for="markup" class="form-label fw-semibold">Наценка (%)</label>
                                 <input type="number" name="markup" id="markup" value="{{ markup }}"
-                                       step="{{ user_settings.markup_step|default:1 }}" class="form-control" required>
+                                       step="{{ user_settings.markup_step|default:1 }}" class="form-control" placeholder="0" required>
                             </div>
-                            <div class="col-12 col-lg-6">
-                                <label for="search-input" class="form-label">Поиск товара</label>
+                            <div class="col-12 col-md-5">
+                                <label for="search-input" class="form-label fw-semibold">Поиск товара</label>
                                 <div class="input-group">
                                     <span class="input-group-text">🔍</span>
                                     <input type="text" id="search-input" class="form-control"
-                                           placeholder="Введите название..." data-focus-hotkey="/">
+                                           placeholder="Введите название товара..." data-focus-hotkey="/">
                                     <button type="button" id="clear-search" class="btn btn-outline-secondary">Очистить</button>
                                 </div>
                             </div>

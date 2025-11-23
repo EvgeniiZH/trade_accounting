@@ -6,19 +6,48 @@ on:
       - main
 
 jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
+
   deploy:
+    needs: build-and-push
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up SSH agent
-        uses: webfactory/ssh-agent@v0.5.3
+        uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Deploy to VPS
+        env:
+          IMAGE_NAME: ghcr.io/${{ github.repository }}:latest
         run: |
           ssh -o StrictHostKeyChecking=no root@${{ secrets.SERVER_IP }} << 'EOF'
             set -e
@@ -31,23 +60,32 @@ jobs:
             echo "==> Обновление кода"
             git pull origin main
 
-            echo "==> Сборка и запуск контейнеров"
-            docker compose build --no-cache
+            echo "==> Логин в GitHub Container Registry"
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            echo "==> Скачивание нового образа"
+            docker pull ghcr.io/${{ github.repository }}:latest
+
+            echo "==> Обновление docker-compose для использования готового образа"
+            export IMAGE_TAG=latest
+            
+            echo "==> Остановка старых контейнеров"
+            docker compose down
+
+            echo "==> Запуск обновлённых контейнеров"
             docker compose up -d
 
             echo "==> Миграции"
-            docker compose exec web python manage.py migrate --noinput
+            docker compose exec -T web python manage.py migrate --noinput
 
             echo "==> Сборка статики"
-            docker compose exec web python manage.py collectstatic --noinput
+            docker compose exec -T web python manage.py collectstatic --noinput
 
             echo "==> Копирование STATIC в /var/www"
-            docker compose exec web cp -r /app/staticfiles/. /var/www/trade_accounting/staticfiles/
-            docker compose exec web chown -R www-data:www-data /var/www/trade_accounting/staticfiles
+            docker compose exec -T web cp -r /app/staticfiles/. /var/www/trade_accounting/staticfiles/
 
             echo "==> Копирование MEDIA в /var/www"
-            docker compose exec web cp -r /app/media/. /var/www/trade_accounting/media/
-            docker compose exec web chown -R www-data:www-data /var/www/trade_accounting/media
+            docker compose exec -T web cp -r /app/media/. /var/www/trade_accounting/media/
 
             echo "==> Обновление конфигурации nginx"
             cp deploy/nginx/django.conf /etc/nginx/sites-available/django

@@ -1,5 +1,6 @@
 services:
   web:
+    image: ghcr.io/${GITHUB_REPOSITORY:-evgeniizh/trade_accounting}:${IMAGE_TAG:-latest}
     build: .
     # Стойкий gunicorn c базовыми защитами от зависаний:
     command: >

@@ -5,13 +5,28 @@
     </button>
 </div>
 
-<div class="table-scroll border rounded shadow-sm">
-    <!-- Loader -->
-    <div class="table-loader">
-        <div class="spinner"></div>
-    </div>
+<div class="card border-0 shadow-sm flex-grow-1 d-flex flex-column">
+    <div class="card-body p-3 d-flex flex-column flex-grow-1">
+        <!-- Поиск и фильтр -->
+        <div class="d-flex flex-column flex-md-row gap-2 mb-3">
+            <div class="input-group flex-grow-1">
+                <span class="input-group-text">🔍</span>
+                <input type="text" id="search-input" class="form-control"
+                       placeholder="Поиск товара..." data-focus-hotkey="/">
+                <button type="button" id="clear-search" class="btn btn-outline-secondary">Очистить</button>
+            </div>
+            <button type="button" id="filter-selected" class="btn btn-outline-secondary text-nowrap">
+                🔘 Показать только выбранные
+            </button>
+        </div>
 
-    <table class="table table-bordered table-hover mb-0" id="calculation-table">
+        <div class="table-scroll border rounded flex-grow-1 position-relative">
+            <!-- Loader -->
+            <div class="table-loader">
+                <div class="spinner"></div>
+            </div>
+
+            <table class="table table-bordered table-hover mb-0" id="calculation-table">
         <thead class="position-sticky top-0 z-1">
         <tr>
             <th>#</th>
@@ -36,10 +51,12 @@
         <tbody>
         {% include 'trades/includes/create_calculation_rows.html' %}
         </tbody>
-    </table>
-</div>
+            </table>
+        </div>
+    </div>
 
-<!-- Пагинация вынесена за пределы формы -->
-<div class="page-footer mt-2">
-    {% include 'includes/pagination.html' %}
+    <!-- Пагинация внизу карточки -->
+    <div class="card-footer bg-white border-top-0">
+        {% include 'includes/pagination.html' %}
+    </div>
 </div>

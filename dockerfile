@@ -1,8 +1,15 @@
-# Используем официальный образ Python (на данный момент версия 3.11)
-FROM python:3.11
+# Используем более стабильный slim-образ на базе Debian 12 (bookworm)
+FROM python:3.11-slim-bookworm
 
-# Устанавливаем системные зависимости
-RUN apt-get update && apt-get install -y gcc libpq-dev && rm -rf /var/lib/apt/lists/*
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    DEBIAN_FRONTEND=noninteractive
+
+# Устанавливаем системные зависимости с минимальным набором пакетов
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends gcc libpq-dev build-essential \
+    && rm -rf /var/lib/apt/lists/*
 
 # Устанавливаем рабочую директорию
 WORKDIR /app

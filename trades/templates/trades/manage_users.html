@@ -32,10 +32,9 @@
                         <td class="search-target">{{ user.username }}</td>
                         <td class="search-target">{{ user.email }}</td>
                         <td class="text-center">{% if user.is_admin %}Администратор{% else %}Пользователь{% endif %}</td>
-                        <td class="text-center d-flex gap-2 justify-content-center">
-                            <a href="{% url 'edit_user' user.id %}" class="btn btn-warning btn-sm" title="Редактировать">✏️</a>
-                            <a href="{% url 'edit_user' user.id %}#password-card" class="btn btn-outline-primary btn-sm" title="Сменить пароль">🔐</a>
-                            <a href="{% url 'delete_user' user.id %}" class="btn btn-danger btn-sm" title="Удалить">🗑</a>
+                        <td class="text-center">
+                            <a href="{% url 'edit_user' user.id %}" class="btn btn-warning btn-sm">✏️</a>
+                            <a href="{% url 'delete_user' user.id %}" class="btn btn-danger btn-sm">🗑</a>
                         </td>
                     </tr>
                 {% empty %}

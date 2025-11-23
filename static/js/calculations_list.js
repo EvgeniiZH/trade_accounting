@@ -1,127 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.querySelector('#search-input');
     const clearButton = document.querySelector('#clear-search');
-<<<<<<< Current (Your changes)
-    const table = document.querySelector('#calculation-table');
-    const tableBody = table?.querySelector('tbody');
-    const selectAll = document.querySelector('#select_all');
-    
-    let searchTimeout;
-
-    // === Инициализация событий (вызывать после AJAX) ===
-    function initRowEvents() {
-        if (!tableBody) return;
-
-        // === Клик по строке ===
-        const calcRows = tableBody.querySelectorAll('tr[data-href]');
-        calcRows.forEach((row) => {
-            row.addEventListener('click', (event) => {
-                if (event.target.closest('a, button, input, label')) {
-                    return;
-                }
-                const href = row.dataset.href;
-                if (href) {
-                    window.location.href = href;
-                }
-            });
-        });
-
-        // === Подтверждение удаления ===
-        const deleteButtons = tableBody.querySelectorAll('button[name="delete_calc"]');
-        deleteButtons.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const row = btn.closest('tr');
-                const title = row?.querySelector('.calc-title')?.textContent.trim() || 'этот расчёт';
-                const confirmed = confirm(`Вы действительно хотите удалить расчёт: «${title}»?`);
-                if (!confirmed) {
-                    e.preventDefault();
-                }
-            });
-        });
-        
-        // === Чекбоксы (если select_all был нажат) ===
-        if (selectAll && selectAll.checked) {
-             const checkboxes = tableBody.querySelectorAll("input[name='calc_ids']");
-             checkboxes.forEach(cb => cb.checked = true);
-        }
-    }
-
-    // === AJAX ПОИСК ===
-    function performSearch() {
-        const searchTerm = searchInput.value.trim();
-        const url = new URL(window.location.href);
-        url.searchParams.set('search', searchTerm);
-        if (searchTerm !== (url.searchParams.get('search') || '')) {
-             url.searchParams.set('page', 1);
-        }
-
-        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-        .then(response => response.text())
-        .then(html => {
-            if (tableBody) {
-                tableBody.innerHTML = html;
-                initRowEvents();
-                
-                // Подсветка
-                if (searchTerm) {
-                    const term = searchTerm.toLowerCase();
-                    tableBody.querySelectorAll('.calc-title a').forEach(cell => {
-                        if (cell.textContent.toLowerCase().includes(term)) {
-                            const regex = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-                            cell.innerHTML = cell.textContent.replace(regex, '<mark>$1</mark>');
-                            cell.closest('tr').classList.add('search-hit');
-                            setTimeout(() => cell.closest('tr').classList.remove('search-hit'), 3000);
-                        }
-                    });
-                    
-                    const firstMatch = tableBody.querySelector('.search-hit');
-                    if (firstMatch) firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-            }
-        });
-    }
-
-    if (searchInput) {
-        searchInput.addEventListener('input', () => {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(performSearch, 1000);
-        });
-
-        searchInput.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                clearTimeout(searchTimeout);
-                performSearch();
-            }
-        });
-        
-        document.addEventListener('keydown', (event) => {
-            if (event.key === '/' && document.activeElement !== searchInput) {
-                event.preventDefault();
-                searchInput.focus();
-            }
-        });
-    }
-
-    if (clearButton) {
-        clearButton.addEventListener('click', () => {
-            searchInput.value = '';
-            performSearch();
-            searchInput.focus();
-        });
-    }
-
-    // === Выбор всех чекбоксов ===
-    if (selectAll) {
-        selectAll.addEventListener('change', () => {
-            const checkboxes = tableBody.querySelectorAll("input[name='calc_ids']");
-            checkboxes.forEach(cb => (cb.checked = selectAll.checked));
-        });
-    }
-
-    // Инициализация при загрузке
-    initRowEvents();
-=======
     const container = document.querySelector('#calculations-list-container');
     
     let searchTimeout;
@@ -269,7 +148,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Инициализация при загрузке
     initEvents();
->>>>>>> Incoming (Background Agent changes)
 
     // === Прокрутка к обновлённому (только при загрузке) ===
     const params = new URLSearchParams(window.location.search);

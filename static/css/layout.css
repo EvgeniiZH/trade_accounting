@@ -146,14 +146,15 @@ footer {
 }
 
 /* Левая колонка на странице создания расчета занимает максимум доступной ширины */
-#create-calculation-wrapper .row > [class*='col-']:first-child {
+/* Применяем только к главному row (прямой ребенок page-content), не к вложенным */
+#create-calculation-wrapper .page-content > .row > [class*='col-']:first-child {
     flex: 1 1 0 !important;
     max-width: none !important;
     overflow: visible !important; /* Убираем overflow:hidden для работы sticky */
 }
 
 /* Правая колонка фиксированной ширины - минимизируем её */
-#create-calculation-wrapper .row > [class*='col-']:last-child {
+#create-calculation-wrapper .page-content > .row > [class*='col-']:last-child {
     flex: 0 0 auto !important;
     width: 250px !important;
     min-width: 250px !important;

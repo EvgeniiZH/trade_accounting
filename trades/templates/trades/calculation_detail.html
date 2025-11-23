@@ -31,31 +31,12 @@
                     </div>
 
                     <!-- 🔍 Поиск товаров -->
-<<<<<<< Current (Your changes)
-                    <form method="get" class="input-group mb-2" id="search-form">
-                        <span class="input-group-text">🔍</span>
-                        <input type="text" name="search" id="search-input" class="form-control" 
-                               placeholder="Поиск товара..." value="{{ search_query }}" data-focus-hotkey="/">
-                        {% if request.GET.sort_by %}
-                            <input type="hidden" name="sort_by" value="{{ request.GET.sort_by }}">
-                        {% endif %}
-                        {% if request.GET.direction %}
-                            <input type="hidden" name="direction" value="{{ request.GET.direction }}">
-                        {% endif %}
-                        {% if request.GET.page_size %}
-                            <input type="hidden" name="page_size" value="{{ request.GET.page_size }}">
-                        {% endif %}
-=======
                     <div class="input-group mb-2">
                         <span class="input-group-text">🔍</span>
                         <input type="text" id="search-input" class="form-control" 
                                placeholder="Поиск товара..." data-focus-hotkey="/">
-<<<<<<< Current (Your changes)
->>>>>>> Incoming (Background Agent changes)
-=======
->>>>>>> Incoming (Background Agent changes)
                         <button type="button" id="clear-search" class="btn btn-outline-secondary">Очистить</button>
-                    </form>
+                    </div>
 
                     <!-- 🔘 Фильтр только выбранные -->
                     <div class="mb-3">
@@ -117,11 +98,11 @@
                         </table>
                     </div>
                 </form>
-                
+
                 <!-- Пагинация вынесена за пределы формы -->
                 <div class="page-footer mt-2">
                     {% include 'includes/pagination.html' %}
-                </div>
+                    </div>
             </div>
 
             <!-- Правая колонка -->
@@ -154,10 +135,10 @@
                             ❌ Отменить
                         </a>
                     </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-        </div>
     </div>
 
     <link rel="stylesheet" href="{% static 'css/pages/create_calculation.css' %}">

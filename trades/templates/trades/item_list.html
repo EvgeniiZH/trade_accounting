@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% load static %}
 
 {% block title %}Список товаров{% endblock %}
@@ -18,49 +18,11 @@
   <div class="page-content">
     <div class="row g-4 align-items-stretch h-100 overflow-hidden">
       <div class="col-12 col-xxl-9 col-xl-8 col-lg-9 overflow-hidden">
-<<<<<<< Current (Your changes)
-        <div class="table-scroll border rounded shadow-sm">
-        <table class="table table-bordered table-hover mb-0" id="item-table">
-          <thead class="table-light position-sticky top-0 z-1">
-          <tr>
-            <th style="width: 60px;">№</th>
-              <th>
-                <a href="?sort=name&direction={% if sort_by == 'name' and direction == 'asc' %}desc{% else %}asc{% endif %}{% if search %}&search={{ search }}{% endif %}" class="text-white text-decoration-none">
-                  Название
-                  {% if sort_by == 'name' %}
-                    {% if direction == 'asc' %}↑{% else %}↓{% endif %}
-                  {% endif %}
-                </a>
-              </th>
-              <th class="text-end" style="width: 140px;">
-                <a href="?sort=price&direction={% if sort_by == 'price' and direction == 'asc' %}desc{% else %}asc{% endif %}{% if search %}&search={{ search }}{% endif %}" class="text-white text-decoration-none">
-                  Цена
-                  {% if sort_by == 'price' %}
-                    {% if direction == 'asc' %}↑{% else %}↓{% endif %}
-                  {% endif %}
-                </a>
-              </th>
-            <th class="text-center" style="width: 220px;">Действия</th>
-          </tr>
-          </thead>
-          <tbody>
-          {% include 'trades/includes/item_list_rows.html' %}
-          </tbody>
-        </table>
-      </div>
-
-        <div class="page-footer">
-      {% include 'includes/pagination.html' %}
-        </div>
-    </div>
-
-=======
         <div id="item-list-container">
             {% include 'trades/includes/item_list_content.html' %}
-        </div>
+                </div>
       </div>
 
->>>>>>> Incoming (Background Agent changes)
       <div class="col-12 col-xxl-3 col-xl-4 col-lg-3 overflow-auto">
       <div class="sticky-sidebar d-flex flex-column gap-4">
         <section>

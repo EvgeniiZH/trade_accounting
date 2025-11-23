@@ -86,8 +86,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Восстанавливаем состояние и вешаем обработчики
         if (tableBody) {
             const rows = tableBody.querySelectorAll('tr');
-            rows.forEach(row => {
-                const checkbox = row.querySelector('.item-checkbox');
+        rows.forEach(row => {
+            const checkbox = row.querySelector('.item-checkbox');
                 const quantityInput = row.querySelector('.quantity-input');
                 const priceCell = row.querySelector('.item-price');
                 const itemId = checkbox.value;
@@ -266,7 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const tableBody = container?.querySelector('tbody');
         if (!tableBody) return;
         const rows = tableBody.querySelectorAll('tr');
-        rows.forEach(row => {
+            rows.forEach(row => {
             const checkbox = row.querySelector('.item-checkbox');
             const shouldShow = checkbox.checked || !filterActive;
             row.style.display = shouldShow ? '' : 'none';

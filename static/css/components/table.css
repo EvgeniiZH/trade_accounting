@@ -67,10 +67,13 @@
 }
 
 .table tbody tr.search-hit {
-    animation: none;
-    background: linear-gradient(90deg, #f0f8ff 0%, #e3f2fd 100%) !important;
-    box-shadow: inset 0 0 0 1px rgba(25, 118, 210, 0.35);
-    transition: background-color 0.4s ease;
+    animation: pulse-highlight 1.1s ease;
+    background-color: #fff7cc !important;
+}
+
+@keyframes pulse-highlight {
+    0% { background-color: #fff7cc; }
+    100% { background-color: transparent; }
 }
 
 /* Таблица-обёртка */

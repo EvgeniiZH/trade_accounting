@@ -1,7 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
-from django.contrib.auth.forms import AdminPasswordChangeForm
 from django.core.exceptions import PermissionDenied
 from django.db import IntegrityError
 from django.http import HttpResponse, JsonResponse
@@ -469,7 +468,7 @@ def create_calculation(request):
 
     search_query = request.GET.get('search', '')
     items_qs = Item.objects.filter(name__icontains=search_query) if search_query else Item.objects.all()
-    
+
     # Сортировка
     sort_by = request.GET.get('sort_by', 'name')
     direction = request.GET.get('direction', 'asc')
@@ -611,7 +610,7 @@ def calculation_detail(request, pk):
             title = request.POST.get("title", "").strip()
             if title:
                 calculation.title = title
-            
+
             # Обновление наценки
             markup = request.POST.get("markup", "0")
             try:
@@ -741,31 +740,15 @@ def create_user(request):
 def edit_user(request, user_id):
     """Редактирование пользователя (только для администраторов)"""
     user = get_object_or_404(CustomUser, id=user_id)
-    action = request.POST.get("action")
-
-    if request.method == "POST" and action == "update_user":
+    if request.method == "POST":
         form = UserEditForm(request.POST, instance=user)
-        password_form = AdminPasswordChangeForm(user)
         if form.is_valid():
             form.save()
             messages.success(request, "Пользователь успешно обновлён!")
             return redirect('manage_users')
-    elif request.method == "POST" and action == "change_password":
-        form = UserEditForm(instance=user)
-        password_form = AdminPasswordChangeForm(user, request.POST)
-        if password_form.is_valid():
-            password_form.save()
-            messages.success(request, "Пароль пользователя успешно обновлён!")
-            return redirect('manage_users')
     else:
         form = UserEditForm(instance=user)
-        password_form = AdminPasswordChangeForm(user)
-
-    return render(request, 'trades/edit_user.html', {
-        'form': form,
-        'password_form': password_form,
-        'user': user
-    })
+    return render(request, 'trades/edit_user.html', {'form': form, 'user': user})
 
 
 @login_required(login_url='/login/')

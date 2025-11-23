@@ -46,17 +46,6 @@ def mul(value, arg):
     except (ValueError, TypeError):
         return ''
 
-@register.filter
-def add_class(field, css):
-    """
-    Добавляет CSS-класс к полю формы.
-    Использование: {{ form.field|add_class:"form-control" }}
-    """
-    try:
-        return field.as_widget(attrs={"class": css})
-    except AttributeError:
-        return field
-
 @register.simple_tag(takes_context=True)
 def querystring(context, **kwargs):
     """

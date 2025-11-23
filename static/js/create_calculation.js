@@ -232,6 +232,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function fetchData(url) {
         toggleLoader(true);
         
+        // Запоминаем, был ли фокус на поле поиска
+        const hadFocus = document.activeElement === searchInput;
+        const cursorPosition = searchInput ? searchInput.selectionStart : 0;
+        
         fetch(url.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
         .then(response => response.text())
         .then(html => {
@@ -240,6 +244,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 initEvents(); // Восстанавливаем состояние
                 window.history.pushState({}, '', url.toString());
                 highlightSearch(url.searchParams.get('search'));
+                
+                // Восстанавливаем фокус, если он был на поле поиска
+                if (hadFocus && searchInput) {
+                    searchInput.focus();
+                    searchInput.setSelectionRange(cursorPosition, cursorPosition);
+                }
             }
         })
         .catch(err => console.error('Error:', err))

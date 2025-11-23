@@ -5,6 +5,16 @@ from collections import OrderedDict
 
 register = template.Library()
 
+@register.filter(name='add_class')
+def add_class(field, css_class):
+    """Добавляет CSS-класс к виджету формы, не теряя существующие."""
+    try:
+        existing = field.field.widget.attrs.get('class', '')
+        classes = f"{existing} {css_class}".strip()
+        return field.as_widget(attrs={**field.field.widget.attrs, 'class': classes})
+    except AttributeError:
+        return field
+
 @register.filter
 def format_price(value):
     try:

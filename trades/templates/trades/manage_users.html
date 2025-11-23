@@ -4,49 +4,51 @@
 {% block title %}Управление пользователями{% endblock %}
 
 {% block content %}
-<div class="container-fluid my-4 px-4">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+<div class="container-fluid page-wrapper">
+    <div class="page-header d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
         <h2 class="mb-0 text-primary">👤 Управление пользователями</h2>
         <a href="{% url 'create_user' %}" class="btn btn-success">➕ Добавить пользователя</a>
     </div>
 
-    <div class="input-group mb-3" data-table-search data-table-id="user-table" data-cell-selector=".search-target">
-        <span class="input-group-text">🔍</span>
-        <input type="text" class="form-control" placeholder="Поиск пользователя..." data-role="search-input" data-focus-hotkey="/">
-        <button type="button" class="btn btn-outline-secondary" data-role="clear-search">Очистить</button>
-    </div>
+    <div class="page-content">
+        <div class="input-group mb-3" data-table-search data-table-id="user-table" data-cell-selector=".search-target">
+            <span class="input-group-text">🔍</span>
+            <input type="text" class="form-control" placeholder="Поиск пользователя..." data-role="search-input" data-focus-hotkey="/">
+            <button type="button" class="btn btn-outline-secondary" data-role="clear-search">Очистить</button>
+        </div>
 
-    <div class="table-scroll border rounded shadow-sm">
-        <table class="table table-bordered table-hover mb-0" id="user-table">
-            <thead class="table-light">
-                <tr>
-                    <th>Имя пользователя</th>
-                    <th>Email</th>
-                    <th class="text-center">Роль</th>
-                    <th class="text-center">Действия</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for user in page_obj %}
+        <div class="table-scroll border rounded shadow-sm">
+            <table class="table table-bordered table-hover mb-0" id="user-table">
+                <thead class="position-sticky top-0 z-1">
                     <tr>
-                        <td class="search-target">{{ user.username }}</td>
-                        <td class="search-target">{{ user.email }}</td>
-                        <td class="text-center">{% if user.is_admin %}Администратор{% else %}Пользователь{% endif %}</td>
-                        <td class="text-center">
-                            <a href="{% url 'edit_user' user.id %}" class="btn btn-warning btn-sm">✏️</a>
-                            <a href="{% url 'delete_user' user.id %}" class="btn btn-danger btn-sm">🗑</a>
-                        </td>
+                        <th>Имя пользователя</th>
+                        <th>Email</th>
+                        <th class="text-center">Роль</th>
+                        <th class="text-center">Действия</th>
                     </tr>
-                {% empty %}
-                    <tr>
-                        <td colspan="4" class="text-center text-muted">Нет пользователей</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    <div class="page-footer">
-        {% include 'includes/pagination.html' %}
+                </thead>
+                <tbody>
+                    {% for user in page_obj %}
+                        <tr>
+                            <td class="search-target">{{ user.username }}</td>
+                            <td class="search-target">{{ user.email }}</td>
+                            <td class="text-center">{% if user.is_admin %}Администратор{% else %}Пользователь{% endif %}</td>
+                            <td class="text-center">
+                                <a href="{% url 'edit_user' user.id %}" class="btn btn-warning btn-sm">✏️</a>
+                                <a href="{% url 'delete_user' user.id %}" class="btn btn-danger btn-sm">🗑</a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">Нет пользователей</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="page-footer">
+            {% include 'includes/pagination.html' %}
+        </div>
     </div>
 </div>
 

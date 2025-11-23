@@ -139,7 +139,8 @@
 
 /* Переопределение из table.css */
 #calculation-table td.item-name {
-    white-space: nowrap;
+    white-space: normal; /* Разрешить перенос */
+    text-align: left;
 }
 
 

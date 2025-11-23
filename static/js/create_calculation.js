@@ -247,8 +247,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 // Восстанавливаем фокус, если он был на поле поиска
                 if (hadFocus && searchInput) {
-                    searchInput.focus();
-                    searchInput.setSelectionRange(cursorPosition, cursorPosition);
+                    // Небольшая задержка, чтобы браузер успел обработать изменения DOM
+                    requestAnimationFrame(() => {
+                        searchInput.focus();
+                        searchInput.setSelectionRange(cursorPosition, cursorPosition);
+                    });
                 }
             }
         })

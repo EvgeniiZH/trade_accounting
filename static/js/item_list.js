@@ -15,6 +15,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function applySearchParam(url, searchTerm) {
         const previousSearch = url.searchParams.get('search') || '';
+        
+        // Сохраняем page_size перед изменениями
+        const currentPageSize = new URLSearchParams(window.location.search).get('page_size');
+        if (currentPageSize) {
+            url.searchParams.set('page_size', currentPageSize);
+        }
+        
         if (searchTerm) {
             url.searchParams.set('search', searchTerm);
         } else {
@@ -91,6 +98,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const currentSearch = searchInput?.value.trim();
             if (typeof currentSearch === 'string' && currentSearch.length) {
                 url.searchParams.set('search', currentSearch);
+            }
+            // Сохраняем page_size
+            const currentPageSize = new URLSearchParams(window.location.search).get('page_size');
+            if (currentPageSize) {
+                url.searchParams.set('page_size', currentPageSize);
             }
             fetchData(url);
         });

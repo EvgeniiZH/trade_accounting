@@ -51,12 +51,14 @@ def handle_add_item(request):
             messages.error(request, "Введите корректное значение цены!")
             return
 
-        item, updated = update_or_create_item_clean(name, price)
-        if updated:
-            messages.success(request, f"Товар «{item.name}» успешно добавлен или обновлён!")
+        item, created, updated = update_or_create_item_clean(name, price)
+        if created:
+            messages.success(request, "Товар успешно добавлен!")
             return redirect(reverse('item_list') + f'?new_item={item.id}')
-        else:
-            messages.info(request, f"Товар «{item.name}» уже существует и совпадает по цене.")
+        if updated:
+            messages.success(request, "Товар успешно обновлён!")
+            return redirect(reverse('item_list') + f'?new_item={item.id}')
+        messages.info(request, f"Товар «{item.name}» уже существует и совпадает по цене.")
     else:
         messages.error(request, "Введите название и цену!")
 
@@ -166,17 +168,20 @@ def handle_upload_file(request):
                 if name and price:
                     try:
                         price = decimal.Decimal(str(price))
-                        item, changed = update_or_create_item_clean(name, price)
-                        if changed:
-                            updated += 1 if Item.objects.filter(pk=item.pk).exists() else 0
-                            created += 0 if Item.objects.filter(pk=item.pk).exists() else 1
+                        item, created_flag, updated_flag = update_or_create_item_clean(name, price)
+                        if created_flag:
+                            created += 1
+                        elif updated_flag:
+                            updated += 1
                         else:
                             skipped += 1
                     except decimal.InvalidOperation:
                         continue
 
-            messages.success(request,
-                             f"Импорт завершён: обновлено — {updated}, добавлено — {created}, пропущено — {skipped}")
+            messages.success(
+                request,
+                f"Товары загружены! Обновлено — {updated}, добавлено — {created}, пропущено — {skipped}",
+            )
     except Exception as e:
         messages.error(request, f"Ошибка загрузки файла: {e}")
 
@@ -647,7 +652,7 @@ def calculation_detail(request, pk):
             # Обновление сумм
             calculation.refresh_totals()
 
-            messages.success(request, "Расчёт успешно обновлён!")
+            messages.success(request, "Расчёт успешно сохранён!")
             return redirect(reverse("calculations_list") + f"?updated_calc={calculation.id}")
 
     # GET-запрос
@@ -740,7 +745,7 @@ def create_user(request):
 def edit_user(request, user_id):
     """Редактирование пользователя (только для администраторов)"""
     user = get_object_or_404(CustomUser, id=user_id)
-    action = request.POST.get('action')
+    action = request.POST.get('action', 'update_user')
 
     if request.method == "POST" and action == 'update_user':
         form = UserEditForm(request.POST, instance=user)

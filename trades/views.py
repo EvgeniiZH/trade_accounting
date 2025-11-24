@@ -496,6 +496,7 @@ def create_calculation(request):
         "markup": markup,
         "selected_items_ids": selected_items_ids,
         "initial_quantities": initial_quantities,
+        "load_create_calculation_css": True,
         "sort_by": sort_by,
         "direction": direction,
         "user_settings": {
@@ -687,6 +688,7 @@ def calculation_detail(request, pk):
         "markup_step": 1,
         "initial_quantities": initial_quantities,
         "selected_items_ids": selected_items_ids,
+        "load_create_calculation_css": True,
         "sort_by": sort_by,
         "direction": direction,
         "search_query": search_query,

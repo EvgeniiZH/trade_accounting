@@ -1,7 +1,8 @@
 /* calculations_list.css — полный контроль таблицы расчётов */
+/* ВАЖНО: Используем специфичный селектор #calculations-list-container, чтобы стили НЕ применялись к таблице на странице создания/редактирования */
 
 /* =============== ОБЩИЕ НАСТРОЙКИ ТАБЛИЦЫ =============== */
-#calculation-table {
+#calculations-list-container #calculation-table {
   table-layout: auto;
   width: 100%;
   border-radius: 8px;
@@ -11,7 +12,7 @@
 }
 
 /* =============== ШАПКА =============== */
-#calculation-table thead th {
+#calculations-list-container #calculation-table thead th {
   background-color: #007bff;
   color: white;
   text-align: center;
@@ -21,22 +22,22 @@
 }
 
 /* =============== КОЛОНКИ =============== */
-#calculation-table th:nth-child(1),
-#calculation-table td:nth-child(1) {
+#calculations-list-container #calculation-table th:nth-child(1),
+#calculations-list-container #calculation-table td:nth-child(1) {
   width: 48px;
   min-width: 48px;
   text-align: center;
 }
 
-#calculation-table th:nth-child(2),
-#calculation-table td:nth-child(2) {
+#calculations-list-container #calculation-table th:nth-child(2),
+#calculations-list-container #calculation-table td:nth-child(2) {
   width: 64px;
   min-width: 64px;
   text-align: center;
 }
 
-#calculation-table th:nth-child(3),
-#calculation-table td:nth-child(3) {
+#calculations-list-container #calculation-table th:nth-child(3),
+#calculations-list-container #calculation-table td:nth-child(3) {
   width: auto;
   min-width: 360px;
   text-align: left;
@@ -44,45 +45,45 @@
   word-break: break-word;
 }
 
-#calculation-table th:nth-child(4),
-#calculation-table td:nth-child(4) {
+#calculations-list-container #calculation-table th:nth-child(4),
+#calculations-list-container #calculation-table td:nth-child(4) {
   width: 110px;
   min-width: 110px;
   text-align: center;
 }
 
-#calculation-table th:nth-child(5),
-#calculation-table td:nth-child(5) {
+#calculations-list-container #calculation-table th:nth-child(5),
+#calculations-list-container #calculation-table td:nth-child(5) {
   width: 140px;
   min-width: 140px;
   text-align: right;
 }
 
-#calculation-table th:nth-child(6),
-#calculation-table td:nth-child(6) {
+#calculations-list-container #calculation-table th:nth-child(6),
+#calculations-list-container #calculation-table td:nth-child(6) {
   width: 150px;
   min-width: 150px;
   text-align: right;
 }
 
-#calculation-table th:nth-child(7),
-#calculation-table td:nth-child(7) {
+#calculations-list-container #calculation-table th:nth-child(7),
+#calculations-list-container #calculation-table td:nth-child(7) {
   width: 150px;
   min-width: 150px;
   text-align: center;
   white-space: nowrap;
 }
 
-#calculation-table th:nth-child(8),
-#calculation-table td:nth-child(8) {
+#calculations-list-container #calculation-table th:nth-child(8),
+#calculations-list-container #calculation-table td:nth-child(8) {
   width: 160px;
   min-width: 150px;
   text-align: center;
   white-space: nowrap;
 }
 
-#calculation-table th:nth-child(9),
-#calculation-table td:nth-child(9) {
+#calculations-list-container #calculation-table th:nth-child(9),
+#calculations-list-container #calculation-table td:nth-child(9) {
   width: 200px;
   min-width: 180px;
   text-align: center;
@@ -90,18 +91,18 @@
 }
 
 /* =============== КНОПКИ =============== */
-#calculation-table .btn-sm {
+#calculations-list-container #calculation-table .btn-sm {
   font-size: 14px;
   padding: 3px 10px;
   margin-right: 5px;
 }
 
 /* =============== СТРОКИ =============== */
-#calculation-table tbody tr:nth-child(even) {
+#calculations-list-container #calculation-table tbody tr:nth-child(even) {
   background-color: #f9f9f9;
 }
 
-#calculation-table tbody tr:hover {
+#calculations-list-container #calculation-table tbody tr:hover {
   background-color: #f1f1f1;
 }
 
@@ -116,14 +117,14 @@
 
 /* =============== АДАПТИВНОСТЬ =============== */
 @media (max-width: 992px) {
-  #calculation-table th,
-  #calculation-table td {
+  #calculations-list-container #calculation-table th,
+  #calculations-list-container #calculation-table td {
     font-size: 14px;
     padding: 6px;
   }
 
-  #calculation-table th:nth-child(3),
-  #calculation-table td:nth-child(3) {
+  #calculations-list-container #calculation-table th:nth-child(3),
+  #calculations-list-container #calculation-table td:nth-child(3) {
     min-width: 260px;
   }
 }

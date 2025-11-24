@@ -1,0 +1,122 @@
+﻿
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" defer></script>
+
+    <!-- Стили -->
+    <link rel="stylesheet" href="/static/css/base.css?v=20251123b">
+    <link rel="stylesheet" href="/static/css/layout.css?v=20251123b">
+    <link rel="stylesheet" href="/static/css/components/table.css?v=20251123d">
+    <link rel="stylesheet" href="/static/css/components/form.css?v=20251123b">
+    <link rel="stylesheet" href="/static/css/components/alerts.css?v=20251123b">
+    <link rel="stylesheet" href="/static/css/components/checkbox.css?v=20251123b">
+    <link rel="stylesheet" href="/static/css/components/animation.css?v=20251123b">
+    <link rel="stylesheet" href="/static/css/login.css?v=20251123b">
+
+    
+
+    <script src="/static/js/edit_modal.js?v=20251123b" defer></script>
+
+    <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
+</head>
+<body>
+
+<!-- Основный макет: боковое меню + контент -->
+<div class="layout">
+
+    <!-- Боковое меню -->
+    
+
+    <!-- Контент -->
+    <main class="content-area">
+        
+<div class="container py-5 login-page">
+  <div class="row justify-content-center">
+    <div class="col-md-5">
+      <div class="card shadow-sm">
+        <div class="card-header fw-semibold">Вход в систему</div>
+        <div class="card-body">
+          <form method="post" novalidate>
+            <input type="hidden" name="csrfmiddlewaretoken" value="TJYc52NZ2gENrOBPO6nHktFMIvJHEvhKWlQqgC5lFD3wWG172GJB756lx0baEgPe">
+
+            
+
+            
+
+            <div class="mb-3">
+              <label class="form-label" for="id_username">Имя пользователя или email</label>
+              <input type="text" name="username" autofocus autocapitalize="none" autocomplete="username" maxlength="150" required id="id_username" class="form-control" placeholder="user или user@example.com">
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label" for="id_password">Пароль</label>
+              <div class="input-group">
+                <input type="password" name="password" autocomplete="current-password" required id="id_password" class="form-control" placeholder="••••••••">
+                <button type="button" class="btn btn-outline-secondary" id="toggle-pass" aria-label="Показать пароль">👁</button>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="1" id="remember_me" name="remember_me">
+                <label class="form-check-label" for="remember_me">Запомнить меня</label>
+              </div>
+              <a class="small" href="/password-reset/">Забыли пароль?</a>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Войти</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('toggle-pass');
+    const input = document.getElementById('id_password');
+    if (btn && input) {
+      btn.addEventListener('click', () => {
+        input.type = input.type === 'password' ? 'text' : 'password';
+      });
+    }
+  });
+</script>
+
+
+        <!-- 🔻 Универсальный футер -->
+        <footer class="text-center text-muted small py-3 mt-auto">
+            <hr>
+            ТИТАН · Торговый учёт · Версия 1.0 · 
+        </footer>
+    </main>
+</div>
+</div>
+
+<!-- Контейнер сообщений -->
+<div id="message-container" role="status" aria-live="polite" aria-atomic="true"></div>
+
+<!-- Передача сообщений Django во внешний JS -->
+<script>
+    window._djangoMessages = [
+        
+    ];
+</script>
+
+<!-- Скрипты -->
+<script src="/static/js/scripts.js" defer></script>
+<script src="/static/js/messages.js" defer></script>
+
+
+
+</body>
+</html>
+

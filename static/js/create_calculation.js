@@ -235,6 +235,52 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // === Применение стилей к таблице ===
+    function applyTableStyles() {
+        // Используем более специфичный селектор для перебития calculations_list.css
+        const wrapper = document.querySelector('#create-calculation-wrapper');
+        if (!wrapper) {
+            setTimeout(applyTableStyles, 100);
+            return;
+        }
+        
+        const table = wrapper.querySelector('#calculation-table');
+        if (!table) {
+            // Если таблица ещё не загружена, попробуем ещё раз через небольшую задержку
+            setTimeout(applyTableStyles, 100);
+            return;
+        }
+        
+        // Применяем стили напрямую к таблице с !important
+        table.style.setProperty('table-layout', 'auto', 'important');
+        table.style.setProperty('width', '100%', 'important');
+        table.style.setProperty('overflow', 'visible', 'important');
+        
+        // Применяем стили к колонкам - убираем фиксированные ширины для автоматического распределения
+        const cols = [
+            { nth: 1, align: 'center' },
+            { nth: 2, align: 'left', wrap: true },
+            { nth: 3, align: 'right' },
+            { nth: 4, align: 'center' },
+            { nth: 5, align: 'center' }
+        ];
+        
+        cols.forEach(col => {
+            const ths = table.querySelectorAll(`thead th:nth-child(${col.nth})`);
+            const tds = table.querySelectorAll(`tbody td:nth-child(${col.nth})`);
+            [...ths, ...tds].forEach(el => {
+                // Убираем фиксированные ширины - пусть таблица сама распределяет
+                el.style.removeProperty('width');
+                el.style.removeProperty('min-width');
+                el.style.setProperty('text-align', col.align, 'important');
+                if (col.wrap) {
+                    el.style.setProperty('white-space', 'normal', 'important');
+                    el.style.setProperty('overflow-wrap', 'anywhere', 'important');
+                }
+            });
+        });
+    }
+
     // === AJAX Запрос ===
     function fetchData(url) {
         toggleLoader(true);
@@ -244,6 +290,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(html => {
             if (container) {
                 container.innerHTML = html;
+                applyTableStyles(); // Применяем стили после обновления
                 initEvents(); // Восстанавливаем состояние
                 window.history.pushState({}, '', url.toString());
                 highlightSearch(url.searchParams.get('search'));
@@ -332,4 +379,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Запуск
     initState();
     initEvents();
+    
+    // Применяем стили при загрузке страницы (несколько раз для надёжности)
+    applyTableStyles();
+    requestAnimationFrame(() => {
+        applyTableStyles();
+        setTimeout(applyTableStyles, 100);
+        setTimeout(applyTableStyles, 500);
+    });
 });

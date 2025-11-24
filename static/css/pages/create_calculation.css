@@ -2,13 +2,16 @@
 #create-calculation-wrapper .table-responsive {
     max-height: 400px;
     overflow-y: auto;
-    overflow-x: hidden;
+    overflow-x: auto; /* Разрешаем горизонтальную прокрутку если нужно */
 }
 
 /* Максимальная ширина для левой колонки на странице создания расчета */
-#create-calculation-wrapper .row > .col-12:first-child {
+#create-calculation-wrapper .row > .col-12:first-child,
+#create-calculation-wrapper .row > [class*='col-']:first-child {
     flex: 1 1 0 !important;
     max-width: none !important;
+    min-width: 0 !important; /* Важно для flex контейнера - позволяет сжиматься */
+    overflow: visible !important; /* Убираем overflow:hidden для работы sticky */
 }
 
 /* Фиксированная ширина для правой колонки */
@@ -37,32 +40,42 @@
     border-left: 0;
 }
 
+/* Фиксация контейнеров для правильного отображения таблицы */
+#create-calculation-wrapper #create-calculation-container {
+    flex: 1 1 0 !important;
+    min-height: 400px !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+#create-calculation-wrapper #create-calculation-container .card {
+    flex: 1 1 0 !important;
+    min-height: 400px !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+#create-calculation-wrapper #create-calculation-container .card-body {
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
 /* Фиксация таблицы для предотвращения "дёргания" при фильтрации */
-#create-calculation-wrapper .table-scroll {
+#create-calculation-wrapper .table-scroll,
+div#create-calculation-wrapper .table-scroll,
+#create-calculation-wrapper div.table-scroll {
     flex: 1 1 0 !important; /* Фиксируем высоту таблицы - занимает всё доступное пространство */
     min-height: 400px !important; /* Минимальная высота */
     max-height: calc(100vh - 200px) !important; /* Максимальная высота */
     height: auto !important; /* Автоматическая высота в пределах min/max */
     width: 100% !important; /* Таблица занимает всю доступную ширину */
-}
-
-/* Ширина столбца с номерами */
-#calculation-table th:nth-child(1),
-#calculation-table td:nth-child(1) {
-    width: 70px !important;
-    min-width: 70px !important;
-    max-width: 70px !important;
-    text-align: center;
-}
-
-/* КРИТИЧНО: overflow:hidden ломает position:sticky */
-#calculation-table {
-    overflow: visible !important;
-}
-
-/* Убираем overflow:hidden с колонки для работы sticky */
-#create-calculation-wrapper .row > [class*='col-']:first-child {
-    overflow: visible !important;
+    overflow-x: auto !important; /* Разрешаем горизонтальную прокрутку если таблица шире контейнера */
+    overflow-y: auto !important; /* Вертикальная прокрутка */
+    min-width: 0 !important; /* Важно для flex контейнера - позволяет сжиматься */
+    display: block !important; /* Гарантируем, что контейнер видим */
+    visibility: visible !important; /* Гарантируем видимость */
 }
 
 #create-calculation-wrapper .table-actions {
@@ -73,8 +86,8 @@
     white-space: nowrap;
 }
 
-/* Закрепление шапки таблицы */
-#calculation-table thead th {
+/* Закрепление шапки таблицы - используем более специфичный селектор */
+#create-calculation-wrapper #calculation-table thead th {
     position: sticky !important;
     top: 0 !important;
     z-index: 999 !important;
@@ -82,64 +95,70 @@
     color: white !important;
 }
 
-#calculation-table {
-    table-layout: fixed;
-    width: 100% !important; /* Таблица занимает всю доступную ширину */
+/* Таблица - используем более специфичный селектор для перебития calculations_list.css */
+#create-calculation-wrapper #calculation-table,
+div#create-calculation-wrapper table#calculation-table,
+#create-calculation-wrapper table#calculation-table {
+    table-layout: auto !important;
+    width: 100% !important;
+    overflow: visible !important;
+    display: table !important; /* Гарантируем, что таблица отображается */
+    visibility: visible !important; /* Гарантируем видимость */
 }
 
 /* ================== СТОЛБЦЫ ================== */
+/* Используем более специфичные селекторы для перебития calculations_list.css */
 
 /* № */
-#calculation-table th:nth-child(1),
-#calculation-table td:nth-child(1) {
-    width: 40px;
-    text-align: center;
+#create-calculation-wrapper #calculation-table th:nth-child(1),
+#create-calculation-wrapper #calculation-table td:nth-child(1) {
+    width: auto !important;
+    text-align: center !important;
 }
 
 /* Товар */
-#calculation-table th:nth-child(2),
-#calculation-table td:nth-child(2) {
-    width: 100%; /* Занимает всё доступное пространство */
-    max-width: 600px; /* Ограничение ширины для читаемости */
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+#create-calculation-wrapper #calculation-table th:nth-child(2),
+#create-calculation-wrapper #calculation-table td:nth-child(2) {
+    width: auto !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    text-align: left !important;
 }
 
 /* Цена */
-#calculation-table th:nth-child(3),
-#calculation-table td:nth-child(3) {
-    width: 120px;
-    text-align: right;
+#create-calculation-wrapper #calculation-table th:nth-child(3),
+#create-calculation-wrapper #calculation-table td:nth-child(3) {
+    width: auto !important;
+    text-align: right !important;
 }
 
 /* Количество */
-#calculation-table th:nth-child(4),
-#calculation-table td:nth-child(4) {
-    width: 115px;
-    text-align: center;
-}
-
-#calculation-table td input.quantity-input {
-    width: 90px;
-    text-align: center;
+#create-calculation-wrapper #calculation-table th:nth-child(4),
+#create-calculation-wrapper #calculation-table td:nth-child(4) {
+    width: auto !important;
+    text-align: center !important;
 }
 
 /* Выбрать */
-#calculation-table th:nth-child(5),
-#calculation-table td:nth-child(5) {
+#create-calculation-wrapper #calculation-table th:nth-child(5),
+#create-calculation-wrapper #calculation-table td:nth-child(5) {
+    width: auto !important;
+    text-align: center !important;
+}
+
+#create-calculation-wrapper #calculation-table td input.quantity-input {
     width: 90px;
     text-align: center;
 }
 
 /* Ячейка цены */
-#calculation-table .item-price {
+#create-calculation-wrapper #calculation-table .item-price {
     text-align: right;
 }
 
 /* Переопределение из table.css */
-#calculation-table td.item-name {
-    white-space: normal; /* Разрешить перенос */
+#create-calculation-wrapper #calculation-table td.item-name {
+    white-space: normal !important;
     text-align: left;
 }
 
@@ -205,13 +224,13 @@
 
 
 /* 💡 Подсветка строки при включённом чекбоксе */
-#calculation-table tbody tr.highlighted {
+#create-calculation-wrapper #calculation-table tbody tr.highlighted {
     background-color: #e6f4ea !important;
     transition: background-color 0.3s ease-in-out;
 }
 
 /* 💡 Удалим стиль чередующихся строк, если был */
-#calculation-table.table-striped tbody tr:nth-of-type(odd) {
+#create-calculation-wrapper #calculation-table.table-striped tbody tr:nth-of-type(odd) {
     background-color: inherit;
 }
 

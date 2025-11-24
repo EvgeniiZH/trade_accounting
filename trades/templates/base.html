@@ -11,17 +11,49 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" defer></script>
 
     <!-- Стили -->
-    <link rel="stylesheet" href="{% static 'css/base.css' %}">
-    <link rel="stylesheet" href="{% static 'css/layout.css' %}">
-    <link rel="stylesheet" href="{% static 'css/components/table.css' %}">
-    <link rel="stylesheet" href="{% static 'css/components/form.css' %}">
-    <link rel="stylesheet" href="{% static 'css/components/alerts.css' %}">
-    <link rel="stylesheet" href="{% static 'css/components/checkbox.css' %}">
-    <link rel="stylesheet" href="{% static 'css/components/animation.css' %}">
-    <link rel="stylesheet" href="{% static 'css/login.css' %}">
-    <link rel="stylesheet" href="{% static 'css/pages/calculations_list.css' %}">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}?v=20251123b">
+    <link rel="stylesheet" href="{% static 'css/layout.css' %}?v=20251123b">
+    <link rel="stylesheet" href="{% static 'css/components/table.css' %}?v=20251123d">
+    <link rel="stylesheet" href="{% static 'css/components/form.css' %}?v=20251123b">
+    <link rel="stylesheet" href="{% static 'css/components/alerts.css' %}?v=20251123b">
+    <link rel="stylesheet" href="{% static 'css/components/checkbox.css' %}?v=20251123b">
+    <link rel="stylesheet" href="{% static 'css/components/animation.css' %}?v=20251123b">
+    <link rel="stylesheet" href="{% static 'css/login.css' %}?v=20251123b">
 
-    <script src="{% static 'js/edit_modal.js' %}" defer></script>
+    {% if load_create_calculation_css %}
+    <link rel="stylesheet" href="{% static 'css/pages/create_calculation.css' %}?v=20251123i">
+    <!-- DEBUG: load_create_calculation_css = True -->
+    {% else %}
+    <!-- DEBUG: load_create_calculation_css = False or not set -->
+    {% endif %}
+
+    {% block extra_css %}{% endblock %}
+
+    <!-- Принудительная загрузка CSS для страниц создания/редактирования расчёта -->
+    <script>
+    (function() {
+        var path = window.location.pathname;
+        if (path === '/calculations/create/' || (path.match(/^\/calculations\/\d+\/$/))) {
+            // Загружаем CSS файл
+            var link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = '{% static "css/pages/create_calculation.css" %}?v=20251123i';
+            document.head.appendChild(link);
+            
+            // Добавляем критичные стили сразу для предотвращения FOUC - используем более специфичный селектор
+            var style = document.createElement('style');
+            style.textContent = '#create-calculation-wrapper #calculation-table { table-layout: auto !important; width: 100% !important; overflow: visible !important; } ' +
+                '#create-calculation-wrapper #calculation-table th:nth-child(1), #create-calculation-wrapper #calculation-table td:nth-child(1) { width: auto !important; text-align: center !important; } ' +
+                '#create-calculation-wrapper #calculation-table th:nth-child(2), #create-calculation-wrapper #calculation-table td:nth-child(2) { width: auto !important; white-space: normal !important; overflow-wrap: anywhere !important; text-align: left !important; } ' +
+                '#create-calculation-wrapper #calculation-table th:nth-child(3), #create-calculation-wrapper #calculation-table td:nth-child(3) { width: auto !important; text-align: right !important; } ' +
+                '#create-calculation-wrapper #calculation-table th:nth-child(4), #create-calculation-wrapper #calculation-table td:nth-child(4) { width: auto !important; text-align: center !important; } ' +
+                '#create-calculation-wrapper #calculation-table th:nth-child(5), #create-calculation-wrapper #calculation-table td:nth-child(5) { width: auto !important; text-align: center !important; }';
+            document.head.appendChild(style);
+        }
+    })();
+    </script>
+
+    <script src="{% static 'js/edit_modal.js' %}?v=20251123b" defer></script>
 
     <link rel="shortcut icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
 </head>
@@ -87,6 +119,7 @@
 <script src="{% static 'js/scripts.js' %}" defer></script>
 <script src="{% static 'js/messages.js' %}" defer></script>
 
+{% block extra_js %}{% endblock %}
 
 </body>
 </html>

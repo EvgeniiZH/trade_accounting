@@ -91,14 +91,13 @@
     min-height: 400px;
     max-height: var(--table-max-height);
     overflow-y: auto;
-    overflow-x: hidden;
+    overflow-x: auto; /* Разрешаем горизонтальный скролл при узком экране */
     margin-bottom: 10px;
     position: relative; /* Для правильного позиционирования sticky элементов */
 }
 
 .table-scroll table {
     width: 100%;
-    table-layout: fixed;
     margin-bottom: 40px; /* Отступ снизу таблицы для полной видимости последней строки */
 }
 
@@ -294,94 +293,4 @@ mark {
     padding-top: 6rem; /* настрой по вкусу */
 }
 
-/* Стили для таблицы создания/редактирования расчета */
-#calculation-table {
-    table-layout: fixed !important;
-    overflow: visible !important; /* Важно для работы position: sticky */
-}
-
-#calculation-table thead {
-    background: #007bff !important;
-}
-
-#calculation-table thead tr {
-    position: sticky !important;
-    top: 0 !important;
-    z-index: 10 !important;
-    background: #007bff !important;
-}
-
-#calculation-table thead th {
-    background: #007bff !important;
-    color: white !important;
-    position: sticky !important;
-    top: 0 !important;
-    z-index: 10 !important;
-    vertical-align: middle !important;
-    border-bottom: 2px solid white !important;
-}
-
-/* Ссылки сортировки в шапке таблицы */
-#calculation-table thead th a {
-    color: white !important;
-    text-decoration: none;
-    display: inline-block;
-}
-
-#calculation-table thead th a:hover {
-    text-decoration: underline !important;
-}
-
-/* Стрелочки сортировки */
-#calculation-table thead th a.asc::after,
-#calculation-table thead th a.desc::after {
-    display: inline-block;
-    margin-left: 6px;
-    font-weight: 700;
-}
-
-#calculation-table thead th a.asc::after {
-    content: '↑';
-}
-
-#calculation-table thead th a.desc::after {
-    content: '↓';
-}
-
-/* Столбец с порядковыми номерами - сделаем шире */
-#calculation-table th:nth-child(1),
-#calculation-table td:nth-child(1) {
-    width: 70px !important;
-    min-width: 70px !important;
-    max-width: 70px !important;
-    text-align: center;
-}
-
-/* Столбец с названием товара */
-#calculation-table th:nth-child(2),
-#calculation-table td:nth-child(2) {
-    min-width: 200px;
-}
-
-/* Столбец с ценой */
-#calculation-table th:nth-child(3),
-#calculation-table td:nth-child(3) {
-    width: 120px;
-    min-width: 120px;
-    text-align: right;
-}
-
-/* Столбец с количеством */
-#calculation-table th:nth-child(4),
-#calculation-table td:nth-child(4) {
-    width: 110px;
-    min-width: 110px;
-}
-
-/* Столбец с checkbox */
-#calculation-table th:nth-child(5),
-#calculation-table td:nth-child(5) {
-    width: 100px;
-    min-width: 100px;
-    text-align: center;
-}
+/* Стили для #calculation-table перенесены в create_calculation.css и calculations_list.css */

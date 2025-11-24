@@ -5,6 +5,41 @@
 {% block title %}Создание расчёта{% endblock %}
 
 {% block content %}
+    <style>
+        /* Локальные стили для безопасности - используем более специфичный селектор */
+        #create-calculation-wrapper #calculation-table {
+            table-layout: auto !important;
+            width: 100% !important;
+            overflow: visible !important;
+        }
+        #create-calculation-wrapper #calculation-table th:nth-child(1),
+        #create-calculation-wrapper #calculation-table td:nth-child(1) {
+            width: auto !important;
+            text-align: center !important;
+        }
+        #create-calculation-wrapper #calculation-table th:nth-child(2),
+        #create-calculation-wrapper #calculation-table td:nth-child(2) {
+            width: auto !important;
+            white-space: normal !important;
+            overflow-wrap: anywhere !important;
+            text-align: left !important;
+        }
+        #create-calculation-wrapper #calculation-table th:nth-child(3),
+        #create-calculation-wrapper #calculation-table td:nth-child(3) {
+            width: auto !important;
+            text-align: right !important;
+        }
+        #create-calculation-wrapper #calculation-table th:nth-child(4),
+        #create-calculation-wrapper #calculation-table td:nth-child(4) {
+            width: auto !important;
+            text-align: center !important;
+        }
+        #create-calculation-wrapper #calculation-table th:nth-child(5),
+        #create-calculation-wrapper #calculation-table td:nth-child(5) {
+            width: auto !important;
+            text-align: center !important;
+        }
+    </style>
     <div id="create-calculation-wrapper" class="container-fluid page-wrapper">
         <div class="page-header d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
             <h2 class="mb-0 text-primary">➕ Создание расчёта</h2>
@@ -44,7 +79,7 @@
                             </div>
                             <div class="col-12 col-md-4">
                                 <label for="markup" class="form-label fw-semibold mb-1">Наценка (%)</label>
-                                <input type="number" name="markup" id="markup" value="{{ markup }}"
+                                <input type="number" name="markup" id="markup" value="{{ markup|stringformat:'f' }}"
                                        step="{{ user_settings.markup_step|default:1 }}" class="form-control" placeholder="0" required>
                             </div>
                         </div>
@@ -81,8 +116,8 @@
         </div>
         </div>
     </div>
+{% endblock %}
 
-    <!-- Стили и JS -->
-    <link rel="stylesheet" href="{% static 'css/pages/create_calculation.css' %}">
-    <script src="{% static 'js/create_calculation.js' %}" defer></script>
+{% block extra_js %}
+<script src="{% static 'js/create_calculation.js' %}?v=20251123e" defer></script>
 {% endblock %}

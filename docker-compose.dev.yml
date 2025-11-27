@@ -1,0 +1,48 @@
+services:
+  backend:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+      - ./staticfiles:/app/staticfiles
+      - ./media:/app/media
+    ports:
+      - "8000:8000"
+    environment:
+      - DJANGO_SETTINGS_MODULE=trade_accounting.settings.local
+      - DEBUG=True
+      - SECRET_KEY=django-insecure-local-dev-key-change-in-production
+      - DATABASE_URL=postgresql://django:me4ut9oodi3W@db:5432/django_project_db
+      - POSTGRES_DB=django_project_db
+      - POSTGRES_USER=django
+      - POSTGRES_PASSWORD=me4ut9oodi3W
+    depends_on:
+      - db
+
+  frontend:
+    image: node:22-alpine
+    working_dir: /app
+    command: sh -c "npm install && npx vite --host 0.0.0.0"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      - NODE_ENV=development
+    stdin_open: true
+    tty: true
+
+  db:
+    image: postgres:14
+    restart: always
+    environment:
+      POSTGRES_DB: django_project_db
+      POSTGRES_USER: django
+      POSTGRES_PASSWORD: me4ut9oodi3W
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+
+volumes:
+  postgres_data:
+

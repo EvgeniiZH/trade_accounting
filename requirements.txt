@@ -1,4 +1,4 @@
-﻿asgiref==3.10.0
+asgiref==3.10.0
 certifi==2025.10.5
 charset-normalizer==3.4.4
 Django==5.2.7
@@ -23,5 +23,14 @@ tzdata==2025.2
 urllib3==2.5.0
 whitenoise==6.11.0
 xlsxwriter==3.2.0
+<<<<<<< HEAD
+gunicorn==23.0.0
+
+# testing
+pytest==8.3.3
+pytest-django==4.9.0
+pytest-cov==6.0.0
+=======
 
 gunicorn==23.0.0
+>>>>>>> 996afe303a3a4caade0c07ac7f12d4c403c82b67

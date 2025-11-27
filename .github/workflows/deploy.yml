@@ -29,8 +29,8 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:latest
-            ghcr.io/${{ github.repository }}:${{ github.sha }}
+            ghcr.io/evgeniizh/trade_accounting:latest
+            ghcr.io/evgeniizh/trade_accounting:${{ github.sha }}
 
   deploy:
     needs: build-and-push
@@ -47,7 +47,7 @@ jobs:
 
       - name: Deploy to VPS
         env:
-          IMAGE_NAME: ghcr.io/${{ github.repository }}:latest
+          IMAGE_NAME: ghcr.io/evgeniizh/trade_accounting:latest
         run: |
           ssh -o StrictHostKeyChecking=no root@${{ secrets.SERVER_IP }} << 'EOF'
             set -e
@@ -64,9 +64,10 @@ jobs:
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
             echo "==> Скачивание нового образа"
-            docker pull ghcr.io/${{ github.repository }}:latest
+            docker pull ghcr.io/evgeniizh/trade_accounting:latest
 
-            echo "==> Обновление docker-compose для использования готового образа"
+            echo "==> Настройка окружения"
+            export GITHUB_REPOSITORY="evgeniizh/trade_accounting"
             export IMAGE_TAG=latest
             
             echo "==> Остановка старых контейнеров"
@@ -82,9 +83,11 @@ jobs:
             docker compose exec -T web python manage.py collectstatic --noinput
 
             echo "==> Копирование STATIC в /var/www"
+            mkdir -p /var/www/trade_accounting/staticfiles
             docker compose exec -T web cp -r /app/staticfiles/. /var/www/trade_accounting/staticfiles/
 
             echo "==> Копирование MEDIA в /var/www"
+            mkdir -p /var/www/trade_accounting/media
             docker compose exec -T web cp -r /app/media/. /var/www/trade_accounting/media/
 
             echo "==> Обновление конфигурации nginx"

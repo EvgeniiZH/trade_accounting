@@ -13,10 +13,12 @@ import pandas as pd
 import decimal
 import io
 import zipfile
+import json
 from django.urls import reverse
 from django.db.models import Count
 from django.db.models.functions import Collate
 from django.core.paginator import Paginator
+from django.views.decorators.csrf import csrf_exempt
 from functools import wraps
 
 from .utils import update_or_create_item_clean, calculate_total_price, paginate_queryset
@@ -392,6 +394,124 @@ def calculations_list(request):
         return render(request, "trades/includes/calculations_list_content.html", context)
 
     return render(request, "trades/calculations_list.html", context)
+
+
+@csrf_exempt
+@login_required(login_url='/login/')
+def export_calculations_excel_api(request):
+    """
+    API-эндпоинт для экспорта выбранных расчётов в Excel (ZIP-архив).
+    Используется новым React-интерфейсом.
+    """
+    if request.method != "POST":
+        return JsonResponse({"error": "Метод не поддерживается. Используйте POST."}, status=405)
+
+    try:
+        # Пытаемся прочитать JSON-тело запроса
+        data = json.loads(request.body.decode("utf-8") or "{}")
+    except json.JSONDecodeError:
+        data = {}
+
+    ids = data.get("ids") or []
+
+    # Поддержка альтернативных вариантов (form-data / query string)
+    if not ids:
+        ids = request.POST.getlist("ids") or request.GET.getlist("ids")
+
+    # Нормализуем список ID к списку целых чисел
+    normalized_ids = []
+    for value in ids:
+        try:
+            normalized_ids.append(int(value))
+        except (TypeError, ValueError):
+            continue
+
+    if not normalized_ids:
+        return JsonResponse({"error": "Не переданы идентификаторы расчётов для экспорта."}, status=400)
+
+    # Фильтруем расчёты с учётом прав доступа
+    calculations_for_export = (
+        Calculation.objects
+        .filter(id__in=normalized_ids)
+        .select_related('user')
+        .prefetch_related('items__item')
+    )
+
+    user = request.user
+    if not (getattr(user, "is_superuser", False) or getattr(user, "is_admin", False)):
+        calculations_for_export = calculations_for_export.filter(user=user)
+
+    if not calculations_for_export.exists():
+        return JsonResponse({"error": "Расчёты для экспорта не найдены или недоступны."}, status=404)
+
+    # Формируем ZIP-архив аналогично calculations_list
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+        for calc in calculations_for_export:
+            total = calc.total_price
+            total_with_markup = calc.total_price_with_markup
+
+            df_calc = pd.DataFrame({
+                "ID": [calc.id],
+                "Создал": [calc.user.username if calc.user else "Не указан"],
+                "Название": [calc.title],
+                "Наценка (%)": [calc.markup],
+                "Стоимость": [total],
+                "Стоимость с наценкой": [total_with_markup],
+                "Дата создания": [calc.created_at.strftime("%d.%m.%Y %H:%M")],
+            })
+
+            items_data = []
+            for idx, calc_item in enumerate(calc.items.all(), start=1):
+                item_total = calc_item.item.price * calc_item.quantity
+                item_total_with_markup = item_total * (1 + calc.markup / 100)
+                items_data.append({
+                    "№": idx,
+                    "Наименование": calc_item.item.name,
+                    "Цена за ед.": float(calc_item.item.price),
+                    "Количество": calc_item.quantity,
+                    "Сумма": float(item_total),
+                    f"Сумма с наценкой ({calc.markup}%)": float(item_total_with_markup),
+                })
+
+            df_items = pd.DataFrame(items_data) if items_data else pd.DataFrame()
+
+            excel_buffer = io.BytesIO()
+            with pd.ExcelWriter(excel_buffer, engine="xlsxwriter") as writer:
+                df_calc.to_excel(writer, index=False, sheet_name="Информация")
+                if not df_items.empty:
+                    df_items.to_excel(writer, index=False, sheet_name="Позиции")
+
+                    workbook = writer.book
+                    worksheet = writer.sheets["Позиции"]
+
+                    money_format = workbook.add_format({"num_format": "#,##0.00 ₽"})
+                    header_format = workbook.add_format({
+                        "bold": True,
+                        "bg_color": "#4472C4",
+                        "font_color": "white",
+                        "align": "center",
+                    })
+
+                    # Применяем форматы к столбцам
+                    worksheet.set_column("C:C", 15, money_format)  # Цена за ед.
+                    worksheet.set_column("E:F", 18, money_format)  # Сумма и Сумма с наценкой
+                    worksheet.set_column("A:A", 5)   # №
+                    worksheet.set_column("B:B", 40)  # Наименование
+                    worksheet.set_column("D:D", 12)  # Количество
+
+            zip_file.writestr(
+                f"calculation_{calc.id}_{calc.title[:30]}.xlsx",
+                excel_buffer.getvalue(),
+            )
+
+    zip_buffer.seek(0)
+    response = HttpResponse(
+        zip_buffer.getvalue(),
+        content_type="application/zip",
+    )
+    response["Content-Disposition"] = 'attachment; filename=\"calculations.zip\"'
+    return response
 
 
 @login_required(login_url='/login/')
@@ -861,3 +981,53 @@ class CustomLoginView(LoginView):
     """Кастомный вид входа с поддержкой username или email через UsernameOrEmailBackend"""
     template_name = 'trades/login.html'
     redirect_authenticated_user = True
+
+
+@login_required(login_url='/login/')
+def upload_items_api(request):
+    """API endpoint для загрузки товаров из Excel файла"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    
+    if 'file' not in request.FILES:
+        return JsonResponse({'error': 'No file provided'}, status=400)
+    
+    file = request.FILES['file']
+    updated, created, skipped = 0, 0, 0
+    errors = []
+    
+    try:
+        df = pd.read_excel(file)
+        if 'Наименование комплектующей' not in df.columns or 'Цена' not in df.columns:
+            return JsonResponse({
+                'error': "Файл должен содержать столбцы 'Наименование комплектующей' и 'Цена'."
+            }, status=400)
+        
+        for idx, row in df.iterrows():
+            name = row.get('Наименование комплектующей')
+            price = row.get('Цена')
+            if name and price:
+                try:
+                    price = decimal.Decimal(str(price))
+                    item, created_flag, updated_flag = update_or_create_item_clean(name, price)
+                    if created_flag:
+                        created += 1
+                    elif updated_flag:
+                        updated += 1
+                    else:
+                        skipped += 1
+                except decimal.InvalidOperation:
+                    errors.append(f"Строка {idx + 2}: некорректная цена")
+                    continue
+            else:
+                errors.append(f"Строка {idx + 2}: отсутствует название или цена")
+        
+        return JsonResponse({
+            'success': True,
+            'created': created,
+            'updated': updated,
+            'skipped': skipped,
+            'errors': errors
+        })
+    except Exception as e:
+        return JsonResponse({'error': f"Ошибка загрузки файла: {str(e)}"}, status=400)

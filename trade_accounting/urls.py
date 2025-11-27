@@ -18,6 +18,7 @@ def trigger_error(_request):
 urlpatterns = [
     path("healthz", healthz),               # ✅ для docker healthcheck
     path("admin/", admin.site.urls),
+    path("api/", include("trade_accounting.api_urls")), # API endpoint
     path("", include("trades.urls")),
     path("sentry-debug/", trigger_error),
 

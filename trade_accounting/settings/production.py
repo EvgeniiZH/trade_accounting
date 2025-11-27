@@ -30,6 +30,8 @@ MEDIA_URL = '/media/'
 CSRF_TRUSTED_ORIGINS = [
     "https://kiteh.ru",
     "https://www.kiteh.ru",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
 ]
 
 sentry_sdk.init(
